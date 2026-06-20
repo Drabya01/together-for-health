@@ -3198,15 +3198,19 @@ async function syncFromGist() {
     const content = gist.files[TFH_GIST_FILE] && gist.files[TFH_GIST_FILE].content;
     if (!content) { updateSyncIndicator('offline'); return false; }
     const cloudState = JSON.parse(content);
-    const cloudV = cloudState._syncVersion || 0;
-    const localV = state._syncVersion || 0;
-    if (cloudV > localV) {
+    // Use timestamp comparison — never overwrite local data with empty gist (_syncTs:0)
+    const cloudTs = cloudState._syncTs || 0;
+    const localTs = state._syncTs || 0;
+    if (cloudTs > 0 && cloudTs > localTs) {
+      // Backup local state before overwriting so data is never truly lost
+      var localBackup = localStorage.getItem(STORE_KEY);
+      if (localBackup) localStorage.setItem(STORE_KEY + '_presync_bk', localBackup);
       Object.assign(state, cloudState);
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
       updateSyncIndicator('synced');
       return 'updated';
     }
-    updateSyncIndicator('synced');
+    updateSyncIndicator(getSyncToken() ? 'synced' : 'offline');
     return 'current';
   } catch(e) { updateSyncIndicator('error'); return false; }
 }
@@ -3270,6 +3274,21 @@ function saveState() {
 }
 
 let state = loadState();
+// Auto-recover: if sync previously wiped data, restore from pre-sync backup
+(function() {
+  try {
+    var cur = state;
+    var hasData = (cur.members||[]).length+(cur.events||[]).length+(cur.plans||[]).length+(cur.meetings||[]).length+(cur.contacts||[]).length > 0;
+    if (!hasData) {
+      var bk = localStorage.getItem(STORE_KEY + '_presync_bk');
+      if (bk) {
+        var recovered = JSON.parse(bk);
+        var hadData = (recovered.members||[]).length+(recovered.events||[]).length+(recovered.plans||[]).length > 0;
+        if (hadData) { state = recovered; localStorage.setItem(STORE_KEY, bk); }
+      }
+    }
+  } catch(e) {}
+})();
 // Fix stale "Grade 12" text in saved announcements and email templates
 if (state.announcements) state.announcements = state.announcements.map(function(a){ return Object.assign({},a,{text:(a.text||'').replace(/Welcome to Grade 12!/g,'Welcome to Together For Health 2026–2027!').replace(/Grade 12/g,'2026–2027')}); });
 if (state.emailTemplates) state.emailTemplates = state.emailTemplates.map(function(t){ return Object.assign({},t,{body:(t.body||'').replace(/Together For Health — \[School\], Grade 12/g,'Together For Health — [School], 2026–2027')}); });
@@ -3309,8 +3328,10 @@ state.announcements.forEach(a => {
 if (state._onboarded === undefined) state._onboarded = false;
 // Site lock PIN (default same as editor PIN)
 if (!state._sitePin) state._sitePin = 'tfh2026';
-// Sync version counter
+// Sync version + timestamp — protect existing data from being overwritten by empty gist
 if (!state._syncVersion) state._syncVersion = 0;
+// _syncTs: 0 = fresh device (may pull from cloud), Date.now() = device has real data (don't overwrite)
+if (!state._syncTs) state._syncTs = state._onboarded ? Date.now() : 0;
 // Migrate events: ensure reminder field
 (state.events || []).forEach(function(ev) { if (ev.reminder === undefined) ev.reminder = ''; });
 let editingId = null;
@@ -5860,6 +5881,15 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     openGlobalSearch();
     return;
+  }
+  // Escape closes search overlay (works regardless of focus)
+  if (e.key === 'Escape') {
+    var overlay = document.getElementById('globalSearchOverlay');
+    if (overlay && overlay.classList.contains('open')) {
+      e.preventDefault();
+      closeGlobalSearch();
+      return;
+    }
   }
   // Ctrl+1-5 tab shortcuts
   const tabShortcuts = { '1': 'dashboard', '2': 'calendar', '3': 'ideas', '4': 'goals', '5': 'meetings' };
