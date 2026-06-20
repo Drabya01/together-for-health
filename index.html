@@ -1685,6 +1685,11 @@
         Our Linktree
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="11" height="11" style="margin-left:auto;opacity:0.5"><path d="M4 4h8v8M12 4L4 12"/></svg>
       </a>
+      <button class="sidebar-footer-btn editor-only" onclick="generateSyncSetupUrl()" title="Copy setup link to enable sync on another device" style="font-weight:600;">
+        <span id="tfh-sync-dot" style="font-size:10px;color:var(--text-hint);" title="Local only">○</span>
+        Cloud sync
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12" style="margin-left:auto;opacity:0.5;"><path d="M1 9a7 7 0 1 1 14 0"/><path d="M4 10l3-3 3 3"/><path d="M7 7v6"/></svg>
+      </button>
       <button class="sidebar-footer-btn" onclick="exportBackup()" title="Download a backup of all club data">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M8 1v9M5 7l3 3 3-3"/><path d="M2 12v2h12v-2"/></svg>
         Export backup
@@ -3174,8 +3179,94 @@ function loadState() {
   return { events: [], plans: [], ideas: [], presentations: [], checks: {}, meetings: [], members: [], feedback: [], posts: [], announcements: [], goals: [], contacts: [], resources: [], transactions: [], activities: [], emailTemplates: [] };
 }
 
+// ====== CLOUD SYNC ======
+const TFH_GIST_ID = '337d0c40e33e199b945083cb4261af00';
+const TFH_GIST_FILE = 'tfh-sync.json';
+var _syncDebounceTimer = null;
+var _syncPending = false;
+
+function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
+
+async function syncFromGist() {
+  try {
+    updateSyncIndicator('syncing');
+    const resp = await fetch('https://api.github.com/gists/' + TFH_GIST_ID, {
+      headers: { 'Accept': 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' }
+    });
+    if (!resp.ok) { updateSyncIndicator('error'); return false; }
+    const gist = await resp.json();
+    const content = gist.files[TFH_GIST_FILE] && gist.files[TFH_GIST_FILE].content;
+    if (!content) { updateSyncIndicator('offline'); return false; }
+    const cloudState = JSON.parse(content);
+    const cloudV = cloudState._syncVersion || 0;
+    const localV = state._syncVersion || 0;
+    if (cloudV > localV) {
+      Object.assign(state, cloudState);
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      updateSyncIndicator('synced');
+      return 'updated';
+    }
+    updateSyncIndicator('synced');
+    return 'current';
+  } catch(e) { updateSyncIndicator('error'); return false; }
+}
+
+async function pushToGist() {
+  const token = getSyncToken();
+  if (!token) return false;
+  try {
+    state._syncVersion = (state._syncVersion || 0) + 1;
+    state._syncTs = Date.now();
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    updateSyncIndicator('syncing');
+    const resp = await fetch('https://api.github.com/gists/' + TFH_GIST_ID, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify({ files: { [TFH_GIST_FILE]: { content: JSON.stringify(state) } } })
+    });
+    if (resp.ok) { updateSyncIndicator('synced'); return true; }
+    if (resp.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); }
+    return false;
+  } catch(e) { updateSyncIndicator('error'); return false; }
+}
+
+function updateSyncIndicator(status) {
+  var el = document.getElementById('tfh-sync-dot');
+  if (!el) return;
+  var map = {
+    synced:  { color: '#10b981', title: 'Synced across devices', char: '●' },
+    syncing: { color: '#f59e0b', title: 'Syncing...', char: '◌' },
+    error:   { color: '#ef4444', title: 'Sync error — check connection', char: '●' },
+    offline: { color: 'var(--text-hint)', title: 'Local only (no sync token)', char: '○' }
+  };
+  var s = map[status] || map.offline;
+  el.style.color = s.color;
+  el.title = s.title;
+  el.textContent = s.char;
+}
+
+function generateSyncSetupUrl() {
+  var token = getSyncToken();
+  if (!token) { showToast('No sync token on this device', 'error'); return; }
+  var encoded = btoa(token);
+  var url = window.location.origin + window.location.pathname + '#tfhsync=' + encoded;
+  navigator.clipboard.writeText(url).then(function() {
+    showToast('Setup link copied! Paste in browser on other device.');
+  }).catch(function() {
+    prompt('Copy this URL and open it on your other device:', url);
+  });
+}
+
 function saveState() {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  clearTimeout(_syncDebounceTimer);
+  _syncDebounceTimer = setTimeout(function() {
+    pushToGist().catch(function(){});
+  }, 1500);
 }
 
 let state = loadState();
@@ -3218,6 +3309,8 @@ state.announcements.forEach(a => {
 if (state._onboarded === undefined) state._onboarded = false;
 // Site lock PIN (default same as editor PIN)
 if (!state._sitePin) state._sitePin = 'tfh2026';
+// Sync version counter
+if (!state._syncVersion) state._syncVersion = 0;
 // Migrate events: ensure reminder field
 (state.events || []).forEach(function(ev) { if (ev.reminder === undefined) ev.reminder = ''; });
 let editingId = null;
@@ -7023,6 +7116,63 @@ function scheduleReminders() {
     scheduleReminders();
   }
 })();
+
+// ====== SYNC BOOTSTRAP ======
+// Check URL hash for one-time token setup (e.g. #tfhsync=BASE64TOKEN)
+(function() {
+  try {
+    var hash = window.location.hash;
+    if (hash && hash.startsWith('#tfhsync=')) {
+      var encoded = hash.substring(9);
+      var token = atob(encoded);
+      if (token && token.length > 10) {
+        localStorage.setItem('tfh_sync_token', token);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        setTimeout(function() { showToast('Sync connected! This device will now sync automatically.'); }, 600);
+      }
+    }
+  } catch(e) {}
+})();
+
+// Auto-pull from cloud on load, then refresh the active tab if state was updated
+window.addEventListener('load', function() {
+  // Load sync-local.js if it exists (sets token locally, gitignored)
+  var s = document.createElement('script');
+  s.src = './sync-local.js';
+  s.onerror = function() {}; // silent if not present (GitHub Pages)
+  s.onload = function() {
+    // Token just loaded — start sync
+    startCloudSync();
+  };
+  document.head.appendChild(s);
+  // Also start sync in case sync-local.js doesn't exist
+  setTimeout(startCloudSync, 800);
+});
+
+function startCloudSync() {
+  updateSyncIndicator(getSyncToken() ? 'syncing' : 'offline');
+  syncFromGist().then(function(result) {
+    if (result === 'updated') {
+      // State was refreshed from cloud — re-render active tab
+      var activeBtn = document.querySelector('.nav-item--active');
+      var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
+      switchTab(activeTab || 'dashboard');
+      showToast('Updated from cloud sync');
+    }
+  }).catch(function() {});
+  // Poll every 2 minutes when page is visible
+  setInterval(function() {
+    if (!document.hidden) {
+      syncFromGist().then(function(result) {
+        if (result === 'updated') {
+          var activeBtn = document.querySelector('.nav-item--active');
+          var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
+          switchTab(activeTab || 'dashboard');
+        }
+      }).catch(function() {});
+    }
+  }, 2 * 60 * 1000);
+}
 
 // ====== SERVICE WORKER ======
 if ('serviceWorker' in navigator) {
