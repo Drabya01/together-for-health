@@ -1472,6 +1472,111 @@
     .ob-field-row { flex-direction: column; }
     .ob-title { font-size: 20px; }
   }
+
+  /* ── Site Lock Screen ───────────────────────────── */
+  #site-lock-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #FCEEF2 0%, #f5f5f3 100%);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  body.dark-mode #site-lock-overlay {
+    background: linear-gradient(135deg, #2a1820 0%, #111110 100%);
+  }
+  #site-lock-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 44px 40px 36px;
+    width: 100%; max-width: 400px; text-align: center;
+    box-shadow: 0 8px 40px rgba(196,120,138,0.12);
+  }
+  #site-lock-logo {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: var(--accent); display: flex;
+    align-items: center; justify-content: center;
+    margin: 0 auto 20px; color: white;
+    font-size: 24px; font-weight: 800; letter-spacing: -1px;
+  }
+  #site-lock-title {
+    font-size: 22px; font-weight: 700; color: var(--text);
+    margin-bottom: 6px; letter-spacing: -0.02em;
+  }
+  #site-lock-sub {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5;
+  }
+  #site-lock-input {
+    width: 100%; padding: 12px 16px; border: 2px solid var(--border);
+    border-radius: 10px; font-size: 16px; font-family: inherit;
+    background: var(--bg); color: var(--text); margin-bottom: 12px;
+    text-align: center; letter-spacing: 3px; transition: border-color 0.15s;
+  }
+  #site-lock-input:focus { outline: none; border-color: var(--accent); }
+  #site-lock-input.lock-shake { animation: lockShake 0.4s ease; border-color: #ef4444; }
+  #site-lock-submit {
+    width: 100%; padding: 12px; background: var(--accent); color: white;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: background 0.12s;
+  }
+  #site-lock-submit:hover { background: var(--accent-mid); }
+  #site-lock-error {
+    color: #ef4444; font-size: 13px; margin-top: 10px; min-height: 18px;
+  }
+  #site-lock-linktree {
+    margin-top: 20px; font-size: 12px; color: var(--text-muted);
+  }
+  #site-lock-linktree a {
+    color: var(--accent); text-decoration: none; font-weight: 500;
+  }
+  #site-lock-linktree a:hover { text-decoration: underline; }
+  @keyframes lockShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  /* ── Notification bell button active state ──────── */
+  #notifBell.notif-on { color: var(--accent); border-color: var(--accent); }
+  #notifBell.notif-on:hover { background: var(--accent-light); }
+
+  /* ── Print styles ───────────────────────────────── */
+  @media print {
+    #sidebar, #top-header, #tfh-toast-container,
+    .editor-only, .editor-only-block, .admin-editor-toolbar,
+    .admin-editor-saved-panel, #onboarding-overlay, #site-lock-overlay,
+    #globalSearchOverlay, #site-lock-overlay,
+    .modal-overlay, .tab-header .btn, .tab-header .btn-primary,
+    .btn-ghost, .ob-btn-primary, .ob-btn-skip,
+    .dash-announcements-actions, .header-action-btn { display: none !important; }
+    html, body { height: auto !important; overflow: visible !important; }
+    #app-shell { display: block !important; overflow: visible !important; }
+    #app-body { display: block !important; overflow: visible !important; }
+    #main-content { overflow: visible !important; height: auto !important; }
+    main { max-width: 100% !important; padding: 16px 20px !important; }
+    .page { display: none !important; }
+    .page.active { display: block !important; }
+    .card { break-inside: avoid; page-break-inside: avoid; }
+    .modal-overlay { display: none !important; }
+    body.admin-editor-mode .editor-only-tab { display: none !important; }
+    @page { margin: 1.2cm 1.8cm; }
+    .tab-header { margin-bottom: 12px; }
+    .tab-title { font-size: 18px; }
+  }
+
+  /* ── Reminder form hint ─────────────────────────── */
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── Linktree sidebar link ──────────────────────── */
+  .sidebar-linktree-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 7px;
+    color: var(--accent-mid); font-size: 12.5px; font-weight: 600;
+    text-decoration: none; transition: background 0.12s;
+    border: 1px solid transparent;
+  }
+  .sidebar-linktree-link:hover {
+    background: var(--accent-light); border-color: rgba(196,120,138,0.25);
+  }
 </style>
 <link rel="stylesheet" href="admin-editor.css">
 </head>
@@ -1575,6 +1680,11 @@
 
     </nav>
     <div id="sidebar-footer">
+      <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener" class="sidebar-linktree-link" title="Together For Health Linktree">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="6.5"/><path d="M5 8h6M8 5v6"/></svg>
+        Our Linktree
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="11" height="11" style="margin-left:auto;opacity:0.5"><path d="M4 4h8v8M12 4L4 12"/></svg>
+      </a>
       <button class="sidebar-footer-btn" onclick="exportBackup()" title="Download a backup of all club data">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M8 1v9M5 7l3 3 3-3"/><path d="M2 12v2h12v-2"/></svg>
         Export backup
@@ -1605,6 +1715,12 @@
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M4 7h1M7 7h1M10 7h1M13 7h1M4 10h8"/></svg>
           <span>Shortcuts</span>
         </button>
+        <button id="notifBell" class="header-action-btn" onclick="toggleNotifications()" title="Enable reminders">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><path d="M8 1.5a5 5 0 0 1 5 5v2.5l1 1.5H2L3 9V6.5a5 5 0 0 1 5-5z"/><path d="M6.5 13.5a1.5 1.5 0 0 0 3 0"/></svg>
+        </button>
+        <button class="header-action-btn" onclick="window.print()" title="Print current view">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><rect x="3" y="1" width="10" height="5" rx="1"/><path d="M3 6H1v7h2"/><path d="M13 6h2v7h-2"/><rect x="3" y="9" width="10" height="6" rx="1"/><path d="M5 12h6M5 14h4"/></svg>
+        </button>
       </div>
     </header>
 
@@ -1624,6 +1740,22 @@
 
     <!-- Announcements strip -->
     <div id="dash-announcements" class="announcements-strip"></div>
+
+    <!-- Linktree banner -->
+    <div style="margin-bottom:18px;">
+      <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:linear-gradient(90deg,#FCEEF2,#f9f0f5);border:1px solid rgba(196,120,138,0.3);text-decoration:none;color:var(--text);transition:box-shadow 0.15s;"
+         onmouseover="this.style.boxShadow='0 2px 12px rgba(196,120,138,0.2)'" onmouseout="this.style.boxShadow=''">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg viewBox="0 0 20 20" fill="white" width="18" height="18"><path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2zm1 11H9V9h2v4zm0-6H9V5h2v2z"/></svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--accent-mid);">Together For Health · Linktree</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">linktr.ee/togetherforhealthMDHS</div>
+        </div>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="color:var(--accent);flex-shrink:0;"><path d="M4 4h8v8M12 4L4 12"/></svg>
+      </a>
+    </div>
 
     <!-- Stat cards -->
     <div class="dash-grid">
@@ -2299,6 +2431,11 @@
     <div class="form-row"><div>
       <label>Notes (optional)</label>
       <textarea id="ev-notes" placeholder="Any details, prep needed, location, etc."></textarea>
+    </div></div>
+    <div class="form-row"><div>
+      <label>Reminder (optional)</label>
+      <input type="datetime-local" id="ev-reminder">
+      <p class="form-hint">Get a browser notification at this time — works while the app is open or running in a tab.</p>
     </div></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-event')">Cancel</button>
@@ -3079,6 +3216,10 @@ state.announcements.forEach(a => {
 });
 // Onboarding flag
 if (state._onboarded === undefined) state._onboarded = false;
+// Site lock PIN (default same as editor PIN)
+if (!state._sitePin) state._sitePin = 'tfh2026';
+// Migrate events: ensure reminder field
+(state.events || []).forEach(function(ev) { if (ev.reminder === undefined) ev.reminder = ''; });
 let editingId = null;
 let calYear, calMonth;
 
@@ -3597,6 +3738,7 @@ function openAddEvent() {
   document.getElementById('ev-time').value = '';
   document.getElementById('ev-cat').value = 'general';
   document.getElementById('ev-notes').value = '';
+  document.getElementById('ev-reminder').value = '';
   openModal('modal-event');
 }
 
@@ -3616,6 +3758,7 @@ function editEvent(id) {
   document.getElementById('ev-time').value = ev.time || '';
   document.getElementById('ev-cat').value = ev.cat;
   document.getElementById('ev-notes').value = ev.notes || '';
+  document.getElementById('ev-reminder').value = ev.reminder || '';
   openModal('modal-event');
 }
 
@@ -3623,13 +3766,18 @@ function saveEvent() {
   if (!validateFields(['ev-title','ev-date'])) return;
   const title = document.getElementById('ev-title').value.trim();
   const date = document.getElementById('ev-date').value;
+  const reminder = document.getElementById('ev-reminder').value;
+  if (reminder && Notification.permission === 'default') {
+    Notification.requestPermission().then(p => { if (p === 'granted') scheduleReminders(); });
+  }
   const ev = {
     id: editingId || uid(),
     type: document.getElementById('ev-type').value,
     title, date,
     time: document.getElementById('ev-time').value,
     cat: document.getElementById('ev-cat').value,
-    notes: document.getElementById('ev-notes').value.trim()
+    notes: document.getElementById('ev-notes').value.trim(),
+    reminder: reminder || ''
   };
   if (editingId) {
     state.events = state.events.map(e => e.id === editingId ? ev : e);
@@ -6759,6 +6907,123 @@ function obFinish() {
   renderDash();
 }
 
+// ====== SITE LOCK SCREEN ======
+(function() {
+  var access = sessionStorage.getItem('tfh_access');
+  if (!access) {
+    document.getElementById('site-lock-overlay').style.display = 'flex';
+    document.getElementById('app-shell').style.visibility = 'hidden';
+  }
+})();
+
+function submitSitePassword() {
+  var input = document.getElementById('site-lock-input');
+  var val = (input.value || '').trim();
+  var errEl = document.getElementById('site-lock-error');
+  var EDITOR_PIN = 'tfh2026';
+  var sitePin = (state._sitePin || 'tfh2026');
+  if (val === sitePin || val === EDITOR_PIN) {
+    sessionStorage.setItem('tfh_access', 'granted');
+    document.getElementById('site-lock-overlay').style.display = 'none';
+    document.getElementById('app-shell').style.visibility = '';
+    if (val === EDITOR_PIN && window.adminEditorIsActive && !window.adminEditorIsActive()) {
+      // Don't auto-enter editor mode — user can click the pencil manually
+    }
+    scheduleReminders();
+  } else {
+    errEl.textContent = 'Incorrect password. Try again.';
+    input.classList.add('lock-shake');
+    input.value = '';
+    setTimeout(function() { input.classList.remove('lock-shake'); input.focus(); }, 450);
+  }
+}
+
+function lockScreenKeydown(e) {
+  if (e.key === 'Enter') submitSitePassword();
+}
+
+function changeSitePassword() {
+  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) { showToast('Editor mode required', 'error'); return; }
+  var newPin = prompt('Enter a new club access password (members will use this to log in):');
+  if (!newPin || !newPin.trim()) return;
+  if (newPin.trim().length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
+  state._sitePin = newPin.trim();
+  saveState();
+  showToast('Club password updated! Share it with your members.');
+}
+
+// ====== PUSH NOTIFICATIONS ======
+var _reminderTimeouts = [];
+
+function toggleNotifications() {
+  if (!('Notification' in window)) { showToast('Browser notifications not supported', 'error'); return; }
+  if (Notification.permission === 'granted') {
+    showToast('Notifications already enabled!');
+    scheduleReminders();
+  } else if (Notification.permission === 'denied') {
+    showToast('Notifications blocked — enable them in your browser settings', 'error');
+  } else {
+    Notification.requestPermission().then(function(perm) {
+      if (perm === 'granted') {
+        showToast('Notifications enabled!');
+        updateNotifBellUI();
+        scheduleReminders();
+      } else {
+        showToast('Notifications not enabled', 'error');
+      }
+    });
+  }
+}
+
+function updateNotifBellUI() {
+  var bell = document.getElementById('notifBell');
+  if (!bell) return;
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    bell.classList.add('notif-on');
+    bell.title = 'Notifications enabled';
+  } else {
+    bell.classList.remove('notif-on');
+    bell.title = 'Enable reminders';
+  }
+}
+
+function scheduleReminders() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  _reminderTimeouts.forEach(function(t) { clearTimeout(t); });
+  _reminderTimeouts = [];
+  var now = Date.now();
+  (state.events || []).forEach(function(ev) {
+    if (!ev.reminder) return;
+    var remTime = new Date(ev.reminder).getTime();
+    var diff = remTime - now;
+    if (diff > 0 && diff < 7 * 24 * 60 * 60 * 1000) {
+      var t = setTimeout(function() {
+        new Notification('Together For Health — Reminder', {
+          body: ev.title + (ev.date ? ' · ' + ev.date : ''),
+          icon: './icon.svg',
+          badge: './icon.svg',
+          tag: ev.id
+        });
+      }, diff);
+      _reminderTimeouts.push(t);
+    } else if (diff < 0 && diff > -2 * 60 * 60 * 1000) {
+      new Notification('Together For Health — Missed reminder', {
+        body: ev.title + (ev.date ? ' · ' + ev.date : ''),
+        icon: './icon.svg',
+        tag: ev.id + '-missed'
+      });
+    }
+  });
+}
+
+// Init notification bell UI + schedule reminders on load
+(function() {
+  updateNotifBellUI();
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    scheduleReminders();
+  }
+})();
+
 // ====== SERVICE WORKER ======
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -6793,6 +7058,22 @@ function renderSocialConsentBanner() {
 }
 </script>
 <script src="admin-editor.js"></script>
+
+<!-- SITE LOCK OVERLAY -->
+<div id="site-lock-overlay" style="display:none;">
+  <div id="site-lock-card">
+    <div id="site-lock-logo">TFH</div>
+    <div id="site-lock-title">Together For Health</div>
+    <div id="site-lock-sub">2026–2027 Health Club Hub<br>Enter the club password to continue.</div>
+    <input type="password" id="site-lock-input" placeholder="Club password" autocomplete="off"
+           onkeydown="lockScreenKeydown(event)">
+    <button id="site-lock-submit" onclick="submitSitePassword()">Enter</button>
+    <div id="site-lock-error"></div>
+    <div id="site-lock-linktree">
+      Follow us on <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener">Linktree</a>
+    </div>
+  </div>
+</div>
 
 <div id="onboarding-overlay" style="display:none;">
   <div id="onboarding-card">
