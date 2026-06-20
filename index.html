@@ -60,6 +60,7 @@
     flex-direction: row;
     height: 100vh;
     overflow: hidden;
+    visibility: hidden;
   }
 
   /* ── Sidebar ──────────────────────────────────── */
@@ -1582,60 +1583,135 @@
     .dash-panels { grid-template-columns: 1fr; }
   }
 
-  /* ── Site Lock Screen ───────────────────────────── */
-  #site-lock-overlay {
+  /* ── Auth Overlays ────────────────────────────────── */
+  .auth-overlay-base {
     position: fixed; inset: 0; z-index: 9999;
     background: linear-gradient(135deg, #FCEEF2 0%, #f5f5f3 100%);
     display: flex; align-items: center; justify-content: center;
-    flex-direction: column;
+    flex-direction: column; padding: 20px; overflow-y: auto;
   }
-  body.dark-mode #site-lock-overlay {
+  body.dark-mode .auth-overlay-base {
     background: linear-gradient(135deg, #2a1820 0%, #111110 100%);
   }
-  #site-lock-card {
+  .auth-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 20px; padding: 44px 40px 36px;
-    width: 100%; max-width: 400px; text-align: center;
+    width: 100%; max-width: 420px; text-align: center;
     box-shadow: 0 8px 40px rgba(196,120,138,0.12);
   }
-  #site-lock-logo {
+  .auth-logo {
     width: 72px; height: 72px; border-radius: 20px;
     background: var(--accent); display: flex;
     align-items: center; justify-content: center;
     margin: 0 auto 20px; color: white;
     font-size: 24px; font-weight: 800; letter-spacing: -1px;
   }
-  #site-lock-title {
+  .auth-title {
     font-size: 22px; font-weight: 700; color: var(--text);
     margin-bottom: 6px; letter-spacing: -0.02em;
   }
-  #site-lock-sub {
+  .auth-sub {
     font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5;
   }
-  #site-lock-input {
+  #google-signin-btn { display: flex; justify-content: center; margin-bottom: 8px; min-height: 44px; }
+  .auth-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 12px 0; color: var(--text-muted); font-size: 12px;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .auth-pin-toggle {
+    background: none; border: none; cursor: pointer;
+    font-size: 12px; color: var(--text-muted); font-family: inherit;
+    padding: 0; text-decoration: underline;
+  }
+  .auth-pin-toggle:hover { color: var(--accent); }
+  #auth-pin-section { display: none; margin-top: 12px; }
+  #auth-pin-section.visible { display: block; }
+  #auth-pin-input {
     width: 100%; padding: 12px 16px; border: 2px solid var(--border);
     border-radius: 10px; font-size: 16px; font-family: inherit;
     background: var(--bg); color: var(--text); margin-bottom: 12px;
     text-align: center; letter-spacing: 3px; transition: border-color 0.15s;
+    box-sizing: border-box;
   }
-  #site-lock-input:focus { outline: none; border-color: var(--accent); }
-  #site-lock-input.lock-shake { animation: lockShake 0.4s ease; border-color: #ef4444; }
-  #site-lock-submit {
+  #auth-pin-input:focus { outline: none; border-color: var(--accent); }
+  #auth-pin-input.lock-shake { animation: lockShake 0.4s ease; border-color: #ef4444; }
+  #auth-pin-btn {
     width: 100%; padding: 12px; background: var(--accent); color: white;
     border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
     cursor: pointer; font-family: inherit; transition: background 0.12s;
   }
-  #site-lock-submit:hover { background: var(--accent-mid); }
-  #site-lock-error {
-    color: #ef4444; font-size: 13px; margin-top: 10px; min-height: 18px;
+  #auth-pin-btn:hover { background: var(--accent-mid); }
+  #auth-pin-error { color: #ef4444; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .auth-linktree { margin-top: 20px; font-size: 12px; color: var(--text-muted); }
+  .auth-linktree a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .auth-linktree a:hover { text-decoration: underline; }
+  /* Onboarding form */
+  #member-onboard-overlay .auth-card { max-width: 480px; text-align: left; }
+  #member-onboard-overlay .auth-title, #member-onboard-overlay .auth-sub { text-align: center; }
+  .mob-google-info {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--accent-light); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 18px;
   }
-  #site-lock-linktree {
-    margin-top: 20px; font-size: 12px; color: var(--text-muted);
+  .mob-google-info img { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+  .mob-google-info-text { font-weight: 600; font-size: 13px; color: var(--text); }
+  .mob-google-info-email { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .mob-form-row { margin-bottom: 14px; }
+  .mob-form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .mob-form-input, .mob-form-select, .mob-form-textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 9px; font-size: 14px; font-family: inherit;
+    background: var(--bg); color: var(--text); transition: border-color 0.15s;
+    box-sizing: border-box;
   }
-  #site-lock-linktree a {
-    color: var(--accent); text-decoration: none; font-weight: 500;
+  .mob-form-input:focus, .mob-form-select:focus, .mob-form-textarea:focus {
+    outline: none; border-color: var(--accent);
   }
-  #site-lock-linktree a:hover { text-decoration: underline; }
+  .mob-form-textarea { resize: vertical; min-height: 70px; }
+  #mob-submit-btn {
+    width: 100%; padding: 13px; background: var(--accent); color: white;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: inherit; margin-top: 6px; transition: background 0.12s;
+  }
+  #mob-submit-btn:hover { background: var(--accent-mid); }
+  /* Pending screen */
+  .pending-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+  .pending-sign-out {
+    width: 100%; padding: 11px; background: none;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; margin-top: 20px;
+    transition: border-color 0.15s;
+  }
+  .pending-sign-out:hover { border-color: var(--accent); color: var(--accent); }
+  /* User badge / dropdown */
+  #userDropdownWrap { position: relative; }
+  #userBadge { display: flex; align-items: center; }
+  .user-initials {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: white;
+  }
+  #userDropdown {
+    position: absolute; top: calc(100% + 6px); right: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.10);
+    min-width: 210px; z-index: 900; padding: 4px;
+    display: flex; flex-direction: column;
+  }
+  .user-dropdown-header {
+    padding: 10px 12px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+  .user-dropdown-name { font-weight: 600; font-size: 13px; color: var(--text); }
+  .user-dropdown-email { font-size: 11px; color: var(--text-muted); margin-top: 1px; word-break: break-all; }
+  .user-dropdown-tier {
+    display: inline-block; margin-top: 5px; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+    background: var(--accent-light); color: var(--accent-mid); text-transform: capitalize;
+  }
   @keyframes lockShake {
     0%,100% { transform: translateX(0); }
     20% { transform: translateX(-8px); }
@@ -1650,8 +1726,8 @@
   @media print {
     #sidebar, #top-header, #tfh-toast-container,
     .editor-only, .editor-only-block, .admin-editor-toolbar,
-    .admin-editor-saved-panel, #onboarding-overlay, #site-lock-overlay,
-    #globalSearchOverlay, #site-lock-overlay,
+    .admin-editor-saved-panel, #onboarding-overlay, #auth-overlay, #member-onboard-overlay, #pending-overlay,
+    #globalSearchOverlay,
     .modal-overlay, .tab-header .btn, .tab-header .btn-primary,
     .btn-ghost, .ob-btn-primary, .ob-btn-skip,
     .dash-announcements-actions, .header-action-btn { display: none !important; }
@@ -3209,6 +3285,8 @@ const TFH_GIST_ID = '337d0c40e33e199b945083cb4261af00';
 const TFH_GIST_FILE = 'tfh-sync.json';
 var _syncDebounceTimer = null;
 var _syncPending = false;
+var GOOGLE_CLIENT_ID = '1010052442736-kv3qsn1j0pov5re2v6na15opsvuga1v6.apps.googleusercontent.com';
+var currentUser = null;
 
 function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
 
@@ -3353,6 +3431,7 @@ state.announcements.forEach(a => {
 if (state._onboarded === undefined) state._onboarded = false;
 // Site lock PIN (default same as editor PIN)
 if (!state._sitePin) state._sitePin = 'tfh2026';
+if (!state.users) state.users = [];
 // Sync version + timestamp — protect existing data from being overwritten by empty gist
 if (!state._syncVersion) state._syncVersion = 0;
 // _syncTs: 0 = fresh device (may pull from cloud), Date.now() = device has real data (don't overwrite)
@@ -5516,6 +5595,38 @@ function memberAvatarColor(name) {
 
 function renderMembers() {
   renderParticipation();
+  // Pending join requests panel (admin only)
+  var existingPanel = document.getElementById('members-requests-panel');
+  if (existingPanel) existingPanel.remove();
+  var isAdmin = currentUser && currentUser.permissionTier === 'admin';
+  var pendingUsers = isAdmin ? (state.users || []).filter(function(u) { return u.status === 'pending'; }) : [];
+  var reqGrid = document.getElementById('members-grid');
+  if (isAdmin && pendingUsers.length > 0 && reqGrid && reqGrid.parentElement) {
+    var panel = document.createElement('div');
+    panel.id = 'members-requests-panel';
+    panel.style.cssText = 'grid-column:1/-1;background:var(--accent-light);border:1px solid var(--accent);border-radius:14px;padding:18px 20px;margin-bottom:8px;';
+    panel.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--accent-mid);margin-bottom:12px;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1" stroke-linecap="round"/></svg> Join Requests (' + pendingUsers.length + ')</div>'
+      + pendingUsers.map(function(u) {
+          var initials = (u.name || 'U').split(' ').map(function(w) { return w[0] || ''; }).slice(0,2).join('').toUpperCase();
+          var avatarHtml = u.photo
+            ? '<img src="' + escHtml(u.photo) + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;" onerror="this.style.display=\'none\'">'
+            : '<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">' + initials + '</div>';
+          var metaParts = [u.grade ? 'Grade ' + escHtml(u.grade) : '', u.roleInterest ? escHtml(u.roleInterest) : '', escHtml(u.email || '')].filter(Boolean);
+          return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(196,120,138,0.15);">'
+            + avatarHtml
+            + '<div style="flex:1;min-width:0;">'
+            + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + escHtml(u.name) + '</div>'
+            + (metaParts.length ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + metaParts.join(' · ') + '</div>' : '')
+            + (u.bio ? '<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:2px;">' + escHtml(u.bio.slice(0,80)) + (u.bio.length > 80 ? '...' : '') + '</div>' : '')
+            + '</div>'
+            + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+            + '<button onclick="showApproveModal(\'' + escHtml(u.id) + '\')" style="padding:5px 12px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Approve</button>'
+            + '<button onclick="rejectUser(\'' + escHtml(u.id) + '\')" style="padding:5px 10px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Reject</button>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+    reqGrid.parentElement.insertBefore(panel, reqGrid);
+  }
   const grid = document.getElementById('members-grid');
   if (!grid) return;
   if (!state.members.length) {
@@ -7002,39 +7113,302 @@ function obFinish() {
 }
 
 // ====== SITE LOCK SCREEN ======
-(function() {
-  var access = sessionStorage.getItem('tfh_access');
-  if (!access) {
-    document.getElementById('site-lock-overlay').style.display = 'flex';
-    document.getElementById('app-shell').style.visibility = 'hidden';
+/* ─── Google Auth ──────────────────────────────────────── */
+function initGoogleAuth() {
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleSignIn,
+    ux_mode: 'popup',
+    auto_select: false
+  });
+  var btnEl = document.getElementById('google-signin-btn');
+  if (btnEl) {
+    google.accounts.id.renderButton(btnEl, {
+      theme: 'outline', size: 'large', width: 280, shape: 'rectangular'
+    });
   }
-})();
+  var stored = sessionStorage.getItem('tfh_google_session');
+  if (stored) {
+    try {
+      var s = JSON.parse(stored);
+      processSignIn(s.googleId, s.email, s.name, s.photo);
+      return;
+    } catch(e) { sessionStorage.removeItem('tfh_google_session'); }
+  }
+}
 
-function submitSitePassword() {
-  var input = document.getElementById('site-lock-input');
-  var val = (input.value || '').trim();
-  var errEl = document.getElementById('site-lock-error');
-  var EDITOR_PIN = 'tfh2026';
-  var sitePin = (state._sitePin || 'tfh2026');
-  if (val === sitePin || val === EDITOR_PIN) {
-    sessionStorage.setItem('tfh_access', 'granted');
-    document.getElementById('site-lock-overlay').style.display = 'none';
-    document.getElementById('app-shell').style.visibility = '';
-    if (val === EDITOR_PIN && window.adminEditorIsActive && !window.adminEditorIsActive()) {
-      // Don't auto-enter editor mode — user can click the pencil manually
+function handleGoogleSignIn(response) {
+  var payload = decodeJwt(response.credential);
+  var googleId = payload.sub;
+  var email = payload.email || '';
+  var name = payload.name || email;
+  var photo = payload.picture || '';
+  sessionStorage.setItem('tfh_google_session', JSON.stringify({ googleId: googleId, email: email, name: name, photo: photo }));
+  processSignIn(googleId, email, name, photo);
+}
+
+function decodeJwt(token) {
+  try {
+    var base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    var pad = base64.length % 4;
+    if (pad) base64 += '===='.slice(pad);
+    return JSON.parse(atob(base64));
+  } catch(e) { return {}; }
+}
+
+function processSignIn(googleId, email, name, photo) {
+  if (!state.users) state.users = [];
+  var user = state.users.find(function(u) { return u.googleId === googleId; });
+  if (!user) {
+    var approvedCount = state.users.filter(function(u) { return u.status === 'approved'; }).length;
+    if (approvedCount === 0) {
+      var adminUser = {
+        id: uid(), googleId: googleId, email: email, name: name, photo: photo,
+        grade: '', roleInterest: '', bio: '',
+        role: 'Admin', permissionTier: 'admin',
+        status: 'approved', joinedAt: Date.now()
+      };
+      state.users.push(adminUser);
+      saveState();
+      currentUser = adminUser;
+      showApp();
+    } else {
+      showMemberOnboard(googleId, email, name, photo);
     }
-    scheduleReminders();
+  } else if (user.status === 'pending') {
+    currentUser = user;
+    showPendingScreen();
+  } else if (user.status === 'rejected') {
+    sessionStorage.removeItem('tfh_google_session');
+    showToast('Your access request was not approved. Contact the club admin.', 'error');
   } else {
-    errEl.textContent = 'Incorrect password. Try again.';
-    input.classList.add('lock-shake');
-    input.value = '';
-    setTimeout(function() { input.classList.remove('lock-shake'); input.focus(); }, 450);
+    currentUser = user;
+    showApp();
   }
 }
 
-function lockScreenKeydown(e) {
-  if (e.key === 'Enter') submitSitePassword();
+function showMemberOnboard(googleId, email, name, photo) {
+  document.getElementById('auth-overlay').style.display = 'none';
+  var overlay = document.getElementById('member-onboard-overlay');
+  overlay.style.display = 'flex';
+  overlay.dataset.googleId = googleId;
+  overlay.dataset.email = email;
+  overlay.dataset.photo = photo || '';
+  var photoEl = document.getElementById('mob-photo');
+  if (photoEl) { photoEl.src = photo || ''; photoEl.style.display = photo ? '' : 'none'; }
+  var nameEl = document.getElementById('mob-name');
+  if (nameEl) nameEl.value = name;
+  var dispName = document.getElementById('mob-display-name');
+  if (dispName) dispName.textContent = name;
+  var dispEmail = document.getElementById('mob-display-email');
+  if (dispEmail) dispEmail.textContent = email;
 }
+
+function submitMemberOnboard() {
+  var overlay = document.getElementById('member-onboard-overlay');
+  var googleId = overlay.dataset.googleId;
+  var email = overlay.dataset.email;
+  var photo = overlay.dataset.photo;
+  var name = (document.getElementById('mob-name').value || '').trim();
+  var grade = document.getElementById('mob-grade').value;
+  var roleInterest = document.getElementById('mob-role').value;
+  var bio = (document.getElementById('mob-bio').value || '').trim();
+  if (!name) { showToast('Please enter your name.', 'error'); return; }
+  if (!state.users) state.users = [];
+  var newUser = {
+    id: uid(), googleId: googleId, email: email, name: name, photo: photo,
+    grade: grade, roleInterest: roleInterest, bio: bio,
+    role: '', permissionTier: 'member',
+    status: 'pending', joinedAt: Date.now()
+  };
+  state.users.push(newUser);
+  saveState();
+  currentUser = newUser;
+  overlay.style.display = 'none';
+  showPendingScreen();
+}
+
+function showPendingScreen() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('member-onboard-overlay').style.display = 'none';
+  var overlay = document.getElementById('pending-overlay');
+  overlay.style.display = 'flex';
+  var nameEl = document.getElementById('pending-name');
+  if (nameEl && currentUser) nameEl.textContent = currentUser.name.split(' ')[0];
+}
+
+function showApp() {
+  var authEl = document.getElementById('auth-overlay');
+  var mobEl = document.getElementById('member-onboard-overlay');
+  var pendEl = document.getElementById('pending-overlay');
+  if (authEl) authEl.style.display = 'none';
+  if (mobEl) mobEl.style.display = 'none';
+  if (pendEl) pendEl.style.display = 'none';
+  document.getElementById('app-shell').style.visibility = 'visible';
+  updateHeaderUserBadge();
+  scheduleReminders();
+  if (typeof switchTab === 'function') switchTab('dashboard');
+}
+
+function signOut() {
+  sessionStorage.removeItem('tfh_google_session');
+  sessionStorage.removeItem('tfh_pin_access');
+  if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+    try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+  }
+  currentUser = null;
+  location.reload();
+}
+
+function updateHeaderUserBadge() {
+  if (!currentUser) return;
+  var existing = document.getElementById('userDropdownWrap');
+  if (existing) existing.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'userDropdownWrap';
+  var actions = document.getElementById('top-header-actions');
+  if (actions) actions.insertBefore(wrap, actions.firstChild);
+  var initials = (currentUser.name || 'U').split(' ').map(function(w) { return w[0] || ''; }).slice(0,2).join('').toUpperCase();
+  var tierColor = currentUser.permissionTier === 'admin' ? 'var(--accent)' : currentUser.permissionTier === 'officer' ? '#6366f1' : '#9ca3af';
+  wrap.innerHTML = '<button id="userBadge" class="header-action-btn" onclick="toggleUserDropdown()" title="' + escHtml(currentUser.name) + ' (' + escHtml(currentUser.permissionTier) + ')">'
+    + (currentUser.photo
+        ? '<img src="' + escHtml(currentUser.photo) + '" style="width:24px;height:24px;border-radius:50%;display:block;" onerror="this.style.display=\'none\'">'
+        : '<span class="user-initials" style="background:' + tierColor + '">' + initials + '</span>')
+    + '</button>'
+    + '<div id="userDropdown" style="display:none;">'
+    + '<div class="user-dropdown-header">'
+    + '<div class="user-dropdown-name">' + escHtml(currentUser.name) + '</div>'
+    + '<div class="user-dropdown-email">' + escHtml(currentUser.email || '') + '</div>'
+    + '<span class="user-dropdown-tier">' + escHtml(currentUser.permissionTier) + '</span>'
+    + '</div>'
+    + '<button class="header-more-item" onclick="signOut()">'
+    + '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3H3v10h3M10 11l3-3-3-3M13 8H7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    + ' Sign out</button>'
+    + '</div>';
+  if (!window._userDropdownListenerAdded) {
+    window._userDropdownListenerAdded = true;
+    document.addEventListener('click', function(e) {
+      var w = document.getElementById('userDropdownWrap');
+      if (w && !w.contains(e.target)) { var d = document.getElementById('userDropdown'); if (d) d.style.display = 'none'; }
+    });
+  }
+}
+
+function toggleUserDropdown() {
+  var d = document.getElementById('userDropdown');
+  if (d) d.style.display = d.style.display === 'none' ? 'flex' : 'none';
+}
+
+function showApproveModal(userId) {
+  var user = (state.users || []).find(function(u) { return u.id === userId; });
+  if (!user) return;
+  var existing = document.getElementById('approveModal');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'approveModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = '<div style="background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.2);">'
+    + '<h3 style="margin:0 0 6px;font-size:17px;color:var(--text);">Approve ' + escHtml(user.name) + '</h3>'
+    + '<p style="font-size:13px;color:var(--text-muted);margin:0 0 18px;">Assign their role and permission level.</p>'
+    + '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text);">Role title</label>'
+    + '<input id="approveRole" type="text" value="' + escHtml(user.roleInterest || '') + '" placeholder="e.g. Research Manager" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);margin-bottom:12px;box-sizing:border-box;">'
+    + '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text);">Permission tier</label>'
+    + '<select id="approveTier" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);margin-bottom:20px;box-sizing:border-box;">'
+    + '<option value="member">Member — view only</option>'
+    + '<option value="officer">Officer — can edit sections</option>'
+    + '<option value="admin">Admin — full access</option>'
+    + '</select>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<button onclick="confirmApprove(\'' + escHtml(userId) + '\')" style="flex:1;padding:11px;background:var(--accent);color:white;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Approve</button>'
+    + '<button onclick="document.getElementById(\'approveModal\').remove()" style="padding:11px 16px;background:none;border:1.5px solid var(--border);border-radius:9px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--text-muted);">Cancel</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+}
+
+function confirmApprove(userId) {
+  var tier = (document.getElementById('approveTier') || {}).value || 'member';
+  var role = ((document.getElementById('approveRole') || {}).value || '').trim();
+  var modal = document.getElementById('approveModal');
+  if (modal) modal.remove();
+  approveUser(userId, tier, role);
+}
+
+function approveUser(userId, tier, roleName) {
+  if (!state.users) return;
+  var user = state.users.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  user.status = 'approved';
+  user.permissionTier = tier || 'member';
+  if (roleName) user.role = roleName;
+  if (!state.members) state.members = [];
+  var alreadyMember = state.members.find(function(m) { return m.email === user.email || m.googleId === user.googleId; });
+  if (!alreadyMember && user.name) {
+    state.members.push({
+      id: uid(), name: user.name, role: user.role || user.roleInterest || 'Member',
+      email: user.email, grade: user.grade || '', active: true,
+      googleId: user.googleId, photo: user.photo
+    });
+  }
+  saveState();
+  renderMembers();
+  showToast(user.name + ' approved as ' + (tier || 'member') + '.', 'success');
+}
+
+function rejectUser(userId) {
+  if (!state.users) return;
+  var user = state.users.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  if (!confirm('Reject ' + user.name + "'s access request?")) return;
+  user.status = 'rejected';
+  saveState();
+  renderMembers();
+  showToast(user.name + "'s request was rejected.", 'info');
+}
+
+function toggleAuthPin() {
+  var sec = document.getElementById('auth-pin-section');
+  if (sec) sec.classList.toggle('visible');
+  var inp = document.getElementById('auth-pin-input');
+  if (inp && sec && sec.classList.contains('visible')) setTimeout(function() { inp.focus(); }, 50);
+}
+
+function authPinKeydown(e) {
+  if (e.key === 'Enter') submitAuthPin();
+}
+
+function submitAuthPin() {
+  var input = document.getElementById('auth-pin-input');
+  var val = (input ? input.value : '').trim();
+  var errEl = document.getElementById('auth-pin-error');
+  var EDITOR_PIN_VAL = 'tfh2026';
+  var sitePin = (state._sitePin || 'tfh2026');
+  if (val === sitePin || val === EDITOR_PIN_VAL) {
+    currentUser = { id: '_pin_admin', googleId: '_pin', email: '', name: 'Admin', photo: '',
+      role: 'Admin', permissionTier: 'admin', status: 'approved' };
+    sessionStorage.setItem('tfh_pin_access', '1');
+    showApp();
+  } else {
+    if (errEl) errEl.textContent = 'Incorrect PIN. Try again.';
+    if (input) { input.classList.add('lock-shake'); input.value = ''; }
+    setTimeout(function() { if (input) { input.classList.remove('lock-shake'); input.focus(); } }, 450);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (sessionStorage.getItem('tfh_pin_access')) {
+    currentUser = { id: '_pin_admin', googleId: '_pin', email: '', name: 'Admin', photo: '',
+      role: 'Admin', permissionTier: 'admin', status: 'approved' };
+    showApp();
+    return;
+  }
+  // If GIS already loaded from cache, init now; otherwise onload attr handles it
+  if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+    initGoogleAuth();
+  }
+});
 
 function changeSitePassword() {
   if (!window.adminEditorIsActive || !window.adminEditorIsActive()) { showToast('Editor mode required', 'error'); return; }
@@ -7209,20 +7583,99 @@ function renderSocialConsentBanner() {
 }
 </script>
 <script src="admin-editor.js"></script>
+<script async src="https://accounts.google.com/gsi/client" onload="initGoogleAuth()"></script>
 
-<!-- SITE LOCK OVERLAY -->
-<div id="site-lock-overlay" style="display:none;">
-  <div id="site-lock-card">
-    <div id="site-lock-logo">TFH</div>
-    <div id="site-lock-title">Together For Health</div>
-    <div id="site-lock-sub">2026–2027 Health Club Hub<br>Enter the club password to continue.</div>
-    <input type="password" id="site-lock-input" placeholder="Club password" autocomplete="off"
-           onkeydown="lockScreenKeydown(event)">
-    <button id="site-lock-submit" onclick="submitSitePassword()">Enter</button>
-    <div id="site-lock-error"></div>
-    <div id="site-lock-linktree">
+<!-- AUTH OVERLAYS -->
+<div id="auth-overlay" class="auth-overlay-base">
+  <div class="auth-card">
+    <div class="auth-logo">TFH</div>
+    <div class="auth-title">Together For Health</div>
+    <div class="auth-sub">2026–2027 Health Club Hub<br>Sign in to continue.</div>
+    <div id="google-signin-btn"></div>
+    <div class="auth-divider">or</div>
+    <button class="auth-pin-toggle" onclick="toggleAuthPin()">Admin PIN sign-in</button>
+    <div id="auth-pin-section">
+      <input type="password" id="auth-pin-input" placeholder="Enter PIN" autocomplete="off"
+             onkeydown="authPinKeydown(event)">
+      <button id="auth-pin-btn" onclick="submitAuthPin()">Enter</button>
+      <div id="auth-pin-error"></div>
+    </div>
+    <div class="auth-linktree">
       Follow us on <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener">Linktree</a>
     </div>
+  </div>
+</div>
+
+<!-- New member onboarding -->
+<div id="member-onboard-overlay" class="auth-overlay-base" style="display:none;">
+  <div class="auth-card" style="max-width:480px;text-align:left;">
+    <div class="auth-logo">TFH</div>
+    <div class="auth-title">Complete your profile</div>
+    <div class="auth-sub">Submit a request to join. An admin will review and approve you.</div>
+    <div class="mob-google-info">
+      <img id="mob-photo" src="" alt="" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;">
+      <div>
+        <div class="mob-google-info-text" id="mob-display-name"></div>
+        <div class="mob-google-info-email" id="mob-display-email"></div>
+      </div>
+    </div>
+    <div class="mob-form-row">
+      <label class="mob-form-label" for="mob-name">Full name *</label>
+      <input class="mob-form-input" type="text" id="mob-name" placeholder="Your full name" autocomplete="off">
+    </div>
+    <div class="mob-form-row">
+      <label class="mob-form-label" for="mob-grade">Grade</label>
+      <select class="mob-form-select" id="mob-grade">
+        <option value="">— Select grade —</option>
+        <option value="9">Grade 9</option>
+        <option value="10">Grade 10</option>
+        <option value="11">Grade 11</option>
+        <option value="12">Grade 12</option>
+        <option value="other">Other / Not applicable</option>
+      </select>
+    </div>
+    <div class="mob-form-row">
+      <label class="mob-form-label" for="mob-role">Role interest</label>
+      <select class="mob-form-select" id="mob-role">
+        <option value="">— Select a role —</option>
+        <option>President</option><option>Vice President</option>
+        <option>Content Manager</option><option>Presentation Director</option>
+        <option>Research Manager</option><option>Curriculum Coordinator</option>
+        <option>Engagement Manager</option><option>Workshop Coordinator</option>
+        <option>Audience Feedback Coordinator</option><option>Secretary</option>
+        <option>Operations Manager</option><option>Volunteer Coordinator</option>
+        <option>Marketing and Social Media Manager</option>
+        <option>Graphic Design Lead</option><option>Photography &amp; Media Lead</option>
+        <option>Public Relations Coordinator</option>
+        <option>Outreach Coordinator</option>
+        <option>Community Partnerships Manager</option>
+        <option>Elementary School Liaison</option>
+        <option>Data and Impact Manager</option>
+        <option>Recruitment Coordinator</option>
+        <option>Executive Transition Coordinator</option>
+        <option>CPR &amp; First Aid Lead</option>
+        <option>Mental Health Awareness Lead</option>
+        <option>Nutrition &amp; Wellness Lead</option>
+        <option>Sports Health &amp; Concussion Lead</option>
+        <option>General Member</option>
+      </select>
+    </div>
+    <div class="mob-form-row">
+      <label class="mob-form-label" for="mob-bio">Short bio <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+      <textarea class="mob-form-textarea" id="mob-bio" placeholder="Tell us a bit about yourself..."></textarea>
+    </div>
+    <button id="mob-submit-btn" onclick="submitMemberOnboard()">Submit request</button>
+  </div>
+</div>
+
+<!-- Pending approval screen -->
+<div id="pending-overlay" class="auth-overlay-base" style="display:none;">
+  <div class="auth-card">
+    <span class="pending-icon">⏳</span>
+    <div class="auth-title">Waiting for approval</div>
+    <div class="auth-sub" style="margin-bottom:12px;">Hi <span id="pending-name"></span>! Your request has been submitted. An admin will review your profile and grant you access soon.</div>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 4px;">You may need to sign in again after approval.</p>
+    <button class="pending-sign-out" onclick="signOut()">Sign out</button>
   </div>
 </div>
 
