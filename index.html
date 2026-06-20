@@ -5786,7 +5786,7 @@ function deletePost(id) {
 }
 
 // ====== GLOBAL SEARCH ======
-let gsDebounceTimer = null;
+var gsDebounceTimer;
 
 function openGlobalSearch() {
   document.getElementById('globalSearchOverlay').classList.add('open');
@@ -5877,7 +5877,7 @@ function gsRunSearch() {
   const resultsEl = document.getElementById('globalSearchResults');
   resultsEl.innerHTML = '';
 
-  if (query.length < 2) return;
+  if (query.length < 1) return;
 
   const q = query.toLowerCase();
   const sections = [];
@@ -6019,7 +6019,14 @@ function gsRunSearch() {
   }))});
 
   if (!sections.length) {
-    resultsEl.innerHTML = `<div id="globalSearchNoResults">No results for "<strong>${escHtml(query)}</strong>"</div>`;
+    const total = (state.members||[]).length + (state.events||[]).length + (state.goals||[]).length +
+      (state.ideas||[]).length + (state.plans||[]).length + (state.meetings||[]).length +
+      (state.presentations||[]).length + (state.contacts||[]).length + (state.activities||[]).length +
+      (state.announcements||[]).length + (state.emailTemplates||[]).length + (state.resources||[]).length;
+    const hint = total === 0
+      ? 'No data found — your club data may not have loaded yet. Try refreshing or importing a backup.'
+      : `No results across ${total} item${total !== 1 ? 's' : ''}.`;
+    resultsEl.innerHTML = `<div id="globalSearchNoResults">Nothing matched "<strong>${escHtml(query)}</strong>"<div style="font-size:12px;margin-top:6px;opacity:0.7;">${hint}</div></div>`;
     return;
   }
 
