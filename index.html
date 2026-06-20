@@ -5595,37 +5595,88 @@ function memberAvatarColor(name) {
 
 function renderMembers() {
   renderParticipation();
-  // Pending join requests panel (admin only)
+  // Remove any existing user panels
   var existingPanel = document.getElementById('members-requests-panel');
   if (existingPanel) existingPanel.remove();
+  var existingAccountsPanel = document.getElementById('members-accounts-panel');
+  if (existingAccountsPanel) existingAccountsPanel.remove();
+
   var isAdmin = currentUser && currentUser.permissionTier === 'admin';
-  var pendingUsers = isAdmin ? (state.users || []).filter(function(u) { return u.status === 'pending'; }) : [];
+  var allUsers = state.users || [];
   var reqGrid = document.getElementById('members-grid');
-  if (isAdmin && pendingUsers.length > 0 && reqGrid && reqGrid.parentElement) {
-    var panel = document.createElement('div');
-    panel.id = 'members-requests-panel';
-    panel.style.cssText = 'grid-column:1/-1;background:var(--accent-light);border:1px solid var(--accent);border-radius:14px;padding:18px 20px;margin-bottom:8px;';
-    panel.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--accent-mid);margin-bottom:12px;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1" stroke-linecap="round"/></svg> Join Requests (' + pendingUsers.length + ')</div>'
-      + pendingUsers.map(function(u) {
-          var initials = (u.name || 'U').split(' ').map(function(w) { return w[0] || ''; }).slice(0,2).join('').toUpperCase();
-          var avatarHtml = u.photo
-            ? '<img src="' + escHtml(u.photo) + '" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;" onerror="this.style.display=\'none\'">'
-            : '<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">' + initials + '</div>';
-          var metaParts = [u.grade ? 'Grade ' + escHtml(u.grade) : '', u.roleInterest ? escHtml(u.roleInterest) : '', escHtml(u.email || '')].filter(Boolean);
-          return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(196,120,138,0.15);">'
-            + avatarHtml
-            + '<div style="flex:1;min-width:0;">'
-            + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + escHtml(u.name) + '</div>'
-            + (metaParts.length ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + metaParts.join(' · ') + '</div>' : '')
-            + (u.bio ? '<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:2px;">' + escHtml(u.bio.slice(0,80)) + (u.bio.length > 80 ? '...' : '') + '</div>' : '')
-            + '</div>'
-            + '<div style="display:flex;gap:6px;flex-shrink:0;">'
-            + '<button onclick="showApproveModal(\'' + escHtml(u.id) + '\')" style="padding:5px 12px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Approve</button>'
-            + '<button onclick="rejectUser(\'' + escHtml(u.id) + '\')" style="padding:5px 10px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Reject</button>'
-            + '</div>'
-            + '</div>';
-        }).join('');
-    reqGrid.parentElement.insertBefore(panel, reqGrid);
+
+  if (isAdmin && reqGrid && reqGrid.parentElement) {
+    var hasPending = allUsers.some(function(u) { return u.status === 'pending'; });
+    // Show panel whenever there are any users OR pending users
+    if (allUsers.length > 0 || hasPending) {
+      var panel = document.createElement('div');
+      panel.id = 'members-accounts-panel';
+      panel.style.cssText = 'grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;';
+
+      // Sort: pending first, then approved, then rejected
+      var sorted = allUsers.slice().sort(function(a, b) {
+        var order = {pending: 0, approved: 1, rejected: 2};
+        return ((order[a.status] || 0) - (order[b.status] || 0));
+      });
+
+      var rows = sorted.map(function(u) {
+        var initials = (u.name || 'U').split(' ').map(function(w) { return w[0] || ''; }).slice(0,2).join('').toUpperCase();
+        var avatarHtml = u.photo
+          ? '<img src="' + escHtml(u.photo) + '" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;object-fit:cover;" onerror="this.style.display=\'none\'">'
+          : '<div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">' + initials + '</div>';
+
+        var statusColor = u.status === 'approved' ? '#22c55e' : u.status === 'pending' ? '#f59e0b' : '#ef4444';
+        var statusBg   = u.status === 'approved' ? 'rgba(34,197,94,0.1)' : u.status === 'pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)';
+        var statusBadge = '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:' + statusBg + ';color:' + statusColor + ';border:1px solid ' + statusColor + '50;text-transform:uppercase;letter-spacing:.04em;">' + (u.status || 'pending') + '</span>';
+
+        var tierControl = '';
+        if (u.status === 'approved') {
+          tierControl = '<select onchange="setUserTier(\'' + u.id + '\',this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--bg);color:var(--text);font-family:inherit;cursor:pointer;">'
+            + ['member','officer','admin'].map(function(t) {
+                return '<option value="' + t + '"' + (u.permissionTier === t ? ' selected' : '') + '>' + t + '</option>';
+              }).join('')
+            + '</select>';
+        } else {
+          tierControl = '<span style="font-size:12px;color:var(--text-muted);padding:4px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg);">' + (u.permissionTier || 'member') + '</span>';
+        }
+
+        var actions = '';
+        if (u.status === 'pending') {
+          actions = '<button onclick="showApproveModal(\'' + u.id + '\')" style="padding:5px 10px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Approve</button>'
+            + ' <button onclick="rejectUser(\'' + u.id + '\')" style="padding:5px 8px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Reject</button>';
+        } else if (u.status === 'rejected') {
+          actions = '<button onclick="showApproveModal(\'' + u.id + '\')" style="padding:5px 10px;background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Re-approve</button>';
+        } else {
+          actions = '<button onclick="revokeUser(\'' + u.id + '\')" style="padding:5px 8px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;" title="Revoke access">Revoke</button>';
+        }
+
+        var metaLine = [u.email ? escHtml(u.email) : '', u.grade ? 'Grade ' + escHtml(u.grade) : ''].filter(Boolean).join(' · ');
+
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">'
+          + avatarHtml
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap;">' + escHtml(u.name || 'Unknown') + ' ' + statusBadge + '</div>'
+          + (metaLine ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + metaLine + '</div>' : '')
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:7px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">'
+          + tierControl + ' ' + actions
+          + '</div>'
+          + '</div>';
+      }).join('');
+
+      var pendingCount = allUsers.filter(function(u) { return u.status === 'pending'; }).length;
+      var pendingBadge = pendingCount > 0
+        ? ' <span style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:20px;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);">' + pendingCount + ' pending</span>'
+        : '';
+
+      panel.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+        + '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="color:var(--accent);flex-shrink:0;"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6 4a6 6 0 0 0-12 0h12z"/></svg>'
+        + 'Signed-In Users (' + allUsers.length + ')' + pendingBadge
+        + '</div>'
+        + rows;
+
+      reqGrid.parentElement.insertBefore(panel, reqGrid);
+    }
   }
   const grid = document.getElementById('members-grid');
   if (!grid) return;
@@ -7366,6 +7417,30 @@ function rejectUser(userId) {
   saveState();
   renderMembers();
   showToast(user.name + "'s request was rejected.", 'info');
+}
+
+function setUserTier(userId, tier) {
+  if (!state.users) return;
+  var user = state.users.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  user.permissionTier = tier;
+  if (currentUser && currentUser.id === userId) {
+    currentUser.permissionTier = tier;
+    updateHeaderUserBadge();
+  }
+  saveState();
+  showToast(user.name + ' set to ' + tier, 'success');
+}
+
+function revokeUser(userId) {
+  if (!state.users) return;
+  var user = state.users.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  if (!confirm('Revoke access for ' + user.name + '? They will need to re-apply.')) return;
+  user.status = 'rejected';
+  saveState();
+  renderMembers();
+  showToast(user.name + "'s access has been revoked.", 'info');
 }
 
 function toggleAuthPin() {
