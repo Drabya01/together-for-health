@@ -1473,6 +1473,75 @@
     .ob-title { font-size: 20px; }
   }
 
+  /* ── Simplified Dashboard ──────────────────────── */
+  .dash-hdr {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+  }
+  .dash-hdr-title {
+    font-size: 20px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .dash-hdr-link {
+    font-size: 12px; color: var(--accent); text-decoration: none;
+    font-weight: 500; display: inline-block; margin-top: 3px;
+  }
+  .dash-hdr-link:hover { text-decoration: underline; }
+
+  .dash-stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 14px;
+  }
+  .dash-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    transition: border-color 0.12s;
+  }
+  .dash-stat[style*="cursor"] { cursor: pointer; }
+  .dash-stat[style*="cursor"]:hover { border-color: var(--accent); }
+  .dash-stat-num {
+    font-size: 28px; font-weight: 700; color: var(--accent);
+    letter-spacing: -0.03em; line-height: 1; margin-bottom: 4px;
+  }
+  .dash-stat-lbl { font-size: 12px; color: var(--text-muted); }
+
+  .dash-panels {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .dash-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .dash-panel-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .dash-panel-hdr span { font-size: 13px; font-weight: 700; color: var(--text); }
+  .dash-panel-hdr a {
+    font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500;
+  }
+  .dash-panel-hdr a:hover { text-decoration: underline; }
+
+  .dash-event-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+  }
+  .dash-event-row:last-child { border-bottom: none; }
+  .dash-event-date {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    min-width: 38px; flex-shrink: 0;
+  }
+  .dash-event-title {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    flex: 1; min-width: 0; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  @media (max-width: 700px) {
+    .dash-stats-row { grid-template-columns: repeat(2, 1fr); }
+    .dash-panels { grid-template-columns: 1fr; }
+  }
+
   /* ── Site Lock Screen ───────────────────────────── */
   #site-lock-overlay {
     position: fixed; inset: 0; z-index: 9999;
@@ -1735,151 +1804,59 @@
 
   <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+
+    <!-- Header -->
+    <div class="dash-hdr">
       <div>
-        <p class="page-title">Dashboard</p>
-        <p class="page-sub">Together For Health · 2026–2027 command centre</p>
+        <div class="dash-hdr-title">Together For Health</div>
+        <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener" class="dash-hdr-link">
+          linktr.ee/togetherforhealthMDHS ↗
+        </a>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddAnnouncement()">+ Announcement</button>
     </div>
 
-    <!-- Announcements strip -->
+    <!-- Announcements -->
     <div id="dash-announcements" class="announcements-strip"></div>
 
-    <!-- Linktree banner -->
-    <div style="margin-bottom:18px;">
-      <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener"
-         style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:linear-gradient(90deg,#FCEEF2,#f9f0f5);border:1px solid rgba(196,120,138,0.3);text-decoration:none;color:var(--text);transition:box-shadow 0.15s;"
-         onmouseover="this.style.boxShadow='0 2px 12px rgba(196,120,138,0.2)'" onmouseout="this.style.boxShadow=''">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg viewBox="0 0 20 20" fill="white" width="18" height="18"><path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2zm1 11H9V9h2v4zm0-6H9V5h2v2z"/></svg>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;color:var(--accent-mid);">Together For Health · Linktree</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">linktr.ee/togetherforhealthMDHS</div>
-        </div>
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="color:var(--accent);flex-shrink:0;"><path d="M4 4h8v8M12 4L4 12"/></svg>
-      </a>
-    </div>
-
-    <!-- Stat cards -->
-    <div class="dash-grid">
-      <div class="stat-card" onclick="switchTab('presentations')" style="cursor:pointer">
-        <div class="stat-num" id="stat-pres">0</div>
-        <div class="stat-label">Presentations done</div>
+    <!-- Stats row -->
+    <div class="dash-stats-row">
+      <div class="dash-stat" onclick="switchTab('presentations')" style="cursor:pointer" title="View presentations">
+        <div class="dash-stat-num" id="stat-pres">0</div>
+        <div class="dash-stat-lbl">Presentations</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-students">0</div>
-        <div class="stat-label">Students reached</div>
+      <div class="dash-stat" title="Estimated students reached">
+        <div class="dash-stat-num" id="stat-students">0</div>
+        <div class="dash-stat-lbl">Students reached</div>
       </div>
-      <div class="stat-card" onclick="switchTab('ideas')" style="cursor:pointer">
-        <div class="stat-num" id="stat-ideas">0</div>
-        <div class="stat-label">Ideas logged</div>
+      <div class="dash-stat" onclick="switchTab('ideas')" style="cursor:pointer" title="View ideas">
+        <div class="dash-stat-num" id="stat-ideas">0</div>
+        <div class="dash-stat-lbl">Ideas</div>
       </div>
-      <div class="stat-card" onclick="switchTab('members')" style="cursor:pointer">
-        <div class="stat-num" id="stat-members">0</div>
-        <div class="stat-label">Members</div>
+      <div class="dash-stat" onclick="switchTab('members')" style="cursor:pointer" title="View members">
+        <div class="dash-stat-num" id="stat-members">0</div>
+        <div class="dash-stat-lbl">Members</div>
       </div>
     </div>
 
-    <!-- Quick glance row -->
-    <div class="dash-quick-row" id="dash-quick-row"></div>
-
-    <div class="dash-cols">
-      <div>
-        <!-- Goals progress -->
-        <div class="dash-section">
-          <div class="dash-section-title">
-            Goals progress
-            <a href="#" onclick="switchTab('goals');return false;" style="font-size:11px;color:var(--accent);font-weight:500;text-transform:none;letter-spacing:0;">View all →</a>
-          </div>
-          <div id="dash-goals-list"></div>
+    <!-- Two panels -->
+    <div class="dash-panels">
+      <div class="dash-panel">
+        <div class="dash-panel-hdr">
+          <span>Upcoming</span>
+          <a href="#" onclick="switchTab('calendar');return false;">Calendar →</a>
         </div>
-
-        <!-- Recent activity feed -->
-        <div class="dash-section">
-          <div class="dash-section-title">Recent activity</div>
-          <div class="card" id="dash-activity-feed"></div>
-        </div>
-
-        <!-- Posters checklist -->
-        <div class="card">
-          <div class="section-label">Posters in school</div>
-          <div class="checklist-item" id="poster-vaping">
-            <input type="checkbox" id="p1" onchange="toggleCheck('poster-vaping','p1')">
-            <label for="p1">Vaping awareness poster</label>
-          </div>
-          <div class="checklist-item" id="poster-sleep">
-            <input type="checkbox" id="p2" onchange="toggleCheck('poster-sleep','p2')">
-            <label for="p2">Sleep health poster</label>
-          </div>
-          <div class="checklist-item" id="poster-mental">
-            <input type="checkbox" id="p3" onchange="toggleCheck('poster-mental','p3')">
-            <label for="p3">Mental health poster</label>
-          </div>
-          <div class="checklist-item" id="poster-hygiene">
-            <input type="checkbox" id="p4" onchange="toggleCheck('poster-hygiene','p4')">
-            <label for="p4">Hygiene poster</label>
-          </div>
-        </div>
+        <div id="dash-upcoming-list"></div>
       </div>
-
-      <div>
-        <!-- Upcoming events -->
-        <div class="dash-section">
-          <div class="dash-section-title">
-            Upcoming events
-            <a href="#" onclick="switchTab('calendar');return false;" style="font-size:11px;color:var(--accent);font-weight:500;text-transform:none;letter-spacing:0;">View calendar →</a>
-          </div>
-          <div class="dash-upcoming-list" id="dash-upcoming-list"></div>
+      <div class="dash-panel">
+        <div class="dash-panel-hdr">
+          <span>Goals</span>
+          <a href="#" onclick="switchTab('goals');return false;">All goals →</a>
         </div>
-
-        <!-- Legacy goals checklist -->
-        <div class="card">
-          <div class="section-label">2026–2027 goals — legacy checklist</div>
-          <div class="checklist-item" id="goal-1">
-            <input type="checkbox" id="g1" onchange="toggleCheck('goal-1','g1')">
-            <label for="g1">Reach 3+ new schools or audiences</label>
-          </div>
-          <div class="checklist-item" id="goal-2">
-            <input type="checkbox" id="g2" onchange="toggleCheck('goal-2','g2')">
-            <label for="g2">Build a full brand kit (logo, colors, templates)</label>
-          </div>
-          <div class="checklist-item" id="goal-3">
-            <input type="checkbox" id="g3" onchange="toggleCheck('goal-3','g3')">
-            <label for="g3">Create an Instagram or social media presence</label>
-          </div>
-          <div class="checklist-item" id="goal-4">
-            <input type="checkbox" id="g4" onchange="toggleCheck('goal-4','g4')">
-            <label for="g4">Write a formal outreach email for school partnerships</label>
-          </div>
-          <div class="checklist-item" id="goal-5">
-            <input type="checkbox" id="g5" onchange="toggleCheck('goal-5','g5')">
-            <label for="g5">Set up a feedback form for every presentation</label>
-          </div>
-          <div class="checklist-item" id="goal-6">
-            <input type="checkbox" id="g6" onchange="toggleCheck('goal-6','g6')">
-            <label for="g6">Document a handoff guide for next year's members</label>
-          </div>
-          <div class="checklist-item" id="goal-7">
-            <input type="checkbox" id="g7" onchange="toggleCheck('goal-7','g7')">
-            <label for="g7">Present to at least one new audience (rec center, community, etc.)</label>
-          </div>
-          <div class="checklist-item" id="goal-8">
-            <input type="checkbox" id="g8" onchange="toggleCheck('goal-8','g8')">
-            <label for="g8">Produce a year-end impact report</label>
-          </div>
-          <div class="checklist-item" id="goal-9">
-            <input type="checkbox" id="g9" onchange="toggleCheck('goal-9','g9')">
-            <label for="g9">Recruit and onboard new Grade 10 members</label>
-          </div>
-          <div class="checklist-item" id="goal-10">
-            <input type="checkbox" id="g10" onchange="toggleCheck('goal-10','g10')">
-            <label for="g10">Apply for school or community club funding/grant</label>
-          </div>
-        </div>
+        <div id="dash-goals-list"></div>
       </div>
     </div>
+
   </div>
 
   <!-- CALENDAR -->
@@ -3484,22 +3461,20 @@ function calcStudentsReached() {
 }
 
 function renderDash() {
-  // Stat cards
-  document.getElementById('stat-pres').textContent = state.presentations.length || '0';
+  const todayStr = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayISOStr = new Date().toISOString().slice(0,10);
+
+  // Stats
+  document.getElementById('stat-pres').textContent = (state.presentations || []).length || '0';
   const studentsReached = calcStudentsReached();
   document.getElementById('stat-students').textContent = studentsReached > 0 ? ('~' + studentsReached) : '0';
-  document.getElementById('stat-ideas').textContent = state.ideas.length || '0';
-  document.getElementById('stat-members').textContent = state.members.length || '0';
+  document.getElementById('stat-ideas').textContent = (state.ideas || []).length || '0';
+  document.getElementById('stat-members').textContent = (state.members || []).length || '0';
 
   // Announcements
   const annContainer = document.getElementById('dash-announcements');
   annContainer.innerHTML = '';
-  const todayISOStr = new Date().toISOString().slice(0,10);
-  let announcements = (state.announcements || []).filter(a => {
-    if (a.expiresAfter && a.expiresAfter < todayISOStr) return false;
-    return true;
-  });
-  // Pinned first
+  let announcements = (state.announcements || []).filter(a => !a.expiresAfter || a.expiresAfter >= todayISOStr);
   announcements.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
   announcements.forEach(a => {
     const div = document.createElement('div');
@@ -3508,143 +3483,55 @@ function renderDash() {
       <div class="announcement-icon">${a.pinned ? '📌' : a.urgent ? '🚨' : '📢'}</div>
       <div style="flex:1">
         <div class="announcement-text">${escHtml(a.text)}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          ${a.date ? '<div class="announcement-date">' + fmtMeetingDate(a.date) + '</div>' : ''}
-          ${a.expiresAfter ? '<div class="announcement-date" style="color:#d97706">Expires: ' + fmtMeetingDate(a.expiresAfter) + '</div>' : ''}
-        </div>
+        ${a.date ? '<div class="announcement-date">' + fmtMeetingDate(a.date) + '</div>' : ''}
       </div>
       <div class="announcement-actions editor-only">
         <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="togglePinAnnouncement('${a.id}')">${a.pinned ? 'Unpin' : 'Pin'}</button>
         <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="editAnnouncement('${a.id}')">Edit</button>
-        <button class="btn btn-ghost btn-danger" style="padding:4px 8px;font-size:12px;" onclick="deleteAnnouncement('${a.id}')">Remove</button>
-      </div>
-    `;
+        <button class="btn btn-ghost btn-danger" style="padding:4px 8px;font-size:12px;" onclick="deleteAnnouncement('${a.id}')">✕</button>
+      </div>`;
     annContainer.appendChild(div);
   });
-
-  // Quick glance row
-  const quickRow = document.getElementById('dash-quick-row');
-  const todayStr = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
-  const nextMeeting = [...(state.meetings || [])].sort((a,b) => a.date.localeCompare(b.date)).find(m => m.date >= todayStr);
-  let nextMeetingText = 'No meetings scheduled';
-  if (nextMeeting) {
-    const diff = Math.ceil((new Date(nextMeeting.date) - new Date(todayStr)) / 86400000);
-    nextMeetingText = diff === 0 ? 'Today!' : diff === 1 ? 'Tomorrow' : 'In ' + diff + ' days';
-  }
-  const draftPosts = (state.posts || []).filter(p => p.status === 'draft').length;
-  const lastFeedback = [...(state.feedback || [])].sort((a,b) => b.date.localeCompare(a.date))[0];
-  quickRow.innerHTML = `
-    <div class="quick-card">
-      <div class="quick-label">Next meeting</div>
-      <div class="quick-value">${nextMeetingText}</div>
-    </div>
-    <div class="quick-card">
-      <div class="quick-label">Draft posts</div>
-      <div class="quick-value">${draftPosts}</div>
-    </div>
-    <div class="quick-card">
-      <div class="quick-label">Last feedback</div>
-      <div class="quick-value" style="font-size:13px">${lastFeedback ? escHtml(lastFeedback.presentationTitle) : 'None yet'}</div>
-    </div>
-  `;
-
-  // Goals progress
-  const goalsList = document.getElementById('dash-goals-list');
-  const goals = (state.goals || []).slice(0, 4);
-  if (!goals.length) {
-    goalsList.innerHTML = '<div style="font-size:13px;color:var(--text-hint);padding:12px 0">No goals set yet. <a href="#" onclick="switchTab(\'goals\');return false;" style="color:var(--accent)">Add goals →</a></div>';
-  } else {
-    goalsList.innerHTML = goals.map(g => {
-      const current = getGoalCurrent(g);
-      const pct = g.target > 0 ? Math.min(100, Math.round((current / g.target) * 100)) : 0;
-      const complete = pct >= 100;
-      return `<div style="margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div style="font-size:13px;font-weight:500">${escHtml(g.title)}</div>
-          <div style="font-size:13px;font-weight:700;color:${complete ? '#22c55e' : 'var(--accent)'};">${pct}%</div>
-        </div>
-        <div class="goal-progress-bar"><div class="goal-progress-fill${complete ? ' complete' : ''}" style="width:${pct}%"></div></div>
-        <div style="font-size:11px;color:var(--text-hint)">${current} / ${g.target} ${escHtml(g.unit || '')}</div>
-      </div>`;
-    }).join('');
-  }
 
   // Upcoming events
   const upcomingList = document.getElementById('dash-upcoming-list');
   const upcomingEvts = [...(state.events || [])]
     .filter(e => e.date >= todayStr)
-    .sort((a,b) => a.date.localeCompare(b.date))
-    .slice(0, 3);
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 5);
   if (!upcomingEvts.length) {
-    upcomingList.innerHTML = '<div style="font-size:13px;color:var(--text-hint);padding:8px 0">No upcoming events.</div>';
+    upcomingList.innerHTML = '<div style="font-size:13px;color:var(--text-hint);padding:4px 0">No upcoming events. <a href="#" onclick="switchTab(\'calendar\');return false;" style="color:var(--accent)">Add one →</a></div>';
   } else {
     upcomingList.innerHTML = upcomingEvts.map(e => {
-      const [y, m, d] = e.date.split('-').map(Number);
-      const label = MONTHS[m-1].slice(0,3) + ' ' + d;
-      const evType = e.type || 'Other';
-      const evColor = EVENT_COLORS[evType] || EVENT_COLORS['Other'];
-      return `<div class="dash-upcoming-item">
-        <span class="dash-upcoming-date">${label}</span>
-        <span class="dash-upcoming-title">${escHtml(e.title)}</span>
-        <span class="ev-type-badge" style="background:${evColor.bg};color:${evColor.text};font-size:10px;padding:1px 7px;">${escHtml(evType)}</span>
+      const [,m,d] = e.date.split('-').map(Number);
+      const evColor = (EVENT_COLORS && EVENT_COLORS[e.type]) || { bg:'#f3f4f6', text:'#374151' };
+      return `<div class="dash-event-row">
+        <span class="dash-event-date">${MONTHS[m-1].slice(0,3)} ${d}</span>
+        <span class="dash-event-title">${escHtml(e.title)}</span>
+        <span class="ev-type-badge" style="background:${evColor.bg};color:${evColor.text};font-size:10px;padding:1px 7px;flex-shrink:0;">${escHtml(e.type||'Other')}</span>
       </div>`;
     }).join('');
   }
 
-  // Recent activity feed
-  const feedEl = document.getElementById('dash-activity-feed');
-  if (feedEl) {
-    const SECTION_ICONS = {
-      plans: '📋', ideas: '💡', meetings: '📝', goals: '🎯',
-      presentations: '🎤', members: '👥', feedback: '💬',
-      activities: '🎮', contacts: '📇', resources: '📚',
-      announcements: '📢', posts: '📱'
-    };
-    // Collect recent items with timestamps based on index (most recently added = last in array)
-    const activityItems = [];
-    const now = Date.now();
-    const pushItems = (arr, section, titleFn) => {
-      (arr || []).forEach((item, i) => {
-        activityItems.push({ section, title: titleFn(item), idx: i, total: arr.length });
-      });
-    };
-    pushItems(state.plans, 'plans', p => p.title);
-    pushItems(state.ideas, 'ideas', i => i.title);
-    pushItems(state.meetings, 'meetings', m => 'Meeting ' + fmtMeetingDate(m.date));
-    pushItems(state.goals, 'goals', g => g.title);
-    pushItems(state.presentations, 'presentations', p => p.title);
-    pushItems(state.members, 'members', m => m.name + ' joined');
-    pushItems(state.feedback, 'feedback', f => f.presentationTitle);
-    pushItems(state.activities, 'activities', a => a.title);
-    pushItems(state.announcements, 'announcements', a => a.text.slice(0, 50));
-    // Sort by recency: items added later have higher index relative to their array total
-    activityItems.sort((a, b) => (b.idx / Math.max(b.total, 1)) - (a.idx / Math.max(a.total, 1)));
-    const recent = activityItems.slice(0, 6);
-    if (!recent.length) {
-      feedEl.innerHTML = '<div style="font-size:13px;color:var(--text-hint);padding:8px 0">No activity yet — start by adding goals, ideas, or meetings.</div>';
-    } else {
-      feedEl.innerHTML = recent.map((item, i) => {
-        const daysAgo = i === 0 ? 'Recently' : i === 1 ? 'Earlier' : i < 3 ? 'This session' : 'Previously';
-        return `<div class="activity-feed-item">
-          <div class="activity-feed-icon">${SECTION_ICONS[item.section] || '📌'}</div>
-          <div class="activity-feed-info">
-            <div class="activity-feed-title">${escHtml(item.title)}</div>
-            <div class="activity-feed-time">${escHtml(item.section.charAt(0).toUpperCase() + item.section.slice(1))} · ${daysAgo}</div>
-          </div>
-        </div>`;
-      }).join('');
-    }
+  // Goals progress
+  const goalsList = document.getElementById('dash-goals-list');
+  const goals = (state.goals || []).slice(0, 4);
+  if (!goals.length) {
+    goalsList.innerHTML = '<div style="font-size:13px;color:var(--text-hint);padding:4px 0">No goals yet. <a href="#" onclick="switchTab(\'goals\');return false;" style="color:var(--accent)">Add one →</a></div>';
+  } else {
+    goalsList.innerHTML = goals.map(g => {
+      const current = getGoalCurrent(g);
+      const pct = g.target > 0 ? Math.min(100, Math.round((current / g.target) * 100)) : 0;
+      const complete = pct >= 100;
+      return `<div style="margin-bottom:11px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;">
+          <div style="font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.title)}</div>
+          <div style="font-size:12px;font-weight:700;color:${complete ? '#22c55e' : 'var(--accent)'};flex-shrink:0;">${pct}%</div>
+        </div>
+        <div class="goal-progress-bar"><div class="goal-progress-fill${complete ? ' complete' : ''}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
   }
-
-  // restore checks
-  Object.entries(state.checks || {}).forEach(([cbId, checked]) => {
-    const cb = document.getElementById(cbId);
-    const row = cb && cb.closest('.checklist-item');
-    if (cb) {
-      cb.checked = checked;
-      if (checked && row) row.classList.add('checked');
-    }
-  });
 
   updateTabBadges();
 }
