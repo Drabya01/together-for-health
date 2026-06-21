@@ -3696,7 +3696,7 @@ function renderDash() {
 }
 
 function toggleCheck(rowId, cbId) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) {
+  if (!hasStaffAccess()) {
     const cb = document.getElementById(cbId);
     if (cb) cb.checked = !cb.checked; // revert the browser's optimistic toggle
     return;
@@ -3889,7 +3889,7 @@ function renderUpcoming() {
 }
 
 function openAddEvent() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('event-modal-title').textContent = 'Add event';
   document.getElementById('ev-type').value = 'Meeting';
@@ -4049,7 +4049,7 @@ function togglePlan(bodyId, header) {
 }
 
 function openAddPlan() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('plan-modal-title').textContent = 'New plan';
   document.getElementById('plan-title').value = '';
@@ -4113,7 +4113,7 @@ function deletePlan(id) {
 }
 
 function togglePlanChecklist(planId, itemId, checked) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) {
+  if (!hasStaffAccess()) {
     // Revert the checkbox
     const cb = document.querySelector(`#pcl-${itemId} input`);
     if (cb) cb.checked = !checked;
@@ -4195,7 +4195,7 @@ function renderIdeas() {
           <span class="idea-status-badge ${statusCls}">${IDEA_STATUS_LABELS[status]}</span>
         </div>
         <div style="display:flex;gap:4px;align-items:center;">
-          ${window.adminEditorIsActive && window.adminEditorIsActive() ? `<select class="status-select" style="font-size:11px;padding:2px 6px;" onchange="changeIdeaStatus('${idea.id}',this.value)">
+          ${hasStaffAccess() ? `<select class="status-select" style="font-size:11px;padding:2px 6px;" onchange="changeIdeaStatus('${idea.id}',this.value)">
             <option value="new" ${status==='new'?'selected':''}>New</option>
             <option value="considering" ${status==='considering'?'selected':''}>Considering</option>
             <option value="implementing" ${status==='implementing'?'selected':''}>Implementing</option>
@@ -4264,7 +4264,7 @@ function voteIdea(id) {
 }
 
 function changeIdeaStatus(id, status) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const idea = state.ideas.find(i => i.id === id);
   if (!idea) return;
   idea.status = status;
@@ -4542,7 +4542,7 @@ function escHtml(str) {
 
 // ====== ANNOUNCEMENTS ======
 function openAddAnnouncement() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('ann-modal-title').textContent = 'Add announcement';
   document.getElementById('ann-text').value = '';
@@ -4554,7 +4554,7 @@ function openAddAnnouncement() {
 }
 
 function editAnnouncement(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const a = state.announcements.find(x => x.id === id);
   if (!a) return;
   editingId = id;
@@ -4583,7 +4583,7 @@ function saveAnnouncement() {
 }
 
 function togglePinAnnouncement(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const a = state.announcements.find(x => x.id === id);
   if (!a) return;
   a.pinned = !a.pinned;
@@ -4679,7 +4679,7 @@ function renderGoals() {
 }
 
 function openAddGoal() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('goal-modal-title').textContent = 'New goal';
   document.getElementById('goal-title').value = '';
@@ -4693,7 +4693,7 @@ function openAddGoal() {
 }
 
 function editGoal(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const g = state.goals.find(x => x.id === id);
   if (!g) return;
   editingId = id;
@@ -4786,7 +4786,7 @@ function renderContacts() {
 }
 
 function openAddContact() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('contact-modal-title').textContent = 'Add contact';
   ['ct-name','ct-school','ct-email','ct-phone','ct-notes'].forEach(id => document.getElementById(id).value = '');
@@ -4796,7 +4796,7 @@ function openAddContact() {
 }
 
 function editContact(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const c = state.contacts.find(x => x.id === id);
   if (!c) return;
   editingId = id;
@@ -4896,7 +4896,7 @@ function renderResources() {
 }
 
 function openAddResource() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('resource-modal-title').textContent = 'Add resource';
   ['res-title','res-url','res-tags','res-notes'].forEach(id => document.getElementById(id).value = '');
@@ -4905,7 +4905,7 @@ function openAddResource() {
 }
 
 function editResource(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const r = state.resources.find(x => x.id === id);
   if (!r) return;
   editingId = id;
@@ -5017,7 +5017,7 @@ function renderBudget() {
 }
 
 function openAddTransaction() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('tx-modal-title').textContent = 'Add transaction';
   document.getElementById('tx-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
@@ -5028,7 +5028,7 @@ function openAddTransaction() {
 }
 
 function editTransaction(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const t = state.transactions.find(x => x.id === id);
   if (!t) return;
   editingId = id;
@@ -5137,7 +5137,7 @@ function renderActivities() {
 }
 
 function openAddActivity() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('activity-modal-title').textContent = 'Add activity';
   ['act-title','act-topic','act-duration','act-materials','act-desc','act-tags'].forEach(id => document.getElementById(id).value = '');
@@ -5146,7 +5146,7 @@ function openAddActivity() {
 }
 
 function editActivity(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const a = state.activities.find(x => x.id === id);
   if (!a) return;
   editingId = id;
@@ -5246,7 +5246,7 @@ function copyEmailTemplate(id) {
 }
 
 function openAddEmailTemplate() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('etpl-modal-title').textContent = 'Add email template';
   ['etpl-name','etpl-subject','etpl-body'].forEach(id => document.getElementById(id).value = '');
@@ -5254,7 +5254,7 @@ function openAddEmailTemplate() {
 }
 
 function editEmailTemplate(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const t = state.emailTemplates.find(x => x.id === id);
   if (!t) return;
   editingId = id;
@@ -5325,7 +5325,7 @@ function renderAttendance() {
 }
 
 function toggleAttendance(meetingId, memberId, checked) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) {
+  if (!hasStaffAccess()) {
     renderAttendance(); // revert
     return;
   }
@@ -5541,7 +5541,7 @@ function addActionItemRow(text, assignee) {
 }
 
 function openAddMeeting() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('meeting-modal-title').textContent = 'New meeting';
   document.getElementById('mt-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
@@ -5600,7 +5600,7 @@ function deleteMeeting(id) {
 }
 
 function toggleActionItem(meetingId, aiId, checked) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) {
+  if (!hasStaffAccess()) {
     const cb = document.querySelector(`#ai-${aiId} input`);
     if (cb) cb.checked = !checked;
     return;
@@ -5715,7 +5715,7 @@ function renderMembers() {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members added yet. Add your team to get started.</div></div>`;
     return;
   }
-  const isEditor = window.adminEditorIsActive && window.adminEditorIsActive();
+  const isEditor = hasStaffAccess();
   grid.innerHTML = state.members.map(m => {
     const initials = m.name.split(' ').map(w => w[0] || '').slice(0,2).join('').toUpperCase();
     const color = memberAvatarColor(m.name);
@@ -5756,13 +5756,13 @@ function copyMemberEmail(id) {
 }
 
 function toggleMemberActive(id, active) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const m = state.members.find(x => x.id === id);
   if (m) { m.active = active; saveState(); renderMembers(); }
 }
 
 function openAddMember() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('member-modal-title').textContent = 'Add member';
   document.getElementById('mb-name').value = '';
@@ -5847,7 +5847,7 @@ function renderFeedback() {
 }
 
 function openAddFeedback() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('fb-modal-title').textContent = 'Log feedback';
   document.getElementById('fb-title').value = '';
@@ -5943,13 +5943,13 @@ function renderSocial() {
 }
 
 function updatePostStatus(id, status) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const p = state.posts.find(x => x.id === id);
   if (p) { p.status = status; saveState(); renderSocial(); }
 }
 
 function openAddPost() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('post-modal-title').textContent = 'New post';
   document.getElementById('post-platform').value = 'Instagram';
@@ -6312,7 +6312,7 @@ function copyText(text, msg) {
 }
 
 function openAddTeacher() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('teacher-modal-title').textContent = 'Add Teacher / Advisor';
   ['tc-name','tc-school','tc-role','tc-email','tc-phone','tc-preferences','tc-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6321,7 +6321,7 @@ function openAddTeacher() {
 }
 
 function editTeacher(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const t = (state.teachers||[]).find(x => x.id === id);
   if (!t) return;
   editingId = id;
@@ -6360,7 +6360,7 @@ function saveTeacher() {
 }
 
 function deleteTeacher(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   if (!confirm('Delete this teacher contact?')) return;
   state.teachers = (state.teachers||[]).filter(x => x.id !== id);
   saveState(); renderTeachers();
@@ -6409,7 +6409,7 @@ function renderConsents() {
 }
 
 function openAddConsent() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('consent-modal-title').textContent = 'Add Consent Record';
   ['cn-school','cn-contact','cn-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6420,7 +6420,7 @@ function openAddConsent() {
 }
 
 function editConsent(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const c = (state.consents||[]).find(x => x.id === id);
   if (!c) return;
   editingId = id;
@@ -6456,7 +6456,7 @@ function saveConsent() {
 }
 
 function deleteConsent(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   if (!confirm('Delete this consent record?')) return;
   state.consents = (state.consents||[]).filter(x => x.id !== id);
   saveState(); renderConsents();
@@ -6512,7 +6512,7 @@ function renderPartnerships() {
 }
 
 function openAddPartnership() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('partnership-modal-title').textContent = 'Add Partnership';
   ['pt-org','pt-contact','pt-email','pt-terms','pt-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6524,7 +6524,7 @@ function openAddPartnership() {
 }
 
 function editPartnership(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const p = (state.partnerships||[]).find(x => x.id === id);
   if (!p) return;
   editingId = id;
@@ -6565,7 +6565,7 @@ function savePartnership() {
 }
 
 function deletePartnership(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   if (!confirm('Delete this partnership?')) return;
   state.partnerships = (state.partnerships||[]).filter(x => x.id !== id);
   saveState(); renderPartnerships();
@@ -6631,7 +6631,7 @@ function renderFundraisers() {
 }
 
 function openAddFundraiser() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('fundraiser-modal-title').textContent = 'New Fundraiser';
   ['fr-name','fr-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6644,7 +6644,7 @@ function openAddFundraiser() {
 }
 
 function editFundraiser(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const f = (state.fundraisers||[]).find(x => x.id === id);
   if (!f) return;
   editingId = id;
@@ -6681,7 +6681,7 @@ function saveFundraiser() {
 }
 
 function deleteFundraiser(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   if (!confirm('Delete this fundraiser?')) return;
   state.fundraisers = (state.fundraisers||[]).filter(x => x.id !== id);
   saveState(); renderFundraisers();
@@ -6746,7 +6746,7 @@ function renderGrants() {
 }
 
 function openAddGrant() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('grant-modal-title').textContent = 'New Grant Application';
   ['gr-funder','gr-contact','gr-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6758,7 +6758,7 @@ function openAddGrant() {
 }
 
 function editGrant(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const g = (state.grants||[]).find(x => x.id === id);
   if (!g) return;
   editingId = id;
@@ -6795,7 +6795,7 @@ function saveGrant() {
 }
 
 function deleteGrant(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   if (!confirm('Delete this grant?')) return;
   state.grants = (state.grants||[]).filter(x => x.id !== id);
   saveState(); renderGrants();
@@ -6884,7 +6884,7 @@ function addEbItemRow(desc, planned, actual) {
 }
 
 function openAddEventBudget() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   editingId = null;
   document.getElementById('eventbudget-modal-title').textContent = 'New Event Budget';
   document.getElementById('eb-name').value = '';
@@ -6895,7 +6895,7 @@ function openAddEventBudget() {
 }
 
 function editEventBudget(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   const eb = (state.eventBudgets||[]).find(x => x.id === id);
   if (!eb) return;
   editingId = id;
@@ -6937,7 +6937,7 @@ function saveEventBudget() {
 }
 
 function deleteEventBudget(id) {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) return;
+  if (!hasStaffAccess()) return;
   if (!confirm('Delete this event budget?')) return;
   state.eventBudgets = (state.eventBudgets||[]).filter(x => x.id !== id);
   saveState(); renderEventBudgets();
@@ -7553,6 +7553,11 @@ function showApp() {
   maybeStartTour();
 }
 
+function hasStaffAccess() {
+  var tier = window.currentUser ? window.currentUser.permissionTier : null;
+  return tier === 'admin' || tier === 'officer';
+}
+
 function updateTabVisibility() {
   var tier = currentUser ? currentUser.permissionTier : null;
   var hasStaffAccess = (tier === 'admin' || tier === 'officer');
@@ -7765,7 +7770,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function changeSitePassword() {
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) { showToast('Editor mode required', 'error'); return; }
+  if (!hasStaffAccess()) { showToast('Editor mode required', 'error'); return; }
   var newPin = prompt('Enter a new club access password (members will use this to log in):');
   if (!newPin || !newPin.trim()) return;
   if (newPin.trim().length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
@@ -7914,7 +7919,7 @@ if ('serviceWorker' in navigator) {
 function renderSocialConsentBanner() {
   const banner = document.getElementById('social-consent-banner');
   if (!banner) return;
-  if (!window.adminEditorIsActive || !window.adminEditorIsActive()) {
+  if (!hasStaffAccess()) {
     banner.style.display = 'none';
     return;
   }
