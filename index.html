@@ -7496,8 +7496,8 @@ function processSignIn(googleId, email, name, photo) {
   if (!state.users) state.users = [];
   var user = state.users.find(function(u) { return u.googleId === googleId; });
   if (!user) {
-    var approvedCount = state.users.filter(function(u) { return u.status === 'approved'; }).length;
-    if (approvedCount === 0) {
+    if (email === 'golussaud@gmail.com') {
+      // Owner always gets bootstrapped as President on first sign-in
       var adminUser = {
         id: uid(), googleId: googleId, email: email, name: name, photo: photo,
         grade: '', roleInterest: '', bio: '',
