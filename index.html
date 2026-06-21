@@ -7503,7 +7503,7 @@ function processSignIn(googleId, email, name, photo) {
       var adminUser = {
         id: uid(), googleId: googleId, email: email, name: name, photo: photo,
         grade: '', roleInterest: '', bio: '',
-        role: 'Admin', permissionTier: 'admin', roleId: 'role_admin',
+        role: 'President', permissionTier: 'admin', roleId: 'role_president',
         status: 'approved', joinedAt: Date.now()
       };
       state.users.push(adminUser);
@@ -7522,9 +7522,9 @@ function processSignIn(googleId, email, name, photo) {
   } else {
     currentUser = user;
     // Superadmin: always enforce full admin access regardless of stored tier
-    if (user.email === 'golussaud@gmail.com' && (user.permissionTier !== 'admin' || user.status !== 'approved' || user.roleId !== 'role_admin')) {
+    if (user.email === 'golussaud@gmail.com' && (user.permissionTier !== 'admin' || user.status !== 'approved' || user.roleId !== 'role_president')) {
       user.permissionTier = 'admin';
-      user.roleId = 'role_admin';
+      user.roleId = 'role_president';
       user.status = 'approved';
       saveState();
     }
@@ -7637,11 +7637,11 @@ var ALL_PERMISSIONS = [
 
 var DEFAULT_ROLES = [
   {
-    id: 'role_admin', name: 'Admin', color: '#e11d48',
+    id: 'role_president', name: 'President', color: '#e4789a',
     permissions: ['*'], isDefault: true, canDelete: false
   },
   {
-    id: 'role_officer', name: 'Officer', color: '#7c3aed',
+    id: 'role_vp', name: 'Vice President', color: '#7c3aed',
     permissions: [
       'MANAGE_MEETINGS','MANAGE_ATTENDANCE','MANAGE_GOALS','MANAGE_IDEAS','MANAGE_ACTIVITIES',
       'MANAGE_PLANS','MANAGE_RESOURCES','MANAGE_ANNOUNCEMENTS',
@@ -7653,7 +7653,51 @@ var DEFAULT_ROLES = [
     isDefault: true, canDelete: false
   },
   {
-    id: 'role_member', name: 'Member', color: '#16a34a',
+    id: 'role_secretary', name: 'Secretary', color: '#2563eb',
+    permissions: [
+      'MANAGE_MEETINGS','MANAGE_ATTENDANCE','MANAGE_GOALS','MANAGE_PLANS',
+      'MANAGE_ACTIVITIES','MANAGE_ANNOUNCEMENTS','MANAGE_RESOURCES','VIEW_MEMBERS',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_treasurer', name: 'Treasurer', color: '#16a34a',
+    permissions: [
+      'VIEW_BUDGET','MANAGE_BUDGET','VIEW_FUNDRAISING','MANAGE_FUNDRAISING','VIEW_MEMBERS',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_social', name: 'Social Media & Marketing Officer', color: '#ea580c',
+    permissions: [
+      'VIEW_SOCIAL','MANAGE_SOCIAL','VIEW_MARKETING','MANAGE_MARKETING',
+      'VIEW_OUTREACH','MANAGE_OUTREACH','VIEW_CONTACTS','MANAGE_CONTACTS','VIEW_MEMBERS',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_outreach', name: 'Outreach Coordinator', color: '#0d9488',
+    permissions: [
+      'VIEW_OUTREACH','MANAGE_OUTREACH','VIEW_CONTACTS','MANAGE_CONTACTS','VIEW_MEMBERS',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_events', name: 'Events Coordinator', color: '#d97706',
+    permissions: [
+      'MANAGE_MEETINGS','MANAGE_ATTENDANCE','MANAGE_ANNOUNCEMENTS','VIEW_MEMBERS','VIEW_CONTACTS',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_activities', name: 'Activities Coordinator', color: '#4f46e5',
+    permissions: [
+      'MANAGE_ACTIVITIES','MANAGE_IDEAS','MANAGE_PLANS','MANAGE_RESOURCES','VIEW_MEMBERS',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_member', name: 'Member', color: '#64748b',
     permissions: [], isDefault: true, canDelete: false
   },
 ];
@@ -7672,6 +7716,12 @@ var TAB_VIEW_PERMS = {
 
 function initRoles() {
   if (!state.roles) state.roles = [];
+  // Remove old generic defaults that were replaced by club-specific roles
+  ['role_admin', 'role_officer'].forEach(function(staleId) {
+    var idx = state.roles.findIndex(function(r) { return r.id === staleId && r.isDefault; });
+    if (idx !== -1) state.roles.splice(idx, 1);
+  });
+  // Seed any missing DEFAULT_ROLES
   DEFAULT_ROLES.forEach(function(dr) {
     if (!state.roles.find(function(r) { return r.id === dr.id; })) {
       state.roles.push(JSON.parse(JSON.stringify(dr)));
@@ -7679,9 +7729,8 @@ function initRoles() {
   });
   if (state.users) {
     state.users.forEach(function(u) {
-      if (!u.roleId) {
-        if (u.permissionTier === 'admin') u.roleId = 'role_admin';
-        else if (u.permissionTier === 'officer') u.roleId = 'role_officer';
+      if (!u.roleId || u.roleId === 'role_admin' || u.roleId === 'role_officer') {
+        if (u.permissionTier === 'admin' || u.roleId === 'role_admin') u.roleId = 'role_president';
         else u.roleId = 'role_member';
       }
     });
@@ -7824,7 +7873,7 @@ function approveUser(userId, tier, roleName) {
   user.status = 'approved';
   user.permissionTier = tier || 'member';
   if (!user.roleId) {
-    user.roleId = tier === 'admin' ? 'role_admin' : tier === 'officer' ? 'role_officer' : 'role_member';
+    user.roleId = tier === 'admin' ? 'role_president' : 'role_member';
   }
   if (roleName) user.role = roleName;
   if (!state.members) state.members = [];
@@ -7857,7 +7906,7 @@ function setUserTier(userId, tier) {
   var user = state.users.find(function(u) { return u.id === userId; });
   if (!user) return;
   user.permissionTier = tier;
-  user.roleId = tier === 'admin' ? 'role_admin' : tier === 'officer' ? 'role_officer' : 'role_member';
+  user.roleId = tier === 'admin' ? 'role_president' : 'role_member';
   if (currentUser && currentUser.id === userId) {
     currentUser.permissionTier = tier;
     currentUser.roleId = user.roleId;
@@ -7920,7 +7969,7 @@ function submitAuthPin() {
   var sitePin = (state._sitePin || 'tfh2026');
   if (val === sitePin || val === EDITOR_PIN_VAL) {
     currentUser = { id: '_pin_admin', googleId: '_pin', email: 'golussaud@gmail.com', name: 'Admin', photo: '',
-      role: 'Admin', permissionTier: 'admin', roleId: 'role_admin', status: 'approved' };
+      role: 'President', permissionTier: 'admin', roleId: 'role_president', status: 'approved' };
     sessionStorage.setItem('tfh_pin_access', '1');
     showApp();
   } else {
@@ -7946,7 +7995,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initRoles();
   if (sessionStorage.getItem('tfh_pin_access')) {
     currentUser = { id: '_pin_admin', googleId: '_pin', email: 'golussaud@gmail.com', name: 'Admin', photo: '',
-      role: 'Admin', permissionTier: 'admin', roleId: 'role_admin', status: 'approved' };
+      role: 'President', permissionTier: 'admin', roleId: 'role_president', status: 'approved' };
     showApp();
     return;
   }
