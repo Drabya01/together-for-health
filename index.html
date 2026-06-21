@@ -3490,7 +3490,7 @@ function openSyncModal() {
       + '<button onclick="forceSyncNow()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:10px;">Sync now</button>'
       + '<button onclick="clearSyncToken()" style="width:100%;padding:10px;background:none;color:#ef4444;border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Disconnect sync on this device</button>';
   }
-  document.getElementById('modal-sync').style.display = 'flex';
+  openModal('modal-sync');
 }
 
 function saveSyncToken() {
