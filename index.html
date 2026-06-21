@@ -2962,7 +2962,7 @@
     <div class="form-row form-2col">
       <div><label>Deadline (optional)</label><input type="date" id="goal-deadline"></div>
       <div><label>Auto-track from</label>
-        <select id="goal-autotrack">
+        <select id="goal-autotrack" onchange="toggleGoalCurrentRow()">
           <option value="none">None (manual)</option>
           <option value="presentations">Presentations count</option>
           <option value="students-reached">Students reached (feedback)</option>
@@ -4817,6 +4817,7 @@ function openAddGoal() {
   document.getElementById('goal-deadline').value = '';
   document.getElementById('goal-autotrack').value = 'none';
   document.getElementById('goal-current').value = '';
+  toggleGoalCurrentRow();
   openModal('modal-goal');
 }
 
@@ -4833,7 +4834,19 @@ function editGoal(id) {
   document.getElementById('goal-deadline').value = g.deadline || '';
   document.getElementById('goal-autotrack').value = g.autoTrack || 'none';
   document.getElementById('goal-current').value = g.current || 0;
+  toggleGoalCurrentRow();
   openModal('modal-goal');
+}
+
+function toggleGoalCurrentRow() {
+  var autoTrack = document.getElementById('goal-autotrack').value;
+  var row = document.getElementById('goal-current-row');
+  if (!row) return;
+  if (autoTrack === 'none') {
+    row.style.display = '';
+  } else {
+    row.style.display = 'none';
+  }
 }
 
 function incrementGoalCurrent() {
@@ -4860,8 +4873,8 @@ function saveGoal() {
   };
   // Check for milestone celebrations
   const existingGoal = editingId ? state.goals.find(x => x.id === editingId) : null;
-  const oldPct = existingGoal && existingGoal.target > 0 ? Math.min(100, Math.round(((existingGoal.current||0) / existingGoal.target) * 100)) : 0;
-  const newPct = target > 0 ? Math.min(100, Math.round((g.current / target) * 100)) : 0;
+  const oldPct = existingGoal && existingGoal.target > 0 ? Math.min(100, Math.round((getGoalCurrent(existingGoal) / existingGoal.target) * 100)) : 0;
+  const newPct = target > 0 ? Math.min(100, Math.round((getGoalCurrent(g) / target) * 100)) : 0;
   [25, 50, 75, 100].forEach(milestone => {
     if (oldPct < milestone && newPct >= milestone) {
       showToast('🎉 Goal reached ' + milestone + '%! ' + title, 'celebration', 3500);
