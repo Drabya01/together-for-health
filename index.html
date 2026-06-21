@@ -7513,7 +7513,8 @@ function processPendingAction() {
     function _doAction() {
       var user = (state.users || []).find(function(u) { return u.id === action.userId; });
       if (!user) {
-        showToast('Member not found — their device may not have synced yet. Ask them to open the app and wait a moment, then try again.', 'error');
+        // Member not on this device yet — just open Members tab so they can approve manually
+        switchTab('members');
         return;
       }
       if (user.status !== 'pending') {
