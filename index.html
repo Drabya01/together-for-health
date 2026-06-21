@@ -3400,8 +3400,16 @@ async function syncFromGist() {
       Object.assign(state, cloudState);
       if (!state.users) state.users = [];
       localUsers.forEach(function(lu) {
-        if (!state.users.find(function(cu) { return cu.googleId === lu.googleId; })) {
+        var cloudUser = state.users.find(function(cu) { return cu.googleId === lu.googleId; });
+        if (!cloudUser) {
           state.users.push(lu);
+        } else if (lu.status === 'approved' && cloudUser.status !== 'approved') {
+          // Never downgrade an approved user — owner may have approved locally
+          // before the approval was pushed to the Gist
+          cloudUser.status = 'approved';
+          cloudUser.permissionTier = lu.permissionTier || cloudUser.permissionTier;
+          cloudUser.roleId = lu.roleId || cloudUser.roleId;
+          cloudUser.role = lu.role || cloudUser.role;
         }
       });
       // Ensure all required arrays exist (cloud state may predate some migrations)
