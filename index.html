@@ -5703,7 +5703,7 @@ function renderMembers() {
 
         var tierControl = '';
         var userRole = (state.roles || []).find(function(r) { return r.id === u.roleId; }) || { name: u.permissionTier || 'member', color: '#888' };
-        if (u.status === 'approved' && u.id !== (currentUser && currentUser.id)) {
+        if (u.status === 'approved') {
           tierControl = '<select onchange="setUserRole(\'' + u.id + '\',this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--bg);color:var(--text);font-family:inherit;cursor:pointer;">'
             + (state.roles || []).map(function(r) {
                 return '<option value="' + r.id + '"' + (u.roleId === r.id ? ' selected' : '') + '>' + r.name + '</option>';
