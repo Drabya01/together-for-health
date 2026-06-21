@@ -1031,7 +1031,7 @@
   .plan-checklist-item { display:flex; align-items:flex-start; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); font-size:13px; }
   .plan-checklist-item:last-child { border-bottom:none; }
   .plan-checklist-item input[type="checkbox"] { width:auto; flex-shrink:0; margin-top:2px; accent-color:var(--accent); }
-  body:not(.admin-editor-mode) .plan-checklist-item input[type="checkbox"] { pointer-events:none; opacity:0.45; }
+  body:not(.user-has-staff-access) .plan-checklist-item input[type="checkbox"] { pointer-events:none; opacity:0.45; }
   .plan-checklist-item.done span { text-decoration:line-through; color:var(--text-hint); }
 
   /* ── Recent activity feed ── */
@@ -1062,7 +1062,7 @@
   .action-item-row { display:flex; align-items:flex-start; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); font-size:13px; }
   .action-item-row:last-child { border-bottom:none; }
   .action-item-row input[type="checkbox"] { width:auto; flex-shrink:0; margin-top:3px; accent-color:var(--accent); }
-  body:not(.admin-editor-mode) .action-item-row input[type="checkbox"] { pointer-events:none; opacity:0.45; }
+  body:not(.user-has-staff-access) .action-item-row input[type="checkbox"] { pointer-events:none; opacity:0.45; }
   .action-item-row.done span.ai-text { text-decoration:line-through; color:var(--text-hint); }
   .ai-assignee { font-size:11px; color:var(--text-muted); margin-left:4px; }
   .action-items-builder { border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
@@ -1080,15 +1080,15 @@
   #helpBtn:hover { background:var(--accent-light); color:var(--accent-mid); border-color:var(--accent); }
 
   /* ── Permission system ── */
-  /* Buttons/actions only visible to editors (when editor mode is active) */
+  /* Buttons/actions visible to staff (admin + officer) without needing editor mode */
   .editor-only { display: none !important; }
-  body.admin-editor-mode .editor-only { display: inline-flex !important; }
+  body.user-has-staff-access .editor-only { display: inline-flex !important; }
   /* plan-card-actions is a block element, not inline */
-  body.admin-editor-mode .editor-only-block { display: flex !important; }
+  body.user-has-staff-access .editor-only-block { display: flex !important; }
   .editor-only-block { display: none !important; }
 
-  /* Checkboxes are pointer-locked for normal members */
-  body:not(.admin-editor-mode) .checklist-item input[type="checkbox"] {
+  /* Checkboxes are pointer-locked for regular members */
+  body:not(.user-has-staff-access) .checklist-item input[type="checkbox"] {
     pointer-events: none;
     opacity: 0.45;
     cursor: default;
@@ -1418,7 +1418,7 @@
   .attendance-table tr:hover td { background:var(--accent-light); }
   .attendance-table tfoot td { background:var(--bg); font-weight:600; font-size:12px; border-top:2px solid var(--border); }
   .attendance-cb { width:18px; height:18px; accent-color:var(--accent); cursor:pointer; }
-  body:not(.admin-editor-mode) .attendance-cb { pointer-events:none; opacity:0.55; cursor:default; }
+  body:not(.user-has-staff-access) .attendance-cb { pointer-events:none; opacity:0.55; cursor:default; }
   .att-pct { color:var(--accent); font-weight:700; }
   .att-pct.low { color:#ef4444; }
   .att-meeting-date { font-weight:600; font-size:13px; }
@@ -2226,7 +2226,7 @@
           <tbody id="participation-tbody"></tbody>
         </table>
       </div>
-      <div id="participation-empty" style="display:none" class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">No members to show participation for.</div></div>
+      <div id="participation-empty" style="display:none" class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg></div><div class="empty-state-text">No members to show participation for.</div></div>
     </div>
   </div>
 
@@ -5295,7 +5295,7 @@ function renderAttendance() {
     return;
   }
   if (!members.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">No members added yet. Add members to track attendance.</div></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members added yet. Add members to track attendance.</div></div>`;
     return;
   }
 
@@ -5710,7 +5710,7 @@ function renderMembers() {
   const grid = document.getElementById('members-grid');
   if (!grid) return;
   if (!state.members.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">👥</div><div class="empty-state-text">No members added yet. Add your team with editor mode.</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members added yet. Add your team to get started.</div></div>`;
     return;
   }
   const isEditor = window.adminEditorIsActive && window.adminEditorIsActive();
