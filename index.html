@@ -3404,6 +3404,11 @@ async function syncFromGist() {
           state.users.push(lu);
         }
       });
+      // Ensure all required arrays exist (cloud state may predate some migrations)
+      ['meetings','members','feedback','posts','announcements','goals','contacts','resources',
+       'transactions','activities','emailTemplates','teachers','consents','partnerships',
+       'fundraisers','grants','eventBudgets'].forEach(function(k) { if (!state[k]) state[k] = []; });
+      state.meetings.forEach(function(m) { if (!m.attendance) m.attendance = {}; if (!m.actionItems) m.actionItems = []; });
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
       initRoles();
       updateSyncIndicator('synced');
@@ -7600,7 +7605,7 @@ function initGoogleAuth() {
       var s = JSON.parse(stored);
       processSignIn(s.googleId, s.email, s.name, s.photo);
       return;
-    } catch(e) { localStorage.removeItem('tfh_google_session'); }
+    } catch(e) { /* auto-login failed — fall through to show the sign-in button */ }
   }
 }
 
@@ -8262,7 +8267,7 @@ function startCloudSync() {
   _syncStarted = true;
   updateSyncIndicator(getSyncToken() ? 'syncing' : 'offline');
   syncFromGist().then(function(result) {
-    if (result === 'updated') {
+    if (result === 'updated' && window.currentUser) {
       var activeBtn = document.querySelector('.nav-item--active');
       var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
       switchTab(activeTab || 'dashboard');
@@ -8273,7 +8278,7 @@ function startCloudSync() {
   setInterval(function() {
     if (!document.hidden) {
       syncFromGist().then(function(result) {
-        if (result === 'updated') {
+        if (result === 'updated' && window.currentUser) {
           var activeBtn = document.querySelector('.nav-item--active');
           var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
           switchTab(activeTab || 'dashboard');
