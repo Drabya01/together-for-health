@@ -3547,11 +3547,13 @@ calMonth = today.getMonth();
 let selectedDate = null;
 
 // ====== TABS ======
-const EDITOR_ONLY_TABS = ['plans','members','budget','contacts','social','feedback','marketing','attendance','outreach','fundraising'];
+const EDITOR_ONLY_TABS = ['plans','members','budget','contacts','social','feedback','marketing','outreach','fundraising'];
 
 function switchTab(name) {
-  // If not in editor mode and tab is editor-only, redirect to dashboard
-  if (EDITOR_ONLY_TABS.includes(name) && (!window.adminEditorIsActive || !window.adminEditorIsActive())) {
+  // Admin-section tabs require at least officer tier
+  var userTier = window.currentUser ? window.currentUser.permissionTier : null;
+  var hasStaff = (userTier === 'admin' || userTier === 'officer');
+  if (EDITOR_ONLY_TABS.includes(name) && !hasStaff) {
     name = 'dashboard';
   }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
