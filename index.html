@@ -7510,10 +7510,10 @@ function processPendingAction() {
       showToast('Admin access required to process this action.', 'error');
       return;
     }
-    setTimeout(function() {
+    function _doAction() {
       var user = (state.users || []).find(function(u) { return u.id === action.userId; });
       if (!user) {
-        showToast('Member not found — make sure Gist sync is set up so data stays in sync.', 'error');
+        showToast('Member not found — their device may not have synced yet. Ask them to open the app and wait a moment, then try again.', 'error');
         return;
       }
       if (user.status !== 'pending') {
@@ -7528,6 +7528,15 @@ function processPendingAction() {
         saveState();
         renderMembers();
         showToast(escHtml(user.name) + '\'s application was rejected.', 'info');
+      }
+    }
+    // Pull from cloud first so we have the latest user list, then act
+    setTimeout(function() {
+      var user = (state.users || []).find(function(u) { return u.id === action.userId; });
+      if (!user && getSyncToken()) {
+        syncFromGist().then(function() { _doAction(); }).catch(function() { _doAction(); });
+      } else {
+        _doAction();
       }
     }, 700);
   } catch(e) {
