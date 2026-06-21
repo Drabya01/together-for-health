@@ -5612,6 +5612,8 @@ Together For Health — [School], 2026–2027
 }
 
 // ====== INIT ======
+// Must be declared before the render calls below (const is not hoisted)
+const AVATAR_COLORS = ['#C4788A','#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
 var _socialFilter = 'all'; // must be declared before renderSocial() is called below
 seedDefaultEvents();
 seedNewFeatures();
@@ -5784,7 +5786,6 @@ function toggleActionItem(meetingId, aiId, checked) {
 }
 
 // ====== MEMBERS ======
-const AVATAR_COLORS = ['#C4788A','#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
 function memberAvatarColor(name) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
