@@ -7515,8 +7515,10 @@ function processSignIn(googleId, email, name, photo) {
     currentUser = user;
     showPendingScreen();
   } else if (user.status === 'rejected') {
-    sessionStorage.removeItem('tfh_google_session');
-    showToast('Your access request was not approved. Contact the club admin.', 'error');
+    user.status = 'pending';
+    saveState();
+    currentUser = user;
+    showPendingScreen();
   } else {
     currentUser = user;
     // Superadmin: always enforce full admin access regardless of stored tier
