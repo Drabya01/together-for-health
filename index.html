@@ -7728,6 +7728,17 @@ function showPendingScreen() {
   if (nameEl && currentUser) nameEl.textContent = currentUser.name.split(' ')[0];
 }
 
+function checkApprovalStatus() {
+  if (!getSyncToken()) {
+    showToast('No sync connected — ask the admin to share the setup link.', 'info');
+    return;
+  }
+  showToast('Checking approval status…', 'info');
+  syncFromGist().then(function() { _checkApprovalFromSync(); }).catch(function() {
+    showToast('Could not reach sync — check your connection.', 'error');
+  });
+}
+
 function showApp() {
   var authEl = document.getElementById('auth-overlay');
   var mobEl = document.getElementById('member-onboard-overlay');
@@ -8286,25 +8297,45 @@ function startCloudSync() {
   _syncStarted = true;
   updateSyncIndicator(getSyncToken() ? 'syncing' : 'offline');
   syncFromGist().then(function(result) {
-    if (result === 'updated' && window.currentUser) {
-      var activeBtn = document.querySelector('.nav-item--active');
-      var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
-      switchTab(activeTab || 'dashboard');
-      showToast('Updated from cloud sync', 'success');
+    if (result === 'updated') {
+      _checkApprovalFromSync();
+      if (window.currentUser && document.getElementById('pending-overlay').style.display === 'none') {
+        var activeBtn = document.querySelector('.nav-item--active');
+        var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
+        switchTab(activeTab || 'dashboard');
+        showToast('Updated from cloud sync', 'success');
+      }
     }
   }).catch(function() {});
-  // Poll every 2 minutes when tab is visible
+  // Poll every 2 minutes when tab is visible (also every 30s when on pending screen)
   setInterval(function() {
     if (!document.hidden) {
       syncFromGist().then(function(result) {
-        if (result === 'updated' && window.currentUser) {
-          var activeBtn = document.querySelector('.nav-item--active');
-          var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
-          switchTab(activeTab || 'dashboard');
+        if (result === 'updated') {
+          _checkApprovalFromSync();
+          if (window.currentUser && document.getElementById('pending-overlay').style.display === 'none') {
+            var activeBtn = document.querySelector('.nav-item--active');
+            var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
+            switchTab(activeTab || 'dashboard');
+          }
         }
       }).catch(function() {});
     }
   }, 2 * 60 * 1000);
+  // Fast-poll every 30s when user is on the pending screen waiting for approval
+  setInterval(function() {
+    var pendingVisible = document.getElementById('pending-overlay') && document.getElementById('pending-overlay').style.display !== 'none';
+    if (pendingVisible && getSyncToken()) syncFromGist().then(_checkApprovalFromSync).catch(function() {});
+  }, 30 * 1000);
+}
+
+function _checkApprovalFromSync() {
+  if (!window.currentUser) return;
+  var updated = (state.users || []).find(function(u) { return u.googleId === window.currentUser.googleId; });
+  if (updated && updated.status === 'approved') {
+    window.currentUser = updated;
+    showApp();
+  }
 }
 
 // ====== SERVICE WORKER ======
@@ -8598,7 +8629,7 @@ function deleteRole(roleId) {
     <span class="pending-icon">⏳</span>
     <div class="auth-title">Waiting for approval</div>
     <div class="auth-sub" style="margin-bottom:12px;">Hi <span id="pending-name"></span>! Your request has been submitted. An admin will review your profile and grant you access soon.</div>
-    <p style="font-size:12px;color:var(--text-muted);margin:0 0 4px;">You may need to sign in again after approval.</p>
+    <button onclick="checkApprovalStatus()" style="width:100%;padding:10px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;">Check again</button>
     <button class="pending-sign-out" onclick="signOut()">Sign out</button>
   </div>
 </div>
