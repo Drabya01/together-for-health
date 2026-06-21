@@ -1929,7 +1929,7 @@
         Our Linktree
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="11" height="11" style="margin-left:auto;opacity:0.5"><path d="M4 4h8v8M12 4L4 12"/></svg>
       </a>
-      <button class="sidebar-footer-btn editor-only" onclick="generateSyncSetupUrl()" title="Copy setup link to enable sync on another device" style="font-weight:600;">
+      <button class="sidebar-footer-btn editor-only" onclick="openSyncModal()" title="Set up cloud sync across devices" style="font-weight:600;">
         <span id="tfh-sync-dot" style="font-size:10px;color:var(--text-hint);" title="Local only">○</span>
         Cloud sync
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12" style="margin-left:auto;opacity:0.5;"><path d="M1 9a7 7 0 1 1 14 0"/><path d="M4 10l3-3 3 3"/><path d="M7 7v6"/></svg>
@@ -2525,6 +2525,17 @@
 
 <!-- TOAST CONTAINER -->
 <div id="tfh-toast-container"></div>
+
+<!-- CLOUD SYNC MODAL -->
+<div class="modal-overlay" id="modal-sync">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span class="modal-title">Cloud Sync</span>
+      <button class="modal-close" onclick="closeModal('modal-sync')">&times;</button>
+    </div>
+    <div id="sync-modal-body" style="padding:4px 0 8px;"></div>
+  </div>
+</div>
 
 <!-- KEYBOARD SHORTCUTS MODAL -->
 <div class="modal-overlay" id="modal-shortcuts">
@@ -3351,6 +3362,7 @@ const TFH_GIST_ID = '337d0c40e33e199b945083cb4261af00';
 const TFH_GIST_FILE = 'tfh-sync.json';
 var _syncDebounceTimer = null;
 var _syncPending = false;
+var _syncStarted = false;
 var GOOGLE_CLIENT_ID = '1010052442736-kv3qsn1j0pov5re2v6na15opsvuga1v6.apps.googleusercontent.com';
 var currentUser = null;
 
@@ -3366,23 +3378,31 @@ function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
 async function syncFromGist() {
   try {
     updateSyncIndicator('syncing');
+    // No Cache-Control header — GitHub CORS policy blocks it in preflight
     const resp = await fetch('https://api.github.com/gists/' + TFH_GIST_ID, {
-      headers: { 'Accept': 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' }
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
     });
     if (!resp.ok) { updateSyncIndicator('error'); return false; }
     const gist = await resp.json();
     const content = gist.files[TFH_GIST_FILE] && gist.files[TFH_GIST_FILE].content;
-    if (!content) { updateSyncIndicator('offline'); return false; }
+    if (!content) { updateSyncIndicator(getSyncToken() ? 'synced' : 'offline'); return false; }
     const cloudState = JSON.parse(content);
-    // Use timestamp comparison — never overwrite local data with empty gist (_syncTs:0)
     const cloudTs = cloudState._syncTs || 0;
     const localTs = state._syncTs || 0;
     if (cloudTs > 0 && cloudTs > localTs) {
-      // Backup local state before overwriting so data is never truly lost
+      // Preserve any local users not yet in cloud (e.g. pending member on this device)
+      var localUsers = (state.users || []).slice();
       var localBackup = localStorage.getItem(STORE_KEY);
       if (localBackup) localStorage.setItem(STORE_KEY + '_presync_bk', localBackup);
       Object.assign(state, cloudState);
+      if (!state.users) state.users = [];
+      localUsers.forEach(function(lu) {
+        if (!state.users.find(function(cu) { return cu.googleId === lu.googleId; })) {
+          state.users.push(lu);
+        }
+      });
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      initRoles();
       updateSyncIndicator('synced');
       return 'updated';
     }
@@ -3431,13 +3451,81 @@ function updateSyncIndicator(status) {
 
 function generateSyncSetupUrl() {
   var token = getSyncToken();
-  if (!token) { showToast('No sync token on this device', 'error'); return; }
+  if (!token) return;
   var encoded = btoa(token);
   var url = window.location.origin + window.location.pathname + '#tfhsync=' + encoded;
   navigator.clipboard.writeText(url).then(function() {
-    showToast('Setup link copied! Paste in browser on other device.');
+    showToast('Setup link copied! Open it on the other device.');
   }).catch(function() {
     prompt('Copy this URL and open it on your other device:', url);
+  });
+}
+
+function openSyncModal() {
+  var token = getSyncToken();
+  var body = document.getElementById('sync-modal-body');
+  if (!body) return;
+  if (!token) {
+    body.innerHTML = '<p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">Cloud sync keeps all members\' data in sync across devices. You need a GitHub Personal Access Token with <strong>gist</strong> scope.</p>'
+      + '<ol style="font-size:13px;color:var(--text-muted);margin:0 0 18px;padding-left:18px;line-height:2;">'
+      + '<li>Go to <strong>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</strong></li>'
+      + '<li>Click <strong>Generate new token (classic)</strong></li>'
+      + '<li>Name it "TFH Sync", check the <strong>gist</strong> box only, generate</li>'
+      + '<li>Copy the token and paste it below</li>'
+      + '</ol>'
+      + '<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Your GitHub token</label>'
+      + '<input id="sync-token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;margin-bottom:12px;" />'
+      + '<button onclick="saveSyncToken()" style="width:100%;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Connect sync</button>';
+  } else {
+    var dot = document.getElementById('tfh-sync-dot');
+    var colour = dot ? dot.style.color : '';
+    var label = colour === '#10b981' ? 'Synced' : colour === '#ef4444' ? 'Error — check token' : 'Active';
+    body.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--accent-light);border-radius:10px;margin-bottom:18px;">'
+      + '<span style="width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0;display:inline-block;"></span>'
+      + '<span style="font-size:14px;font-weight:600;color:var(--text);">Sync connected</span>'
+      + '<span style="font-size:12px;color:var(--text-muted);margin-left:auto;">' + label + '</span>'
+      + '</div>'
+      + '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">To add another device, copy the setup link and open it in that browser. It stores the token automatically.</p>'
+      + '<button onclick="generateSyncSetupUrl();closeModal(\'modal-sync\');" style="width:100%;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;">Copy device setup link</button>'
+      + '<button onclick="forceSyncNow()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:10px;">Sync now</button>'
+      + '<button onclick="clearSyncToken()" style="width:100%;padding:10px;background:none;color:#ef4444;border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Disconnect sync on this device</button>';
+  }
+  document.getElementById('modal-sync').style.display = 'flex';
+}
+
+function saveSyncToken() {
+  var input = document.getElementById('sync-token-input');
+  if (!input || !input.value.trim()) { showToast('Paste your token first', 'error'); return; }
+  localStorage.setItem('tfh_sync_token', input.value.trim());
+  closeModal('modal-sync');
+  updateSyncIndicator('syncing');
+  pushToGist().then(function(ok) {
+    if (ok) { showToast('Sync connected! Data saved to cloud.', 'success'); }
+    else { showToast('Token saved but push failed — check it has gist scope.', 'error'); updateSyncIndicator('error'); }
+  });
+}
+
+function clearSyncToken() {
+  if (!confirm('Disconnect cloud sync on this device? Your local data stays intact.')) return;
+  localStorage.removeItem('tfh_sync_token');
+  closeModal('modal-sync');
+  updateSyncIndicator('offline');
+  showToast('Sync disconnected on this device.', 'info');
+}
+
+function forceSyncNow() {
+  closeModal('modal-sync');
+  updateSyncIndicator('syncing');
+  syncFromGist().then(function(result) {
+    if (result === 'updated') {
+      var activeBtn = document.querySelector('.nav-item--active');
+      switchTab(activeBtn ? activeBtn.dataset.tab : 'dashboard');
+      showToast('Pulled latest from cloud.', 'success');
+    } else if (result === 'current') {
+      pushToGist().then(function(ok) {
+        if (ok) showToast('Already up to date — pushed local state.', 'success');
+      });
+    }
   });
 }
 
@@ -8107,31 +8195,27 @@ function scheduleReminders() {
 
 // Auto-pull from cloud on load, then refresh the active tab if state was updated
 window.addEventListener('load', function() {
-  // Load sync-local.js if it exists (sets token locally, gitignored)
+  // Try loading sync-local.js (sets token on local dev; always 404 on GitHub Pages — silent)
   var s = document.createElement('script');
   s.src = './sync-local.js';
-  s.onerror = function() {}; // silent if not present (GitHub Pages)
-  s.onload = function() {
-    // Token just loaded — start sync
-    startCloudSync();
-  };
+  s.onerror = function() { startCloudSync(); };
+  s.onload = function() { startCloudSync(); };
   document.head.appendChild(s);
-  // Also start sync in case sync-local.js doesn't exist
-  setTimeout(startCloudSync, 800);
 });
 
 function startCloudSync() {
+  if (_syncStarted) return;
+  _syncStarted = true;
   updateSyncIndicator(getSyncToken() ? 'syncing' : 'offline');
   syncFromGist().then(function(result) {
     if (result === 'updated') {
-      // State was refreshed from cloud — re-render active tab
       var activeBtn = document.querySelector('.nav-item--active');
       var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
       switchTab(activeTab || 'dashboard');
-      showToast('Updated from cloud sync');
+      showToast('Updated from cloud sync', 'success');
     }
   }).catch(function() {});
-  // Poll every 2 minutes when page is visible
+  // Poll every 2 minutes when tab is visible
   setInterval(function() {
     if (!document.hidden) {
       syncFromGist().then(function(result) {
