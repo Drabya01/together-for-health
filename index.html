@@ -183,13 +183,12 @@
     #sidebar-footer { display: none; }
   }
 
-  /* Editor-only nav items — shown by role, not editor mode */
-  .editor-only-tab { display: none !important; }
-  body.user-has-staff-access .editor-only-tab { display: flex !important; }
+  /* Editor-only nav items — visibility controlled per-tab by JS updateTabVisibility() */
+  .editor-only-tab { display: none; }
+  body.user-has-staff-access .editor-only-tab { display: flex; }
 
-  /* Admin group label */
+  /* Admin group label — JS controls display directly */
   #sidebar-admin-group { display: none; }
-  body.user-has-staff-access #sidebar-admin-group { display: block; }
 
   /* ── App body ─────────────────────────────────── */
   #app-body {
@@ -1783,6 +1782,46 @@
   .sidebar-linktree-link:hover {
     background: var(--accent-light); border-color: rgba(196,120,138,0.25);
   }
+
+  /* ===== ROLES MANAGER ===== */
+  .modal-roles-manager { max-width: 800px; width: 100%; height: 600px; max-height: 88vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  .modal-roles-manager .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .roles-manager-body { display: flex; flex: 1; overflow: hidden; }
+  .roles-sidebar { width: 200px; min-width: 180px; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 10px 8px 12px; gap: 2px; overflow-y: auto; flex-shrink: 0; }
+  .roles-sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); padding: 4px 10px 8px; }
+  .role-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: background 0.13s; }
+  .role-list-item:hover { background: var(--surface); }
+  .role-list-item.active { background: var(--accent-light); }
+  .role-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .roles-add-btn { margin-top: 4px; font-size: 12px; padding: 6px 10px; border-radius: 8px; }
+  .roles-editor { flex: 1; overflow-y: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 18px; }
+  .roles-editor-empty { color: var(--text-muted); text-align: center; margin-top: 100px; font-size: 14px; }
+  .role-edit-header { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .role-name-input { flex: 1; font-size: 20px; font-weight: 700; border: none; background: transparent; outline: none; color: var(--text); border-bottom: 2px solid transparent; padding-bottom: 2px; transition: border-color 0.15s; }
+  .role-name-input:focus { border-bottom-color: var(--brand, #e4789a); }
+  .role-color-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0; }
+  .role-color-swatch input[type=color] { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); border: none; cursor: pointer; opacity: 0; }
+  .perm-category { display: flex; flex-direction: column; }
+  .perm-category-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px; }
+  .perm-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 8px; background: var(--surface); margin-bottom: 4px; gap: 12px; }
+  .perm-row-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .perm-row-label { font-size: 13px; font-weight: 600; }
+  .perm-row-desc { font-size: 11px; color: var(--text-muted); }
+  .perm-toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .perm-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .perm-toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: background 0.18s; }
+  .perm-toggle input:checked + .perm-toggle-track { background: var(--brand, #e4789a); }
+  .perm-toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.18s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .perm-toggle input:checked + .perm-toggle-track::before { transform: translateX(16px); }
+  .perm-toggle input:disabled + .perm-toggle-track { opacity: 0.5; cursor: default; }
+  .roles-editor-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); margin-top: auto; gap: 8px; flex-wrap: wrap; }
+  .role-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  @media (max-width: 600px) {
+    .modal-roles-manager { height: 90vh; }
+    .roles-manager-body { flex-direction: column; }
+    .roles-sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; flex-wrap: wrap; }
+    .roles-editor { padding: 16px; }
+  }
 </style>
 <link rel="stylesheet" href="admin-editor.css">
 </head>
@@ -2204,7 +2243,12 @@
         <p class="page-title">Members</p>
         <p class="page-sub">Club roster — names, roles, and contact info</p>
       </div>
-      <button class="btn btn-primary editor-only" onclick="openAddMember()">+ Add member</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="manage-roles-btn" class="btn" style="display:none;" onclick="openRolesManager()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M15 19l2 2 4-4"/></svg>Manage Roles
+        </button>
+        <button class="btn btn-primary editor-only" onclick="openAddMember()">+ Add member</button>
+      </div>
     </div>
     <div class="members-grid" id="members-grid"></div>
 
@@ -3547,13 +3591,10 @@ calMonth = today.getMonth();
 let selectedDate = null;
 
 // ====== TABS ======
-const EDITOR_ONLY_TABS = ['plans','members','budget','contacts','social','feedback','marketing','outreach','fundraising'];
-
 function switchTab(name) {
-  // Admin-section tabs require at least officer tier
-  var userTier = window.currentUser ? window.currentUser.permissionTier : null;
-  var hasStaff = (userTier === 'admin' || userTier === 'officer');
-  if (EDITOR_ONLY_TABS.includes(name) && !hasStaff) {
+  // If this tab requires a permission, redirect to dashboard when user lacks it
+  var requiredPerm = TAB_VIEW_PERMS[name];
+  if (requiredPerm && !hasPermission(requiredPerm)) {
     name = 'dashboard';
   }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -3696,7 +3737,7 @@ function renderDash() {
 }
 
 function toggleCheck(rowId, cbId) {
-  if (!hasStaffAccess()) {
+  if (!hasPermission('MANAGE_PLANS')) {
     const cb = document.getElementById(cbId);
     if (cb) cb.checked = !cb.checked; // revert the browser's optimistic toggle
     return;
@@ -3889,7 +3930,7 @@ function renderUpcoming() {
 }
 
 function openAddEvent() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_MEETINGS')) return;
   editingId = null;
   document.getElementById('event-modal-title').textContent = 'Add event';
   document.getElementById('ev-type').value = 'Meeting';
@@ -4049,7 +4090,7 @@ function togglePlan(bodyId, header) {
 }
 
 function openAddPlan() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_PLANS')) return;
   editingId = null;
   document.getElementById('plan-modal-title').textContent = 'New plan';
   document.getElementById('plan-title').value = '';
@@ -4113,7 +4154,7 @@ function deletePlan(id) {
 }
 
 function togglePlanChecklist(planId, itemId, checked) {
-  if (!hasStaffAccess()) {
+  if (!hasPermission('MANAGE_PLANS')) {
     // Revert the checkbox
     const cb = document.querySelector(`#pcl-${itemId} input`);
     if (cb) cb.checked = !checked;
@@ -4264,7 +4305,7 @@ function voteIdea(id) {
 }
 
 function changeIdeaStatus(id, status) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_IDEAS')) return;
   const idea = state.ideas.find(i => i.id === id);
   if (!idea) return;
   idea.status = status;
@@ -4542,7 +4583,7 @@ function escHtml(str) {
 
 // ====== ANNOUNCEMENTS ======
 function openAddAnnouncement() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_ANNOUNCEMENTS')) return;
   editingId = null;
   document.getElementById('ann-modal-title').textContent = 'Add announcement';
   document.getElementById('ann-text').value = '';
@@ -4554,7 +4595,7 @@ function openAddAnnouncement() {
 }
 
 function editAnnouncement(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_ANNOUNCEMENTS')) return;
   const a = state.announcements.find(x => x.id === id);
   if (!a) return;
   editingId = id;
@@ -4583,7 +4624,7 @@ function saveAnnouncement() {
 }
 
 function togglePinAnnouncement(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_ANNOUNCEMENTS')) return;
   const a = state.announcements.find(x => x.id === id);
   if (!a) return;
   a.pinned = !a.pinned;
@@ -4679,7 +4720,7 @@ function renderGoals() {
 }
 
 function openAddGoal() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_GOALS')) return;
   editingId = null;
   document.getElementById('goal-modal-title').textContent = 'New goal';
   document.getElementById('goal-title').value = '';
@@ -4693,7 +4734,7 @@ function openAddGoal() {
 }
 
 function editGoal(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_GOALS')) return;
   const g = state.goals.find(x => x.id === id);
   if (!g) return;
   editingId = id;
@@ -4786,7 +4827,7 @@ function renderContacts() {
 }
 
 function openAddContact() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_CONTACTS')) return;
   editingId = null;
   document.getElementById('contact-modal-title').textContent = 'Add contact';
   ['ct-name','ct-school','ct-email','ct-phone','ct-notes'].forEach(id => document.getElementById(id).value = '');
@@ -4796,7 +4837,7 @@ function openAddContact() {
 }
 
 function editContact(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_CONTACTS')) return;
   const c = state.contacts.find(x => x.id === id);
   if (!c) return;
   editingId = id;
@@ -4896,7 +4937,7 @@ function renderResources() {
 }
 
 function openAddResource() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_RESOURCES')) return;
   editingId = null;
   document.getElementById('resource-modal-title').textContent = 'Add resource';
   ['res-title','res-url','res-tags','res-notes'].forEach(id => document.getElementById(id).value = '');
@@ -4905,7 +4946,7 @@ function openAddResource() {
 }
 
 function editResource(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_RESOURCES')) return;
   const r = state.resources.find(x => x.id === id);
   if (!r) return;
   editingId = id;
@@ -5017,7 +5058,7 @@ function renderBudget() {
 }
 
 function openAddTransaction() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_BUDGET')) return;
   editingId = null;
   document.getElementById('tx-modal-title').textContent = 'Add transaction';
   document.getElementById('tx-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
@@ -5028,7 +5069,7 @@ function openAddTransaction() {
 }
 
 function editTransaction(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_BUDGET')) return;
   const t = state.transactions.find(x => x.id === id);
   if (!t) return;
   editingId = id;
@@ -5137,7 +5178,7 @@ function renderActivities() {
 }
 
 function openAddActivity() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_ACTIVITIES')) return;
   editingId = null;
   document.getElementById('activity-modal-title').textContent = 'Add activity';
   ['act-title','act-topic','act-duration','act-materials','act-desc','act-tags'].forEach(id => document.getElementById(id).value = '');
@@ -5146,7 +5187,7 @@ function openAddActivity() {
 }
 
 function editActivity(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_ACTIVITIES')) return;
   const a = state.activities.find(x => x.id === id);
   if (!a) return;
   editingId = id;
@@ -5246,7 +5287,7 @@ function copyEmailTemplate(id) {
 }
 
 function openAddEmailTemplate() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   editingId = null;
   document.getElementById('etpl-modal-title').textContent = 'Add email template';
   ['etpl-name','etpl-subject','etpl-body'].forEach(id => document.getElementById(id).value = '');
@@ -5254,7 +5295,7 @@ function openAddEmailTemplate() {
 }
 
 function editEmailTemplate(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   const t = state.emailTemplates.find(x => x.id === id);
   if (!t) return;
   editingId = id;
@@ -5325,7 +5366,7 @@ function renderAttendance() {
 }
 
 function toggleAttendance(meetingId, memberId, checked) {
-  if (!hasStaffAccess()) {
+  if (!hasPermission('MANAGE_ATTENDANCE')) {
     renderAttendance(); // revert
     return;
   }
@@ -5541,7 +5582,7 @@ function addActionItemRow(text, assignee) {
 }
 
 function openAddMeeting() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_MEETINGS')) return;
   editingId = null;
   document.getElementById('meeting-modal-title').textContent = 'New meeting';
   document.getElementById('mt-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
@@ -5600,7 +5641,7 @@ function deleteMeeting(id) {
 }
 
 function toggleActionItem(meetingId, aiId, checked) {
-  if (!hasStaffAccess()) {
+  if (!hasPermission('MANAGE_MEETINGS')) {
     const cb = document.querySelector(`#ai-${aiId} input`);
     if (cb) cb.checked = !checked;
     return;
@@ -5632,7 +5673,7 @@ function renderMembers() {
   var existingAccountsPanel = document.getElementById('members-accounts-panel');
   if (existingAccountsPanel) existingAccountsPanel.remove();
 
-  var isAdmin = currentUser && currentUser.permissionTier === 'admin';
+  var isAdmin = hasPermission('MANAGE_USERS');
   var allUsers = state.users || [];
   var reqGrid = document.getElementById('members-grid');
 
@@ -5661,14 +5702,17 @@ function renderMembers() {
         var statusBadge = '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:' + statusBg + ';color:' + statusColor + ';border:1px solid ' + statusColor + '50;text-transform:uppercase;letter-spacing:.04em;">' + (u.status || 'pending') + '</span>';
 
         var tierControl = '';
-        if (u.status === 'approved') {
-          tierControl = '<select onchange="setUserTier(\'' + u.id + '\',this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--bg);color:var(--text);font-family:inherit;cursor:pointer;">'
-            + ['member','officer','admin'].map(function(t) {
-                return '<option value="' + t + '"' + (u.permissionTier === t ? ' selected' : '') + '>' + t + '</option>';
+        var userRole = (state.roles || []).find(function(r) { return r.id === u.roleId; }) || { name: u.permissionTier || 'member', color: '#888' };
+        if (u.status === 'approved' && u.id !== (currentUser && currentUser.id)) {
+          tierControl = '<select onchange="setUserRole(\'' + u.id + '\',this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--bg);color:var(--text);font-family:inherit;cursor:pointer;">'
+            + (state.roles || []).map(function(r) {
+                return '<option value="' + r.id + '"' + (u.roleId === r.id ? ' selected' : '') + '>' + r.name + '</option>';
               }).join('')
             + '</select>';
         } else {
-          tierControl = '<span style="font-size:12px;color:var(--text-muted);padding:4px 8px;border:1px solid var(--border);border-radius:7px;background:var(--bg);">' + (u.permissionTier || 'member') + '</span>';
+          tierControl = '<span class="role-badge" style="background:' + userRole.color + '22;color:' + userRole.color + ';border:1px solid ' + userRole.color + '55;">'
+            + '<span style="width:7px;height:7px;border-radius:50%;background:' + userRole.color + ';flex-shrink:0;display:inline-block;"></span>'
+            + escHtml(userRole.name) + '</span>';
         }
 
         var actions = '';
@@ -5756,13 +5800,13 @@ function copyMemberEmail(id) {
 }
 
 function toggleMemberActive(id, active) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_MEMBERS')) return;
   const m = state.members.find(x => x.id === id);
   if (m) { m.active = active; saveState(); renderMembers(); }
 }
 
 function openAddMember() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_MEMBERS')) return;
   editingId = null;
   document.getElementById('member-modal-title').textContent = 'Add member';
   document.getElementById('mb-name').value = '';
@@ -5847,7 +5891,7 @@ function renderFeedback() {
 }
 
 function openAddFeedback() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FEEDBACK')) return;
   editingId = null;
   document.getElementById('fb-modal-title').textContent = 'Log feedback';
   document.getElementById('fb-title').value = '';
@@ -5943,13 +5987,13 @@ function renderSocial() {
 }
 
 function updatePostStatus(id, status) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_SOCIAL')) return;
   const p = state.posts.find(x => x.id === id);
   if (p) { p.status = status; saveState(); renderSocial(); }
 }
 
 function openAddPost() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_SOCIAL')) return;
   editingId = null;
   document.getElementById('post-modal-title').textContent = 'New post';
   document.getElementById('post-platform').value = 'Instagram';
@@ -6312,7 +6356,7 @@ function copyText(text, msg) {
 }
 
 function openAddTeacher() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   editingId = null;
   document.getElementById('teacher-modal-title').textContent = 'Add Teacher / Advisor';
   ['tc-name','tc-school','tc-role','tc-email','tc-phone','tc-preferences','tc-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6321,7 +6365,7 @@ function openAddTeacher() {
 }
 
 function editTeacher(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   const t = (state.teachers||[]).find(x => x.id === id);
   if (!t) return;
   editingId = id;
@@ -6360,7 +6404,7 @@ function saveTeacher() {
 }
 
 function deleteTeacher(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   if (!confirm('Delete this teacher contact?')) return;
   state.teachers = (state.teachers||[]).filter(x => x.id !== id);
   saveState(); renderTeachers();
@@ -6409,7 +6453,7 @@ function renderConsents() {
 }
 
 function openAddConsent() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   editingId = null;
   document.getElementById('consent-modal-title').textContent = 'Add Consent Record';
   ['cn-school','cn-contact','cn-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6420,7 +6464,7 @@ function openAddConsent() {
 }
 
 function editConsent(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   const c = (state.consents||[]).find(x => x.id === id);
   if (!c) return;
   editingId = id;
@@ -6456,7 +6500,7 @@ function saveConsent() {
 }
 
 function deleteConsent(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   if (!confirm('Delete this consent record?')) return;
   state.consents = (state.consents||[]).filter(x => x.id !== id);
   saveState(); renderConsents();
@@ -6512,7 +6556,7 @@ function renderPartnerships() {
 }
 
 function openAddPartnership() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   editingId = null;
   document.getElementById('partnership-modal-title').textContent = 'Add Partnership';
   ['pt-org','pt-contact','pt-email','pt-terms','pt-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6524,7 +6568,7 @@ function openAddPartnership() {
 }
 
 function editPartnership(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   const p = (state.partnerships||[]).find(x => x.id === id);
   if (!p) return;
   editingId = id;
@@ -6565,7 +6609,7 @@ function savePartnership() {
 }
 
 function deletePartnership(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_OUTREACH')) return;
   if (!confirm('Delete this partnership?')) return;
   state.partnerships = (state.partnerships||[]).filter(x => x.id !== id);
   saveState(); renderPartnerships();
@@ -6631,7 +6675,7 @@ function renderFundraisers() {
 }
 
 function openAddFundraiser() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FUNDRAISING')) return;
   editingId = null;
   document.getElementById('fundraiser-modal-title').textContent = 'New Fundraiser';
   ['fr-name','fr-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6644,7 +6688,7 @@ function openAddFundraiser() {
 }
 
 function editFundraiser(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FUNDRAISING')) return;
   const f = (state.fundraisers||[]).find(x => x.id === id);
   if (!f) return;
   editingId = id;
@@ -6681,7 +6725,7 @@ function saveFundraiser() {
 }
 
 function deleteFundraiser(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FUNDRAISING')) return;
   if (!confirm('Delete this fundraiser?')) return;
   state.fundraisers = (state.fundraisers||[]).filter(x => x.id !== id);
   saveState(); renderFundraisers();
@@ -6746,7 +6790,7 @@ function renderGrants() {
 }
 
 function openAddGrant() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FUNDRAISING')) return;
   editingId = null;
   document.getElementById('grant-modal-title').textContent = 'New Grant Application';
   ['gr-funder','gr-contact','gr-notes'].forEach(id => { document.getElementById(id).value = ''; });
@@ -6758,7 +6802,7 @@ function openAddGrant() {
 }
 
 function editGrant(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FUNDRAISING')) return;
   const g = (state.grants||[]).find(x => x.id === id);
   if (!g) return;
   editingId = id;
@@ -6795,7 +6839,7 @@ function saveGrant() {
 }
 
 function deleteGrant(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_FUNDRAISING')) return;
   if (!confirm('Delete this grant?')) return;
   state.grants = (state.grants||[]).filter(x => x.id !== id);
   saveState(); renderGrants();
@@ -6884,7 +6928,7 @@ function addEbItemRow(desc, planned, actual) {
 }
 
 function openAddEventBudget() {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_BUDGET')) return;
   editingId = null;
   document.getElementById('eventbudget-modal-title').textContent = 'New Event Budget';
   document.getElementById('eb-name').value = '';
@@ -6895,7 +6939,7 @@ function openAddEventBudget() {
 }
 
 function editEventBudget(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_BUDGET')) return;
   const eb = (state.eventBudgets||[]).find(x => x.id === id);
   if (!eb) return;
   editingId = id;
@@ -6937,7 +6981,7 @@ function saveEventBudget() {
 }
 
 function deleteEventBudget(id) {
-  if (!hasStaffAccess()) return;
+  if (!hasPermission('MANAGE_BUDGET')) return;
   if (!confirm('Delete this event budget?')) return;
   state.eventBudgets = (state.eventBudgets||[]).filter(x => x.id !== id);
   saveState(); renderEventBudgets();
@@ -7458,7 +7502,7 @@ function processSignIn(googleId, email, name, photo) {
       var adminUser = {
         id: uid(), googleId: googleId, email: email, name: name, photo: photo,
         grade: '', roleInterest: '', bio: '',
-        role: 'Admin', permissionTier: 'admin',
+        role: 'Admin', permissionTier: 'admin', roleId: 'role_admin',
         status: 'approved', joinedAt: Date.now()
       };
       state.users.push(adminUser);
@@ -7477,8 +7521,9 @@ function processSignIn(googleId, email, name, photo) {
   } else {
     currentUser = user;
     // Superadmin: always enforce full admin access regardless of stored tier
-    if (user.email === 'golussaud@gmail.com' && (user.permissionTier !== 'admin' || user.status !== 'approved')) {
+    if (user.email === 'golussaud@gmail.com' && (user.permissionTier !== 'admin' || user.status !== 'approved' || user.roleId !== 'role_admin')) {
       user.permissionTier = 'admin';
+      user.roleId = 'role_admin';
       user.status = 'approved';
       saveState();
     }
@@ -7517,7 +7562,7 @@ function submitMemberOnboard() {
   var newUser = {
     id: uid(), googleId: googleId, email: email, name: name, photo: photo,
     grade: grade, roleInterest: roleInterest, bio: bio,
-    role: '', permissionTier: 'member',
+    role: '', permissionTier: 'member', roleId: 'role_member',
     status: 'pending', joinedAt: Date.now()
   };
   state.users.push(newUser);
@@ -7553,24 +7598,137 @@ function showApp() {
   maybeStartTour();
 }
 
+// ===== PERMISSIONS SYSTEM =====
+var ALL_PERMISSIONS = [
+  // General
+  { id: 'MANAGE_ROLES',         label: 'Manage Roles',          category: 'General',              desc: 'Create, edit, delete roles and assign them to members' },
+  { id: 'MANAGE_USERS',         label: 'Manage Users',          category: 'General',              desc: 'Approve/reject sign-ups and change member account settings' },
+  { id: 'EDITOR_MODE',          label: 'Editor Mode',           category: 'General',              desc: 'Access the PIN-protected editor to change website text' },
+  // Meetings & Planning
+  { id: 'MANAGE_MEETINGS',      label: 'Manage Meetings',       category: 'Meetings & Planning',  desc: 'Add, edit, and delete meetings and action items' },
+  { id: 'MANAGE_ATTENDANCE',    label: 'Manage Attendance',     category: 'Meetings & Planning',  desc: 'Mark and change member attendance at meetings' },
+  { id: 'MANAGE_GOALS',         label: 'Manage Goals',          category: 'Meetings & Planning',  desc: 'Add, edit, and delete club goals' },
+  { id: 'MANAGE_IDEAS',         label: 'Manage Ideas',          category: 'Meetings & Planning',  desc: 'Change status of submitted ideas' },
+  { id: 'MANAGE_ACTIVITIES',    label: 'Manage Activities',     category: 'Meetings & Planning',  desc: 'Add, edit, and delete club activities and presentations' },
+  { id: 'MANAGE_PLANS',         label: 'Manage Plans',          category: 'Meetings & Planning',  desc: 'View and edit strategic plans and checklists' },
+  { id: 'MANAGE_RESOURCES',     label: 'Manage Resources',      category: 'Meetings & Planning',  desc: 'Add, edit, and delete shared resources' },
+  { id: 'MANAGE_ANNOUNCEMENTS', label: 'Manage Announcements',  category: 'Meetings & Planning',  desc: 'Post, edit, pin, and delete announcements' },
+  // Members & Contacts
+  { id: 'VIEW_MEMBERS',         label: 'View Members',          category: 'Members & Contacts',   desc: 'See the full member roster and signed-in users panel' },
+  { id: 'MANAGE_MEMBERS',       label: 'Manage Members',        category: 'Members & Contacts',   desc: 'Add, edit, and toggle active status of members' },
+  { id: 'VIEW_CONTACTS',        label: 'View Contacts',         category: 'Members & Contacts',   desc: 'See the external contacts directory' },
+  { id: 'MANAGE_CONTACTS',      label: 'Manage Contacts',       category: 'Members & Contacts',   desc: 'Add and edit external contacts' },
+  // Finance
+  { id: 'VIEW_BUDGET',          label: 'View Budget',           category: 'Finance',              desc: 'See the budget tab with transaction history' },
+  { id: 'MANAGE_BUDGET',        label: 'Manage Budget',         category: 'Finance',              desc: 'Add, edit, and delete transactions and event budgets' },
+  { id: 'VIEW_FUNDRAISING',     label: 'View Fundraising',      category: 'Finance',              desc: 'See fundraisers, event pages, and grant applications' },
+  { id: 'MANAGE_FUNDRAISING',   label: 'Manage Fundraising',    category: 'Finance',              desc: 'Add, edit, and delete fundraisers and grants' },
+  // Outreach & Social
+  { id: 'VIEW_OUTREACH',        label: 'View Outreach',         category: 'Outreach & Social',    desc: 'See outreach contacts, teachers, consents, and partnerships' },
+  { id: 'MANAGE_OUTREACH',      label: 'Manage Outreach',       category: 'Outreach & Social',    desc: 'Add, edit, and manage outreach content and email templates' },
+  { id: 'VIEW_FEEDBACK',        label: 'View Feedback',         category: 'Outreach & Social',    desc: 'See member feedback submissions' },
+  { id: 'MANAGE_FEEDBACK',      label: 'Manage Feedback',       category: 'Outreach & Social',    desc: 'Add and manage feedback entries' },
+  { id: 'VIEW_SOCIAL',          label: 'View Social',           category: 'Outreach & Social',    desc: 'See the social media content calendar' },
+  { id: 'MANAGE_SOCIAL',        label: 'Manage Social',         category: 'Outreach & Social',    desc: 'Create, edit, and update social media posts' },
+  { id: 'VIEW_MARKETING',       label: 'View Marketing',        category: 'Outreach & Social',    desc: 'See marketing materials and campaigns' },
+  { id: 'MANAGE_MARKETING',     label: 'Manage Marketing',      category: 'Outreach & Social',    desc: 'Add, edit, and delete marketing content' },
+];
+
+var DEFAULT_ROLES = [
+  {
+    id: 'role_admin', name: 'Admin', color: '#e11d48',
+    permissions: ['*'], isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_officer', name: 'Officer', color: '#7c3aed',
+    permissions: [
+      'MANAGE_MEETINGS','MANAGE_ATTENDANCE','MANAGE_GOALS','MANAGE_IDEAS','MANAGE_ACTIVITIES',
+      'MANAGE_PLANS','MANAGE_RESOURCES','MANAGE_ANNOUNCEMENTS',
+      'VIEW_MEMBERS','MANAGE_MEMBERS','VIEW_CONTACTS','MANAGE_CONTACTS',
+      'VIEW_BUDGET','MANAGE_BUDGET','VIEW_FUNDRAISING','MANAGE_FUNDRAISING',
+      'VIEW_OUTREACH','MANAGE_OUTREACH','VIEW_FEEDBACK','MANAGE_FEEDBACK',
+      'VIEW_SOCIAL','MANAGE_SOCIAL','VIEW_MARKETING','MANAGE_MARKETING',
+    ],
+    isDefault: true, canDelete: false
+  },
+  {
+    id: 'role_member', name: 'Member', color: '#16a34a',
+    permissions: [], isDefault: true, canDelete: false
+  },
+];
+
+var TAB_VIEW_PERMS = {
+  plans:       'MANAGE_PLANS',
+  members:     'VIEW_MEMBERS',
+  budget:      'VIEW_BUDGET',
+  contacts:    'VIEW_CONTACTS',
+  outreach:    'VIEW_OUTREACH',
+  fundraising: 'VIEW_FUNDRAISING',
+  feedback:    'VIEW_FEEDBACK',
+  social:      'VIEW_SOCIAL',
+  marketing:   'VIEW_MARKETING',
+};
+
+function initRoles() {
+  if (!state.roles) state.roles = [];
+  DEFAULT_ROLES.forEach(function(dr) {
+    if (!state.roles.find(function(r) { return r.id === dr.id; })) {
+      state.roles.push(JSON.parse(JSON.stringify(dr)));
+    }
+  });
+  if (state.users) {
+    state.users.forEach(function(u) {
+      if (!u.roleId) {
+        if (u.permissionTier === 'admin') u.roleId = 'role_admin';
+        else if (u.permissionTier === 'officer') u.roleId = 'role_officer';
+        else u.roleId = 'role_member';
+      }
+    });
+  }
+}
+
+function hasPermission(perm) {
+  if (!window.currentUser) return false;
+  if (window.currentUser.email === 'golussaud@gmail.com') return true;
+  if (!state.roles) return false;
+  var role = state.roles.find(function(r) { return r.id === window.currentUser.roleId; });
+  if (!role) return false;
+  if (role.permissions.indexOf('*') !== -1) return true;
+  return role.permissions.indexOf(perm) !== -1;
+}
+
 function hasStaffAccess() {
-  var tier = window.currentUser ? window.currentUser.permissionTier : null;
-  return tier === 'admin' || tier === 'officer';
+  if (!window.currentUser) return false;
+  if (window.currentUser.email === 'golussaud@gmail.com') return true;
+  if (!state.roles) return false;
+  var role = state.roles.find(function(r) { return r.id === window.currentUser.roleId; });
+  if (!role) return false;
+  if (role.permissions.indexOf('*') !== -1) return true;
+  return role.permissions.some(function(p) { return p.indexOf('MANAGE_') === 0; });
 }
 
 function updateTabVisibility() {
-  var tier = currentUser ? currentUser.permissionTier : null;
-  var hasStaffAccess = (tier === 'admin' || tier === 'officer');
-  if (hasStaffAccess) {
+  if (hasStaffAccess()) {
     document.body.classList.add('user-has-staff-access');
   } else {
     document.body.classList.remove('user-has-staff-access');
   }
-  // Editor pencil button only visible to admins
+  var anyAdminTabVisible = false;
+  Object.keys(TAB_VIEW_PERMS).forEach(function(tabName) {
+    var perm = TAB_VIEW_PERMS[tabName];
+    var btn = document.querySelector('[data-tab="' + tabName + '"]');
+    if (btn) {
+      var canSee = hasPermission(perm);
+      btn.style.display = canSee ? '' : 'none';
+      if (canSee) anyAdminTabVisible = true;
+    }
+  });
+  var adminGroup = document.getElementById('sidebar-admin-group');
+  if (adminGroup) adminGroup.style.display = anyAdminTabVisible ? 'block' : 'none';
   var edBtn = document.getElementById('adminEditorNavBtn');
-  if (edBtn) {
-    edBtn.style.display = (tier === 'admin') ? '' : 'none';
-  }
+  if (edBtn) edBtn.style.display = hasPermission('EDITOR_MODE') ? '' : 'none';
+  var rolesBtn = document.getElementById('manage-roles-btn');
+  if (rolesBtn) rolesBtn.style.display = hasPermission('MANAGE_ROLES') ? '' : 'none';
 }
 
 function signOut() {
@@ -7664,6 +7822,9 @@ function approveUser(userId, tier, roleName) {
   if (!user) return;
   user.status = 'approved';
   user.permissionTier = tier || 'member';
+  if (!user.roleId) {
+    user.roleId = tier === 'admin' ? 'role_admin' : tier === 'officer' ? 'role_officer' : 'role_member';
+  }
   if (roleName) user.role = roleName;
   if (!state.members) state.members = [];
   var alreadyMember = state.members.find(function(m) { return m.email === user.email || m.googleId === user.googleId; });
@@ -7695,13 +7856,37 @@ function setUserTier(userId, tier) {
   var user = state.users.find(function(u) { return u.id === userId; });
   if (!user) return;
   user.permissionTier = tier;
+  user.roleId = tier === 'admin' ? 'role_admin' : tier === 'officer' ? 'role_officer' : 'role_member';
   if (currentUser && currentUser.id === userId) {
     currentUser.permissionTier = tier;
+    currentUser.roleId = user.roleId;
     updateHeaderUserBadge();
     updateTabVisibility();
   }
   saveState();
   showToast(user.name + ' set to ' + tier, 'success');
+}
+
+function setUserRole(userId, roleId) {
+  if (!state.users || !state.roles) return;
+  var user = state.users.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  var role = state.roles.find(function(r) { return r.id === roleId; });
+  if (!role) return;
+  user.roleId = roleId;
+  // Sync permissionTier for backwards compatibility
+  user.permissionTier = (role.permissions.indexOf('*') !== -1) ? 'admin'
+    : (role.permissions.indexOf('MANAGE_USERS') !== -1 || role.permissions.length > 10) ? 'officer'
+    : 'member';
+  if (currentUser && currentUser.id === userId) {
+    currentUser.roleId = roleId;
+    currentUser.permissionTier = user.permissionTier;
+    updateHeaderUserBadge();
+    updateTabVisibility();
+  }
+  saveState();
+  renderMembers();
+  showToast(user.name + ' assigned to ' + role.name, 'success');
 }
 
 function revokeUser(userId) {
@@ -7733,8 +7918,8 @@ function submitAuthPin() {
   var EDITOR_PIN_VAL = 'tfh2026';
   var sitePin = (state._sitePin || 'tfh2026');
   if (val === sitePin || val === EDITOR_PIN_VAL) {
-    currentUser = { id: '_pin_admin', googleId: '_pin', email: '', name: 'Admin', photo: '',
-      role: 'Admin', permissionTier: 'admin', status: 'approved' };
+    currentUser = { id: '_pin_admin', googleId: '_pin', email: 'golussaud@gmail.com', name: 'Admin', photo: '',
+      role: 'Admin', permissionTier: 'admin', roleId: 'role_admin', status: 'approved' };
     sessionStorage.setItem('tfh_pin_access', '1');
     showApp();
   } else {
@@ -7757,9 +7942,10 @@ function submitAuthPin() {
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
+  initRoles();
   if (sessionStorage.getItem('tfh_pin_access')) {
-    currentUser = { id: '_pin_admin', googleId: '_pin', email: '', name: 'Admin', photo: '',
-      role: 'Admin', permissionTier: 'admin', status: 'approved' };
+    currentUser = { id: '_pin_admin', googleId: '_pin', email: 'golussaud@gmail.com', name: 'Admin', photo: '',
+      role: 'Admin', permissionTier: 'admin', roleId: 'role_admin', status: 'approved' };
     showApp();
     return;
   }
@@ -7770,7 +7956,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function changeSitePassword() {
-  if (!hasStaffAccess()) { showToast('Editor mode required', 'error'); return; }
+  if (!hasPermission('MANAGE_ROLES')) { showToast('No permission', 'error'); return; }
   var newPin = prompt('Enter a new club access password (members will use this to log in):');
   if (!newPin || !newPin.trim()) return;
   if (newPin.trim().length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
@@ -7919,7 +8105,7 @@ if ('serviceWorker' in navigator) {
 function renderSocialConsentBanner() {
   const banner = document.getElementById('social-consent-banner');
   if (!banner) return;
-  if (!hasStaffAccess()) {
+  if (!hasPermission('MANAGE_SOCIAL')) {
     banner.style.display = 'none';
     return;
   }
@@ -7939,6 +8125,171 @@ function renderSocialConsentBanner() {
     banner.style.display = '';
     banner.innerHTML = `<div style="padding:10px 16px;border-radius:var(--radius-sm);background:#fef9c3;border:1px solid #fde047;color:#854d0e;font-size:13px;font-weight:500;">⚠️ ${missingCount} school${missingCount !== 1 ? 's' : ''} in your Contacts ${missingCount !== 1 ? 'have' : 'has'} no active photo/media consent on file. <a href="#" onclick="switchTab('outreach');return false;" style="color:var(--accent-mid);text-decoration:underline;margin-left:4px;">Go to Outreach →</a></div>`;
   }
+}
+
+// ===== ROLES MANAGER =====
+var _selectedRoleId = null;
+
+function openRolesManager() {
+  if (!hasPermission('MANAGE_ROLES')) { showToast('No permission', 'error'); return; }
+  _selectedRoleId = null;
+  renderRolesList();
+  document.getElementById('roles-editor').innerHTML = '<div class="roles-editor-empty">Select a role on the left to view and edit its permissions.</div>';
+  openModal('modal-roles');
+}
+
+function renderRolesList() {
+  var list = document.getElementById('roles-list');
+  if (!list) return;
+  list.innerHTML = (state.roles || []).map(function(role) {
+    var active = role.id === _selectedRoleId ? ' active' : '';
+    return '<div class="role-list-item' + active + '" onclick="selectRole(\'' + role.id + '\')">'
+      + '<div class="role-dot" style="background:' + escHtml(role.color || '#888') + '"></div>'
+      + '<span>' + escHtml(role.name) + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function selectRole(roleId) {
+  _selectedRoleId = roleId;
+  renderRolesList();
+  renderRoleEditor();
+}
+
+function renderRoleEditor() {
+  var editor = document.getElementById('roles-editor');
+  if (!editor) return;
+  var role = (state.roles || []).find(function(r) { return r.id === _selectedRoleId; });
+  if (!role) {
+    editor.innerHTML = '<div class="roles-editor-empty">Select a role on the left to view and edit its permissions.</div>';
+    return;
+  }
+  var isWildcard = role.permissions.indexOf('*') !== -1;
+  var isOwnerRole = role.canDelete === false;
+  var canRename = !isOwnerRole;
+
+  var html = '<div class="role-edit-header">'
+    + '<div class="role-color-swatch" style="background:' + escHtml(role.color || '#888') + '" title="Change color">'
+    + '<input type="color" value="' + escHtml(role.color || '#888888') + '" oninput="previewRoleColor(this.value)" onchange="saveRoleColor(this.value)">'
+    + '</div>'
+    + '<input class="role-name-input" id="role-name-input" type="text" value="' + escHtml(role.name) + '"'
+    + (canRename ? '' : ' readonly') + ' placeholder="Role name" />'
+    + '</div>';
+
+  if (isWildcard) {
+    html += '<div style="padding:16px 18px;background:var(--surface);border-radius:10px;font-size:13px;">'
+      + '<div style="font-weight:700;color:var(--text);margin-bottom:4px;">Administrator — All Permissions</div>'
+      + '<div style="color:var(--text-muted);">This role has unrestricted access to every feature on the site.</div>'
+      + '</div>';
+  } else {
+    var categories = [];
+    ALL_PERMISSIONS.forEach(function(p) {
+      var cat = categories.find(function(c) { return c.name === p.category; });
+      if (!cat) { cat = { name: p.category, perms: [] }; categories.push(cat); }
+      cat.perms.push(p);
+    });
+    html += categories.map(function(cat) {
+      return '<div class="perm-category">'
+        + '<div class="perm-category-title">' + escHtml(cat.name) + '</div>'
+        + cat.perms.map(function(p) {
+          var checked = role.permissions.indexOf(p.id) !== -1;
+          return '<div class="perm-row">'
+            + '<div class="perm-row-info">'
+            + '<span class="perm-row-label">' + escHtml(p.label) + '</span>'
+            + '<span class="perm-row-desc">' + escHtml(p.desc) + '</span>'
+            + '</div>'
+            + '<label class="perm-toggle">'
+            + '<input type="checkbox"' + (checked ? ' checked' : '') + ' onchange="toggleRolePerm(\'' + p.id + '\',this.checked)">'
+            + '<span class="perm-toggle-track"></span>'
+            + '</label>'
+            + '</div>';
+        }).join('')
+        + '</div>';
+    }).join('');
+  }
+
+  var deleteBtn = (role.canDelete !== false)
+    ? '<button class="btn" style="color:#ef4444;border-color:#ef444440;" onclick="deleteRole(\'' + role.id + '\')">Delete Role</button>'
+    : '<span></span>';
+  var saveBtn = !isWildcard
+    ? '<button class="btn btn-primary" onclick="saveRoleEdits()">Save Changes</button>'
+    : '';
+
+  html += '<div class="roles-editor-footer">' + deleteBtn + '<div style="display:flex;gap:8px;">' + saveBtn + '</div></div>';
+  editor.innerHTML = html;
+}
+
+function previewRoleColor(color) {
+  var swatch = document.querySelector('.role-color-swatch');
+  if (swatch) swatch.style.background = color;
+}
+
+function saveRoleColor(color) {
+  var role = (state.roles || []).find(function(r) { return r.id === _selectedRoleId; });
+  if (!role) return;
+  role.color = color;
+  saveState();
+  renderRolesList();
+}
+
+function toggleRolePerm(permId, enabled) {
+  var role = (state.roles || []).find(function(r) { return r.id === _selectedRoleId; });
+  if (!role) return;
+  if (enabled) {
+    if (role.permissions.indexOf(permId) === -1) role.permissions.push(permId);
+  } else {
+    role.permissions = role.permissions.filter(function(p) { return p !== permId; });
+  }
+  saveState();
+}
+
+function saveRoleEdits() {
+  var role = (state.roles || []).find(function(r) { return r.id === _selectedRoleId; });
+  if (!role) return;
+  var nameInput = document.getElementById('role-name-input');
+  if (nameInput && role.canDelete !== false) {
+    var newName = nameInput.value.trim();
+    if (newName) role.name = newName;
+  }
+  saveState();
+  renderRolesList();
+  showToast('Role saved', 'success');
+}
+
+function createRole() {
+  if (!hasPermission('MANAGE_ROLES')) return;
+  var newRole = {
+    id: 'role_custom_' + Date.now(),
+    name: 'New Role',
+    color: '#6366f1',
+    permissions: [],
+    canDelete: true
+  };
+  if (!state.roles) state.roles = [];
+  state.roles.push(newRole);
+  saveState();
+  _selectedRoleId = newRole.id;
+  renderRolesList();
+  renderRoleEditor();
+  var nameInput = document.getElementById('role-name-input');
+  if (nameInput) { nameInput.focus(); nameInput.select(); }
+}
+
+function deleteRole(roleId) {
+  var role = (state.roles || []).find(function(r) { return r.id === roleId; });
+  if (!role || role.canDelete === false) { showToast('Built-in roles cannot be deleted', 'error'); return; }
+  if (!confirm('Delete role "' + role.name + '"? Members with this role will be moved to Member.')) return;
+  if (state.users) {
+    state.users.forEach(function(u) {
+      if (u.roleId === roleId) { u.roleId = 'role_member'; u.permissionTier = 'member'; }
+    });
+  }
+  state.roles = state.roles.filter(function(r) { return r.id !== roleId; });
+  saveState();
+  _selectedRoleId = null;
+  renderRolesList();
+  document.getElementById('roles-editor').innerHTML = '<div class="roles-editor-empty">Select a role on the left to view and edit its permissions.</div>';
+  showToast('Role deleted', 'success');
 }
 </script>
 <script src="admin-editor.js"></script>
@@ -8183,6 +8534,26 @@ function renderSocialConsentBanner() {
       <p class="ob-sub" id="ob-done-summary">Your workspace is ready.</p>
       <div id="ob-done-stats" class="ob-done-stats"></div>
       <button class="ob-btn-primary ob-btn-full" onclick="closeOnboarding()" style="margin-top:24px;">Go to Dashboard →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROLES MANAGER MODAL -->
+<div class="modal-overlay" id="modal-roles">
+  <div class="modal modal-roles-manager">
+    <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="modal-title">Manage Roles</span>
+      <button class="modal-close" onclick="closeModal('modal-roles')">&times;</button>
+    </div>
+    <div class="roles-manager-body">
+      <div class="roles-sidebar">
+        <div class="roles-sidebar-label">Roles</div>
+        <div class="roles-list" id="roles-list"></div>
+        <button class="btn btn-primary roles-add-btn" onclick="createRole()">+ New Role</button>
+      </div>
+      <div class="roles-editor" id="roles-editor">
+        <div class="roles-editor-empty">Select a role on the left to view and edit its permissions.</div>
+      </div>
     </div>
   </div>
 </div>

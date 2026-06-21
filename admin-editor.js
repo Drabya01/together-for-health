@@ -156,10 +156,9 @@ window.adminEditorToggle  = function() { _editorActive ? _editorOff(false) : _as
 window.adminEditorIsActive = function() { return _editorActive; };
 
 function _askPin() {
-  // Editor mode is admin-only
-  if (!window.currentUser || window.currentUser.permissionTier !== 'admin') {
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('EDITOR_MODE')) {
     if (typeof window.showToast === 'function') {
-      window.showToast("Editor mode is for admins only.", 'error');
+      window.showToast('You need the Editor Mode permission to do this.', 'error');
     }
     return;
   }
