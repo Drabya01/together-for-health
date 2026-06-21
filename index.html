@@ -7871,6 +7871,16 @@ function initRoles() {
         else u.roleId = 'role_member';
       }
     });
+    // Backfill: create member cards for approved users who don't have one yet
+    if (!state.members) state.members = [];
+    state.users.forEach(function(u) {
+      if (u.status === 'approved' && u.name) {
+        var already = state.members.find(function(m) { return m.email === u.email || m.googleId === u.googleId; });
+        if (!already) {
+          state.members.push({ id: uid(), name: u.name, role: u.role || u.roleInterest || 'Member', email: u.email || '', grade: u.grade || '', active: true, googleId: u.googleId, photo: u.photo || '' });
+        }
+      }
+    });
   }
   saveState();
 }
