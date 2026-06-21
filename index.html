@@ -7943,10 +7943,10 @@ function revokeUser(userId) {
   var user = state.users.find(function(u) { return u.id === userId; });
   if (!user) return;
   if (!confirm('Revoke access for ' + user.name + '? They will need to re-apply.')) return;
-  user.status = 'rejected';
+  user.status = 'pending';
   saveState();
   renderMembers();
-  showToast(user.name + "'s access has been revoked.", 'info');
+  showToast(user.name + "'s access has been revoked. They can re-apply.", 'info');
 }
 
 function toggleAuthPin() {
