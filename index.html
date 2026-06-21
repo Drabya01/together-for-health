@@ -7099,39 +7099,95 @@ function _buildTourSteps() {
   var first = currentUser ? currentUser.name.split(' ')[0] : 'there';
   var s = [{ type:'welcome', name:first, isAdmin:isAdmin }];
 
+  // Always-visible tabs, top to bottom
   s.push({ type:'feature', tab:'dashboard', spotlight:'[data-tab="dashboard"]',
-    icon:'dashboard', badge:'Dashboard', title:'Your Command Center',
-    desc:'Meeting recaps, upcoming events, and key stats — everything at a glance the moment you open the app.' });
-
-  s.push({ type:'feature', tab:'meetings', spotlight:'[data-tab="meetings"]',
-    icon:'meetings', badge:'Meetings', title:'Every Meeting, Captured',
-    desc:'Log agendas, decisions, action items, and attendance. Search or review any past meeting in seconds.' });
+    icon:'dashboard', badge:'Dashboard', title:'Dashboard',
+    desc:'Your home screen. Shows recent meetings, upcoming events, and quick stats.' });
 
   s.push({ type:'feature', tab:'calendar', spotlight:'[data-tab="calendar"]',
-    icon:'calendar', badge:'Calendar', title:'Club Calendar',
-    desc:'All upcoming events in one view. Never miss a meeting, deadline, or club activity.' });
+    icon:'calendar', badge:'Calendar', title:'Calendar',
+    desc:'All club events in one place. Click any day to see what is scheduled.' });
+
+  s.push({ type:'feature', tab:'ideas', spotlight:'[data-tab="ideas"]',
+    icon:'ideas', badge:'Ideas', title:'Ideas',
+    desc:'Post ideas for the club here. Other members can see them and vote.' });
+
+  s.push({ type:'feature', tab:'presentations', spotlight:'[data-tab="presentations"]',
+    icon:'presentations', badge:'Presentations', title:'Presentations',
+    desc:'Track presentations the club has done at schools.' });
+
+  s.push({ type:'feature', tab:'goals', spotlight:'[data-tab="goals"]',
+    icon:'goals', badge:'Goals', title:'Goals',
+    desc:'Club goals for the year. Add them and check them off as you go.' });
+
+  s.push({ type:'feature', tab:'meetings', spotlight:'[data-tab="meetings"]',
+    icon:'meetings', badge:'Meetings', title:'Meetings',
+    desc:'Log what happened at each meeting. Add the agenda, decisions, action items, and who showed up.' });
+
+  s.push({ type:'feature', tab:'attendance', spotlight:'[data-tab="attendance"]',
+    icon:'attendance', badge:'Attendance', title:'Attendance',
+    desc:'See who came to each meeting. Good for tracking participation over time.' });
+
+  s.push({ type:'feature', tab:'activities', spotlight:'[data-tab="activities"]',
+    icon:'activities', badge:'Activities', title:'Activities',
+    desc:'A running log of recent activity across the whole club.' });
+
+  s.push({ type:'feature', tab:'resources', spotlight:'[data-tab="resources"]',
+    icon:'resources', badge:'Resources', title:'Resources',
+    desc:'Links, files, and documents shared by the club. Anything worth saving goes here.' });
+
+  // Header features
+  s.push({ type:'feature', spotlight:'#globalSearchBtn',
+    icon:'search', badge:'Search', title:'Search',
+    desc:'Click Search or press Ctrl+K to find anything in the app fast. Members, meetings, goals, all of it.' });
 
   if (canEdit) {
     s.push({ type:'feature', spotlight:'#adminEditorNavBtn',
-      icon:'editor', badge: isAdmin ? 'Editor Mode · Admin' : 'Editor Mode · Officer',
-      title:'Edit Anything',
-      desc:'Click the pencil button in the header to unlock editor mode. Add members, record meetings, update any text — changes save automatically.' });
+      icon:'editor', badge: isAdmin ? 'Editor Mode (Admin)' : 'Editor Mode (Officer)',
+      title:'Editor Mode',
+      desc:'Click the pencil button to turn on editor mode. From there you can edit any text on the page, add members, log meetings, and more.' });
+
+    // Admin-only tabs, top to bottom
+    s.push({ type:'feature', tab:'plans', spotlight:'[data-tab="plans"]',
+      icon:'plans', badge:'Plans', title:'Plans',
+      desc:'Write up plans for upcoming events or initiatives.' });
+
     s.push({ type:'feature', tab:'members', spotlight:'[data-tab="members"]',
-      icon:'members', badge:'Members & Access',
-      title:'Manage Your Team',
-      desc:'Full roster plus every Google sign-in. Approve new members, set roles — member, officer, or admin — and revoke access anytime.' });
-  } else {
-    s.push({ type:'feature', tab:'resources', spotlight:'[data-tab="resources"]',
-      icon:'resources', badge:'Resources', title:'Club Resources',
-      desc:'Links, documents, and materials your club leaders have shared — always current.' });
-    s.push({ type:'feature', tab:'attendance', spotlight:'[data-tab="attendance"]',
-      icon:'attendance', badge:'Attendance', title:'Track Participation',
-      desc:'Your attendance history across every meeting, so you always know your record.' });
+      icon:'members', badge:'Members', title:'Members',
+      desc:'Your full club roster. Add or remove members, manage who has access to the app.' });
+
+    s.push({ type:'feature', tab:'budget', spotlight:'[data-tab="budget"]',
+      icon:'budget', badge:'Budget', title:'Budget',
+      desc:'Track income and spending. Log transactions and keep the finances organized.' });
+
+    s.push({ type:'feature', tab:'contacts', spotlight:'[data-tab="contacts"]',
+      icon:'contacts', badge:'Contacts', title:'Contacts',
+      desc:'School contacts and other people the club works with. Keep their info in one spot.' });
+
+    s.push({ type:'feature', tab:'outreach', spotlight:'[data-tab="outreach"]',
+      icon:'outreach', badge:'Outreach', title:'Outreach',
+      desc:'Log outreach to schools and organizations. Track follow-ups so nothing gets missed.' });
+
+    s.push({ type:'feature', tab:'fundraising', spotlight:'[data-tab="fundraising"]',
+      icon:'fundraising', badge:'Fundraising', title:'Fundraising',
+      desc:'Track fundraising campaigns and how much has been raised.' });
+
+    s.push({ type:'feature', tab:'feedback', spotlight:'[data-tab="feedback"]',
+      icon:'feedback', badge:'Feedback', title:'Feedback',
+      desc:'Log feedback from schools or events. Useful for improving presentations over time.' });
+
+    s.push({ type:'feature', tab:'social', spotlight:'[data-tab="social"]',
+      icon:'social', badge:'Social', title:'Social',
+      desc:'Plan and track social media posts for the club.' });
+
+    s.push({ type:'feature', tab:'marketing', spotlight:'[data-tab="marketing"]',
+      icon:'marketing', badge:'Marketing', title:'Marketing',
+      desc:'Manage marketing campaigns and materials the club is running.' });
   }
 
   s.push({ type:'feature', spotlight:'#userDropdownWrap',
-    icon:'profile', badge:'Your Account', title:'Your Profile Badge',
-    desc:'Your avatar in the top-right corner. Click it anytime to see your role and permission level, or to sign out.' });
+    icon:'profile', badge:'Your Account', title:'Your Profile',
+    desc:'Click your avatar in the top right to see your role and permission level, or to sign out.' });
 
   s.push({ type:'done', name:first });
   return s;
@@ -7278,14 +7334,27 @@ function _obDoneHtml(step) {
 
 function _obIcon(type) {
   var icons = {
-    dashboard:  '<rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>',
-    meetings:   '<rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 3V1m6 2V1M3 7h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 11h3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
-    calendar:   '<rect x="2" y="3" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 1v2m8-2v2M2 8h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="10" cy="13" r="1" fill="currentColor"/><circle cx="13" cy="13" r="1" fill="currentColor"/>',
-    editor:     '<path d="M13.5 2.5a2 2 0 0 1 2.83 2.83L5 16.66 2 17l.34-3L13.5 2.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
-    members:    '<circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 17c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
-    resources:  '<path d="M5 2h8l4 4v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M13 2v4h4M6 9h8M6 12h8M6 15h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
-    attendance: '<rect x="2" y="4" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 8h16M7 2v2m6-2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 12l2.5 2.5L14 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
-    profile:    '<circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 17a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
+    dashboard:     '<rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+    calendar:      '<rect x="2" y="3" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 1v2m8-2v2M2 8h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="10" cy="13" r="1" fill="currentColor"/><circle cx="13" cy="13" r="1" fill="currentColor"/>',
+    ideas:         '<path d="M10 2a5 5 0 0 1 3 9l-1 1H8l-1-1A5 5 0 0 1 10 2z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M8 14h4M9 16h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    presentations: '<rect x="1" y="2" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 14v3M7 17h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    goals:         '<circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="10" cy="10" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/>',
+    meetings:      '<rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 3V1m6 2V1M3 7h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 11h3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+    attendance:    '<rect x="2" y="4" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 8h16M7 2v2m6-2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 12l2.5 2.5L14 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+    activities:    '<path d="M1 10h3l2-6 4 12 2-6h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    resources:     '<path d="M5 2h8l4 4v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M13 2v4h4M6 9h8M6 12h8M6 15h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    search:        '<circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    editor:        '<path d="M13.5 2.5a2 2 0 0 1 2.83 2.83L5 16.66 2 17l.34-3L13.5 2.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    plans:         '<rect x="3" y="1" width="14" height="18" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 7l2.5 2.5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 13h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    members:       '<circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 17c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
+    budget:        '<rect x="1" y="4" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M1 9h18" stroke="currentColor" stroke-width="1.5"/><path d="M10 12v1.5M10 6.5v1.5M7.5 8.5C7.5 7.7 8.6 7 10 7s2.5.7 2.5 1.5-1.1 1.5-2.5 1.5-2.5.5-2.5 1.5S8.6 13 10 13s2.5-.7 2.5-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    contacts:      '<rect x="3" y="1" width="14" height="18" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 7h8M6 10.5h6M6 14h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    outreach:      '<path d="M2 15l5-5 4 4 7-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="18" cy="5" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+    fundraising:   '<circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 5.5V7M10 13v1.5M7.5 8.5C7.5 7.7 8.6 7 10 7s2.5.7 2.5 1.5-1.1 1.5-2.5 1.5-2.5.7-2.5 1.5S8.6 13 10 13s2.5-.7 2.5-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    feedback:      '<path d="M1 2h18v12H11l-4 4V14H1z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/><circle cx="6" cy="8" r="1" fill="currentColor"/><circle cx="10" cy="8" r="1" fill="currentColor"/><circle cx="14" cy="8" r="1" fill="currentColor"/>',
+    social:        '<circle cx="16" cy="4" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="4" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6.2 9l7.8-4M6.2 11l7.8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    marketing:     '<rect x="1" y="4" width="18" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M1 9l9 5 9-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    profile:       '<circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 17a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
   };
   return icons[type] || icons.dashboard;
 }
