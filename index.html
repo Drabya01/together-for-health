@@ -183,12 +183,13 @@
     #sidebar-footer { display: none; }
   }
 
-  /* Editor-only nav items — visibility controlled per-tab by JS updateTabVisibility() */
+  /* Editor-only nav items — per-tab visibility from JS; CSS shows all for staff as fallback */
   .editor-only-tab { display: none; }
   body.user-has-staff-access .editor-only-tab { display: flex; }
 
-  /* Admin group label — JS controls display directly */
+  /* Admin group — CSS shows for any staff, JS fine-tunes per-tab */
   #sidebar-admin-group { display: none; }
+  body.user-has-staff-access #sidebar-admin-group { display: block; }
 
   /* ── App body ─────────────────────────────────── */
   #app-body {
