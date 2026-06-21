@@ -3374,12 +3374,15 @@ var ADMIN_NOTIFY_EMAIL  = 'golussaud@gmail.com';
 var APP_ORIGIN          = 'https://drabya01.github.io/together-for-health';
 
 function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
+function getSyncGistId() { return localStorage.getItem('tfh_gist_id') || ''; }
 
 async function syncFromGist() {
   try {
     updateSyncIndicator('syncing');
     // No Cache-Control header — GitHub CORS policy blocks it in preflight
-    const resp = await fetch('https://api.github.com/gists/' + TFH_GIST_ID, {
+    var gistId = getSyncGistId();
+    if (!gistId) { updateSyncIndicator('offline'); return false; }
+    const resp = await fetch('https://api.github.com/gists/' + gistId, {
       headers: { 'Accept': 'application/vnd.github.v3+json' }
     });
     if (!resp.ok) { updateSyncIndicator('error'); return false; }
@@ -3419,17 +3422,32 @@ async function pushToGist() {
     state._syncTs = Date.now();
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     updateSyncIndicator('syncing');
-    const resp = await fetch('https://api.github.com/gists/' + TFH_GIST_ID, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': 'token ' + token,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify({ files: { [TFH_GIST_FILE]: { content: JSON.stringify(state) } } })
+    const headers = {
+      'Authorization': 'token ' + token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    const fileBody = JSON.stringify({ files: { [TFH_GIST_FILE]: { content: JSON.stringify(state) } } });
+    var gistId = getSyncGistId();
+    // Try PATCH if we have an ID; fall through to create if missing/forbidden
+    if (gistId) {
+      const patch = await fetch('https://api.github.com/gists/' + gistId, { method: 'PATCH', headers: headers, body: fileBody });
+      if (patch.ok) { updateSyncIndicator('synced'); return true; }
+      if (patch.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); return false; }
+      // 403/404 = don't own this gist — fall through and create a new one
+    }
+    // Create a new private Gist owned by this account
+    const create = await fetch('https://api.github.com/gists', {
+      method: 'POST', headers: headers,
+      body: JSON.stringify({ description: 'Together For Health — Club Sync', public: false, files: { [TFH_GIST_FILE]: { content: JSON.stringify(state) } } })
     });
-    if (resp.ok) { updateSyncIndicator('synced'); return true; }
-    if (resp.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); }
+    if (create.ok) {
+      const created = await create.json();
+      localStorage.setItem('tfh_gist_id', created.id);
+      updateSyncIndicator('synced');
+      return true;
+    }
+    if (create.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); }
     return false;
   } catch(e) { updateSyncIndicator('error'); return false; }
 }
@@ -3452,7 +3470,9 @@ function updateSyncIndicator(status) {
 function generateSyncSetupUrl() {
   var token = getSyncToken();
   if (!token) return;
-  var encoded = btoa(token);
+  var gistId = getSyncGistId();
+  var payload = JSON.stringify({ t: token, g: gistId });
+  var encoded = btoa(payload);
   var url = window.location.origin + window.location.pathname + '#tfhsync=' + encoded;
   navigator.clipboard.writeText(url).then(function() {
     showToast('Setup link copied! Open it on the other device.');
@@ -8200,15 +8220,26 @@ function scheduleReminders() {
 })();
 
 // ====== SYNC BOOTSTRAP ======
-// Check URL hash for one-time token setup (e.g. #tfhsync=BASE64TOKEN)
+// Check URL hash for one-time token+gistId setup (e.g. #tfhsync=BASE64JSON)
 (function() {
   try {
     var hash = window.location.hash;
     if (hash && hash.startsWith('#tfhsync=')) {
       var encoded = hash.substring(9);
-      var token = atob(encoded);
+      var decoded = atob(encoded);
+      var token, gistId;
+      try {
+        var parsed = JSON.parse(decoded);
+        token = parsed.t;
+        gistId = parsed.g;
+      } catch(_) {
+        // Old format: plain token string
+        token = decoded;
+        gistId = '';
+      }
       if (token && token.length > 10) {
         localStorage.setItem('tfh_sync_token', token);
+        if (gistId) localStorage.setItem('tfh_gist_id', gistId);
         history.replaceState(null, '', window.location.pathname + window.location.search);
         setTimeout(function() { showToast('Sync connected! This device will now sync automatically.'); }, 600);
       }
