@@ -3311,6 +3311,13 @@ var _syncPending = false;
 var GOOGLE_CLIENT_ID = '1010052442736-kv3qsn1j0pov5re2v6na15opsvuga1v6.apps.googleusercontent.com';
 var currentUser = null;
 
+// ── Email notifications (fill in after EmailJS setup at emailjs.com) ──
+var EMAILJS_PUBLIC_KEY  = '';   // Account → General → Public Key
+var EMAILJS_SERVICE_ID  = '';   // Email Services → your service ID
+var EMAILJS_TEMPLATE_ID = '';   // Email Templates → your template ID
+var ADMIN_NOTIFY_EMAIL  = '1sauddra@hdsb.ca';
+var APP_ORIGIN          = 'https://drabya01.github.io/together-for-health';
+
 function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
 
 async function syncFromGist() {
@@ -7379,6 +7386,59 @@ function skipOnboarding() { finishTour(); }
 function closeOnboarding() { finishTour(); }
 function obFinish() { finishTour(); }
 
+// ====== EMAIL NOTIFICATIONS ======
+function sendApprovalEmail(user) {
+  if (!EMAILJS_PUBLIC_KEY || typeof emailjs === 'undefined') return;
+  var base = APP_ORIGIN.replace(/\/$/, '');
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email:        ADMIN_NOTIFY_EMAIL,
+    applicant_name:  user.name          || 'Unknown',
+    applicant_email: user.email         || '',
+    applicant_grade: user.grade         || 'Not specified',
+    applicant_role:  user.roleInterest  || 'Not specified',
+    applicant_bio:   user.bio           || 'None provided',
+    approve_link:    base + '/?approve=' + encodeURIComponent(user.id),
+    reject_link:     base + '/?reject='  + encodeURIComponent(user.id),
+  }, EMAILJS_PUBLIC_KEY).catch(function(err) {
+    console.warn('Approval email failed:', err);
+  });
+}
+
+function processPendingAction() {
+  var raw = sessionStorage.getItem('tfh_pending_action');
+  if (!raw) return;
+  try {
+    var action = JSON.parse(raw);
+    sessionStorage.removeItem('tfh_pending_action');
+    if (!currentUser || currentUser.permissionTier !== 'admin') {
+      showToast('Admin access required to process this action.', 'error');
+      return;
+    }
+    setTimeout(function() {
+      var user = (state.users || []).find(function(u) { return u.id === action.userId; });
+      if (!user) {
+        showToast('Member not found — make sure Gist sync is set up so data stays in sync.', 'error');
+        return;
+      }
+      if (user.status !== 'pending') {
+        showToast(escHtml(user.name) + ' has already been processed.', 'info');
+        return;
+      }
+      switchTab('members');
+      if (action.type === 'approve') {
+        approveUser(action.userId, 'member', user.roleInterest || 'Member');
+      } else {
+        user.status = 'rejected';
+        saveState();
+        renderMembers();
+        showToast(escHtml(user.name) + '\'s application was rejected.', 'info');
+      }
+    }, 700);
+  } catch(e) {
+    sessionStorage.removeItem('tfh_pending_action');
+  }
+}
+
 // ====== SITE LOCK SCREEN ======
 /* ─── Google Auth ──────────────────────────────────────── */
 function initGoogleAuth() {
@@ -7491,6 +7551,7 @@ function submitMemberOnboard() {
   };
   state.users.push(newUser);
   saveState();
+  sendApprovalEmail(newUser);
   currentUser = newUser;
   overlay.style.display = 'none';
   showPendingScreen();
@@ -7516,6 +7577,7 @@ function showApp() {
   updateHeaderUserBadge();
   scheduleReminders();
   if (typeof switchTab === 'function') switchTab('dashboard');
+  processPendingAction();
   maybeStartTour();
 }
 
@@ -7688,6 +7750,18 @@ function submitAuthPin() {
     setTimeout(function() { if (input) { input.classList.remove('lock-shake'); input.focus(); } }, 450);
   }
 }
+
+// Read approve/reject URL params written by email magic links
+(function() {
+  try {
+    var p = new URLSearchParams(window.location.search);
+    var a = p.get('approve'), r = p.get('reject');
+    if (a || r) {
+      sessionStorage.setItem('tfh_pending_action', JSON.stringify({ type: a ? 'approve' : 'reject', userId: a || r }));
+      history.replaceState({}, '', window.location.pathname);
+    }
+  } catch(e) {}
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
   if (sessionStorage.getItem('tfh_pin_access')) {
@@ -7875,6 +7949,7 @@ function renderSocialConsentBanner() {
 }
 </script>
 <script src="admin-editor.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script async src="https://accounts.google.com/gsi/client" onload="initGoogleAuth()"></script>
 
 <!-- AUTH OVERLAYS -->
