@@ -5488,6 +5488,7 @@ Together For Health — [School], 2026–2027
 }
 
 // ====== INIT ======
+var _socialFilter = 'all'; // must be declared before renderSocial() is called below
 seedDefaultEvents();
 seedNewFeatures();
 renderDash();
@@ -5942,7 +5943,6 @@ function deleteFeedback(id) {
 }
 
 // ====== SOCIAL MEDIA ======
-let _socialFilter = 'all';
 
 function filterSocial(status) {
   _socialFilter = status;
