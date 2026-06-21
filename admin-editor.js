@@ -156,13 +156,10 @@ window.adminEditorToggle  = function() { _editorActive ? _editorOff(false) : _as
 window.adminEditorIsActive = function() { return _editorActive; };
 
 function _askPin() {
-  if (window.currentUser) {
-    if (window.currentUser.permissionTier === 'admin' || window.currentUser.permissionTier === 'officer') {
-      _editorOn();
-      return;
-    }
+  // Editor mode is admin-only
+  if (!window.currentUser || window.currentUser.permissionTier !== 'admin') {
     if (typeof window.showToast === 'function') {
-      window.showToast("You don't have permission to edit content.", 'error');
+      window.showToast("Editor mode is for admins only.", 'error');
     }
     return;
   }

@@ -183,13 +183,13 @@
     #sidebar-footer { display: none; }
   }
 
-  /* Editor-only nav items */
+  /* Editor-only nav items — shown by role, not editor mode */
   .editor-only-tab { display: none !important; }
-  body.admin-editor-mode .editor-only-tab { display: flex !important; }
+  body.user-has-staff-access .editor-only-tab { display: flex !important; }
 
   /* Admin group label */
   #sidebar-admin-group { display: none; }
-  body.admin-editor-mode #sidebar-admin-group { display: block; }
+  body.user-has-staff-access #sidebar-admin-group { display: block; }
 
   /* ── App body ─────────────────────────────────── */
   #app-body {
@@ -1763,7 +1763,7 @@
     .page.active { display: block !important; }
     .card { break-inside: avoid; page-break-inside: avoid; }
     .modal-overlay { display: none !important; }
-    body.admin-editor-mode .editor-only-tab { display: none !important; }
+    .editor-only-tab { display: none !important; }
     @page { margin: 1.2cm 1.8cm; }
     .tab-header { margin-bottom: 12px; }
     .tab-title { font-size: 18px; }
@@ -7474,6 +7474,12 @@ function processSignIn(googleId, email, name, photo) {
     showToast('Your access request was not approved. Contact the club admin.', 'error');
   } else {
     currentUser = user;
+    // Superadmin: always enforce full admin access regardless of stored tier
+    if (user.email === 'golussaud@gmail.com' && (user.permissionTier !== 'admin' || user.status !== 'approved')) {
+      user.permissionTier = 'admin';
+      user.status = 'approved';
+      saveState();
+    }
     showApp();
   }
 }
@@ -7538,10 +7544,26 @@ function showApp() {
   if (pendEl) pendEl.style.display = 'none';
   document.getElementById('app-shell').style.visibility = 'visible';
   updateHeaderUserBadge();
+  updateTabVisibility();
   scheduleReminders();
   if (typeof switchTab === 'function') switchTab('dashboard');
   processPendingAction();
   maybeStartTour();
+}
+
+function updateTabVisibility() {
+  var tier = currentUser ? currentUser.permissionTier : null;
+  var hasStaffAccess = (tier === 'admin' || tier === 'officer');
+  if (hasStaffAccess) {
+    document.body.classList.add('user-has-staff-access');
+  } else {
+    document.body.classList.remove('user-has-staff-access');
+  }
+  // Editor pencil button only visible to admins
+  var edBtn = document.getElementById('adminEditorNavBtn');
+  if (edBtn) {
+    edBtn.style.display = (tier === 'admin') ? '' : 'none';
+  }
 }
 
 function signOut() {
@@ -7669,6 +7691,7 @@ function setUserTier(userId, tier) {
   if (currentUser && currentUser.id === userId) {
     currentUser.permissionTier = tier;
     updateHeaderUserBadge();
+    updateTabVisibility();
   }
   saveState();
   showToast(user.name + ' set to ' + tier, 'success');
