@@ -7560,13 +7560,13 @@ function initGoogleAuth() {
       theme: 'outline', size: 'large', width: 280, shape: 'rectangular'
     });
   }
-  var stored = sessionStorage.getItem('tfh_google_session');
+  var stored = localStorage.getItem('tfh_google_session');
   if (stored) {
     try {
       var s = JSON.parse(stored);
       processSignIn(s.googleId, s.email, s.name, s.photo);
       return;
-    } catch(e) { sessionStorage.removeItem('tfh_google_session'); }
+    } catch(e) { localStorage.removeItem('tfh_google_session'); }
   }
 }
 
@@ -7576,7 +7576,7 @@ function handleGoogleSignIn(response) {
   var email = payload.email || '';
   var name = payload.name || email;
   var photo = payload.picture || '';
-  sessionStorage.setItem('tfh_google_session', JSON.stringify({ googleId: googleId, email: email, name: name, photo: photo }));
+  localStorage.setItem('tfh_google_session', JSON.stringify({ googleId: googleId, email: email, name: name, photo: photo }));
   processSignIn(googleId, email, name, photo);
 }
 
@@ -7880,7 +7880,7 @@ function updateTabVisibility() {
 }
 
 function signOut() {
-  sessionStorage.removeItem('tfh_google_session');
+  localStorage.removeItem('tfh_google_session');
   sessionStorage.removeItem('tfh_pin_access');
   if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
     try { google.accounts.id.disableAutoSelect(); } catch(e) {}
