@@ -1863,6 +1863,7 @@
   }
   #mobile-sidebar-backdrop.open { display: block; }
   @media (max-width: 600px) {
+    #app-shell { overflow: visible; }
     #sidebar {
       display: none !important;
       position: fixed;
@@ -1874,6 +1875,10 @@
       overflow-y: auto;
     }
     #sidebar.mobile-open { display: flex !important; }
+    #sidebar.mobile-open #sidebar-logo { display: flex !important; }
+    #sidebar.mobile-open .nav-item-label { display: inline !important; }
+    #sidebar.mobile-open .nav-item { justify-content: flex-start !important; padding: 10px 14px !important; }
+    #sidebar.mobile-open .nav-group-label { display: block !important; }
     #mobile-bottom-nav { display: flex; }
     #main-content { padding-bottom: 58px; }
     .modal-overlay { padding: 10px; }
@@ -1888,6 +1893,7 @@
 <body>
 
 <div id="app-shell">
+  <div id="mobile-sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
   <!-- SIDEBAR -->
   <aside id="sidebar">
@@ -2607,7 +2613,6 @@
     More
   </button>
 </div>
-<div id="mobile-sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
 <!-- TOAST CONTAINER -->
 <div id="tfh-toast-container"></div>
