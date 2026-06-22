@@ -1042,8 +1042,7 @@
   .activity-feed-title { font-size:13px; font-weight:500; color:var(--text); }
   .activity-feed-time { font-size:11px; color:var(--text-hint); margin-top:1px; }
 
-  /* ── Announcement pinned ── */
-  .announcement-card.pinned { border-left:3px solid #f59e0b; }
+  /* ── Announcement pinned (legacy) ── */
   .pin-icon { font-size:13px; color:#d97706; }
 
   /* ── Resource starring ── */
@@ -1289,15 +1288,38 @@
   /* ── Plans status filter & badges ─────────── */
   #plans-status-filter { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
 
-  /* ── Announcements ─────────────────────────── */
-  .announcements-strip { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
-  .announcement-card { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-radius:var(--radius-sm); border:1px solid; }
-  .announcement-card.normal { background:#fff8e1; border-color:#f9a825; }
-  .announcement-card.urgent { background:#fdecea; border-color:#e53935; }
-  .announcement-icon { font-size:18px; flex-shrink:0; margin-top:2px; }
-  .announcement-text { flex:1; font-size:14px; line-height:1.5; font-weight:500; }
-  .announcement-date { font-size:11px; color:var(--text-muted); margin-top:3px; font-weight:400; }
-  .announcement-actions { display:flex; gap:4px; flex-shrink:0; }
+  /* ── Announcements feed ────────────────────── */
+  .announcements-strip { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+  .ann-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:box-shadow 0.15s; }
+  .ann-card:hover { box-shadow:0 2px 12px rgba(0,0,0,0.07); }
+  .ann-card--pinned { border-left:3px solid #f59e0b; }
+  .ann-card--new { border-color:var(--accent); }
+  .ann-type-stripe { height:4px; }
+  .ann-type-stripe--general  { background:#f59e0b; }
+  .ann-type-stripe--meeting  { background:#3b82f6; }
+  .ann-type-stripe--event    { background:#8b5cf6; }
+  .ann-type-stripe--reminder { background:#10b981; }
+  .ann-type-stripe--urgent   { background:#ef4444; }
+  .ann-card-header { display:flex; align-items:center; gap:8px; padding:10px 14px 4px; }
+  .ann-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; flex-shrink:0; }
+  .ann-meta { flex:1; min-width:0; }
+  .ann-author { font-size:12px; font-weight:600; color:var(--text); }
+  .ann-dot { color:var(--text-muted); margin:0 3px; font-size:11px; }
+  .ann-time { font-size:11px; color:var(--text-muted); }
+  .ann-type-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; flex-shrink:0; white-space:nowrap; }
+  .ann-pin-icon { font-size:12px; flex-shrink:0; opacity:0.7; }
+  .ann-card-body { padding:4px 14px 8px; }
+  .ann-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; line-height:1.3; }
+  .ann-body-text { font-size:13px; color:var(--text-secondary,var(--text-muted)); line-height:1.55; }
+  .ann-card-footer { display:flex; align-items:center; gap:8px; padding:8px 14px 10px; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .ann-react-btn { display:inline-flex; align-items:center; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:3px 10px; font-size:12px; cursor:pointer; transition:all 0.15s; font-family:inherit; color:var(--text-muted); }
+  .ann-react-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .ann-react-btn--active { background:#fdf2f4; border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .ann-seen { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:3px; }
+  .ann-admin-btns { display:flex; gap:4px; margin-left:auto; }
+  .nav-item { position:relative; }
+  .mob-nav-btn { position:relative; }
+  .ann-unread-dot { position:absolute; top:5px; right:5px; min-width:15px; height:15px; background:var(--accent); color:white; border-radius:10px; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 3px; pointer-events:none; }
 
   /* ── Dashboard upgrades ─────────────────────── */
   .dash-quick-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
@@ -2996,32 +3018,39 @@
 <div class="modal-overlay" id="modal-announcement">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title" id="ann-modal-title">Add announcement</span>
+      <span class="modal-title" id="ann-modal-title">New announcement</span>
       <button class="modal-close" onclick="closeModal('modal-announcement')">&times;</button>
     </div>
     <div class="form-row"><div>
+      <label>Title</label>
+      <input type="text" id="ann-title" placeholder="e.g. Meeting this Friday!">
+    </div></div>
+    <div class="form-row"><div>
       <label>Message *</label>
-      <textarea id="ann-text" placeholder="e.g. Presentation booked for next Friday — confirm your availability!"></textarea>
+      <textarea id="ann-text" placeholder="e.g. Confirm your availability — we need at least 5 members present."></textarea>
     </div></div>
     <div class="form-row form-2col">
-      <div><label>Date</label><input type="date" id="ann-date"></div>
-      <div><label>Urgency</label>
-        <select id="ann-urgent">
-          <option value="0">Normal (yellow)</option>
-          <option value="1">Urgent (red)</option>
+      <div><label>Type</label>
+        <select id="ann-type">
+          <option value="general">📢 General</option>
+          <option value="meeting">🗓 Meeting</option>
+          <option value="event">🎉 Event</option>
+          <option value="reminder">🔔 Reminder</option>
+          <option value="urgent">🚨 Urgent</option>
         </select>
       </div>
+      <div><label>Date (optional)</label><input type="date" id="ann-date"></div>
     </div>
     <div class="form-row form-2col">
       <div><label>Expires after (optional)</label><input type="date" id="ann-expires"></div>
       <div style="display:flex;align-items:center;gap:10px;padding-top:20px;">
         <input type="checkbox" id="ann-pinned" style="width:auto;cursor:pointer;">
-        <label for="ann-pinned" style="margin:0;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;">📌 Pin this announcement</label>
+        <label for="ann-pinned" style="margin:0;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;">📌 Pin this</label>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-announcement')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
+      <button class="btn btn-primary" onclick="saveAnnouncement()">Post</button>
     </div>
   </div>
 </div>
@@ -3773,27 +3802,41 @@ function openShortcutsModal() { openModal('modal-shortcuts'); }
 
 // ====== TAB BADGE COUNTS ======
 function updateTabBadges() {
-  // Remove existing badges
-  document.querySelectorAll('.nav-tab-badge').forEach(b => b.remove());
-  const counts = {
+  document.querySelectorAll('.nav-tab-badge').forEach(function(b) { b.remove(); });
+  document.querySelectorAll('.ann-unread-dot').forEach(function(b) { b.remove(); });
+  var counts = {
     ideas: (state.ideas || []).length,
     meetings: (state.meetings || []).length,
     goals: (state.goals || []).length,
     activities: (state.activities || []).length,
     presentations: (state.presentations || []).length,
   };
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    const onclick = tab.getAttribute('onclick') || '';
-    const match = onclick.match(/switchTab\('(\w+)'\)/);
+  document.querySelectorAll('.nav-tab').forEach(function(tab) {
+    var onclick = tab.getAttribute('onclick') || '';
+    var match = onclick.match(/switchTab\('(\w+)'\)/);
     if (!match) return;
-    const tabName = match[1];
+    var tabName = match[1];
     if (counts[tabName]) {
-      const badge = document.createElement('span');
+      var badge = document.createElement('span');
       badge.className = 'nav-tab-badge';
       badge.textContent = counts[tabName];
       tab.appendChild(badge);
     }
   });
+  // Unread announcement dot on dashboard nav items
+  var lastSeenTs2 = parseInt(localStorage.getItem('tfh_ann_seen_ts') || '0');
+  var todayISO2 = new Date().toISOString().slice(0,10);
+  var unreadAnn = (state.announcements || []).filter(function(a) {
+    return a.createdAt && a.createdAt > lastSeenTs2 && (!a.expiresAfter || a.expiresAfter >= todayISO2);
+  }).length;
+  if (unreadAnn > 0) {
+    document.querySelectorAll('.nav-item[data-tab="dashboard"], .mob-nav-btn[data-tab="dashboard"]').forEach(function(btn) {
+      var dot = document.createElement('span');
+      dot.className = 'ann-unread-dot';
+      dot.textContent = unreadAnn;
+      btn.appendChild(dot);
+    });
+  }
 }
 
 const today = new Date();
@@ -3908,24 +3951,71 @@ function renderDash() {
   document.getElementById('stat-members').textContent = (state.members || []).length || '0';
 
   // Announcements
-  const annContainer = document.getElementById('dash-announcements');
+  var annContainer = document.getElementById('dash-announcements');
   annContainer.innerHTML = '';
-  let announcements = (state.announcements || []).filter(a => !a.expiresAfter || a.expiresAfter >= todayISOStr);
-  announcements.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
-  announcements.forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'announcement-card ' + (a.urgent ? 'urgent' : 'normal') + (a.pinned ? ' pinned' : '');
-    div.innerHTML = `
-      <div class="announcement-icon">${a.pinned ? '📌' : a.urgent ? '🚨' : '📢'}</div>
-      <div style="flex:1">
-        <div class="announcement-text">${escHtml(a.text)}</div>
-        ${a.date ? '<div class="announcement-date">' + fmtMeetingDate(a.date) + '</div>' : ''}
-      </div>
-      <div class="announcement-actions editor-only">
-        <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="togglePinAnnouncement('${a.id}')">${a.pinned ? 'Unpin' : 'Pin'}</button>
-        <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="editAnnouncement('${a.id}')">Edit</button>
-        <button class="btn btn-ghost btn-danger" style="padding:4px 8px;font-size:12px;" onclick="deleteAnnouncement('${a.id}')">✕</button>
-      </div>`;
+  var lastSeenTs = parseInt(localStorage.getItem('tfh_ann_seen_ts') || '0');
+  var annList = (state.announcements || []).filter(function(a) {
+    return !a.expiresAfter || a.expiresAfter >= todayISOStr;
+  });
+  annList.sort(function(a, b) {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+  // Track seenBy for read receipts
+  if (window.currentUser) {
+    var seenChanged = false;
+    annList.forEach(function(a) {
+      if (!a.seenBy) a.seenBy = [];
+      if (a.seenBy.indexOf(window.currentUser.googleId) === -1) {
+        a.seenBy.push(window.currentUser.googleId);
+        seenChanged = true;
+      }
+    });
+    if (seenChanged) saveState();
+    localStorage.setItem('tfh_ann_seen_ts', String(Date.now()));
+  }
+  annList.forEach(function(a) {
+    var type = a.type || (a.urgent ? 'urgent' : 'general');
+    var typeInfo = ANN_TYPES[type] || ANN_TYPES.general;
+    var isNew = a.createdAt && a.createdAt > lastSeenTs;
+    var avatarColor = AVATAR_COLORS[(a.authorName || '?').charCodeAt(0) % AVATAR_COLORS.length];
+    var avatarLetter = (a.authorName || '?').charAt(0).toUpperCase();
+    var likeCount = ((a.reactions || {})['👍'] || []).length;
+    var userLiked = window.currentUser && ((a.reactions || {})['👍'] || []).indexOf(window.currentUser.googleId) !== -1;
+    var seenCount = (a.seenBy || []).length;
+    var timeStr = a.createdAt ? annTimeAgo(a.createdAt) : (a.date ? fmtMeetingDate(a.date) : '');
+    var div = document.createElement('div');
+    div.className = 'ann-card' + (a.pinned ? ' ann-card--pinned' : '') + (isNew ? ' ann-card--new' : '');
+    var headerHtml =
+      '<div class="ann-type-stripe ann-type-stripe--' + type + '"></div>' +
+      '<div class="ann-card-header">' +
+        (a.authorName ? '<div class="ann-avatar" style="background:' + avatarColor + '">' + avatarLetter + '</div>' : '') +
+        '<div class="ann-meta">' +
+          (a.authorName ? '<span class="ann-author">' + escHtml(a.authorName) + '</span><span class="ann-dot">·</span>' : '') +
+          (timeStr ? '<span class="ann-time">' + escHtml(timeStr) + '</span>' : '') +
+        '</div>' +
+        '<span class="ann-type-badge" style="background:' + typeInfo.bg + ';color:' + typeInfo.color + '">' + typeInfo.emoji + ' ' + typeInfo.label + '</span>' +
+        (a.pinned ? '<span class="ann-pin-icon" title="Pinned">📌</span>' : '') +
+      '</div>';
+    var bodyHtml =
+      '<div class="ann-card-body">' +
+        (a.title ? '<div class="ann-title">' + escHtml(a.title) + '</div>' : '') +
+        '<div class="ann-body-text">' + escHtml(a.text) + '</div>' +
+      '</div>';
+    var footerHtml =
+      '<div class="ann-card-footer">' +
+        '<button class="ann-react-btn' + (userLiked ? ' ann-react-btn--active' : '') + '" onclick="reactToAnnouncement(\'' + a.id + '\',\'👍\')" title="' + (userLiked ? 'Unlike' : 'Like') + '">' +
+          '👍' + (likeCount ? ' <span>' + likeCount + '</span>' : '') +
+        '</button>' +
+        '<span class="ann-seen editor-only" title="Seen by ' + seenCount + ' member(s)">👁 ' + seenCount + '</span>' +
+        '<div class="ann-admin-btns editor-only">' +
+          '<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="togglePinAnnouncement(\'' + a.id + '\')">' + (a.pinned ? 'Unpin' : 'Pin') + '</button>' +
+          '<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="editAnnouncement(\'' + a.id + '\')">Edit</button>' +
+          '<button class="btn btn-ghost btn-danger" style="padding:3px 8px;font-size:11px;" onclick="deleteAnnouncement(\'' + a.id + '\')">✕</button>' +
+        '</div>' +
+      '</div>';
+    div.innerHTML = headerHtml + bodyHtml + footerHtml;
     annContainer.appendChild(div);
   });
 
@@ -4818,13 +4908,41 @@ function escHtml(str) {
 }
 
 // ====== ANNOUNCEMENTS ======
+function annTimeAgo(ts) {
+  if (!ts) return '';
+  var diff = Date.now() - ts;
+  var mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  var days = Math.floor(hrs / 24);
+  if (days < 7) return days + 'd ago';
+  var d = new Date(ts);
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+function reactToAnnouncement(annId, emoji) {
+  if (!window.currentUser) return;
+  var a = (state.announcements || []).find(function(x) { return x.id === annId; });
+  if (!a) return;
+  if (!a.reactions) a.reactions = {};
+  if (!a.reactions[emoji]) a.reactions[emoji] = [];
+  var idx = a.reactions[emoji].indexOf(window.currentUser.googleId);
+  if (idx === -1) a.reactions[emoji].push(window.currentUser.googleId);
+  else a.reactions[emoji].splice(idx, 1);
+  saveState();
+  renderDash();
+}
+
 function openAddAnnouncement() {
   if (!hasPermission('MANAGE_ANNOUNCEMENTS')) return;
   editingId = null;
-  document.getElementById('ann-modal-title').textContent = 'Add announcement';
+  document.getElementById('ann-modal-title').textContent = 'New announcement';
+  document.getElementById('ann-title').value = '';
   document.getElementById('ann-text').value = '';
-  document.getElementById('ann-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
-  document.getElementById('ann-urgent').value = '0';
+  document.getElementById('ann-type').value = 'general';
+  document.getElementById('ann-date').value = '';
   document.getElementById('ann-expires').value = '';
   document.getElementById('ann-pinned').checked = false;
   openModal('modal-announcement');
@@ -4836,9 +4954,10 @@ function editAnnouncement(id) {
   if (!a) return;
   editingId = id;
   document.getElementById('ann-modal-title').textContent = 'Edit announcement';
+  document.getElementById('ann-title').value = a.title || '';
   document.getElementById('ann-text').value = a.text;
+  document.getElementById('ann-type').value = a.type || (a.urgent ? 'urgent' : 'general');
   document.getElementById('ann-date').value = a.date || '';
-  document.getElementById('ann-urgent').value = a.urgent ? '1' : '0';
   document.getElementById('ann-expires').value = a.expiresAfter || '';
   document.getElementById('ann-pinned').checked = a.pinned || false;
   openModal('modal-announcement');
@@ -4846,17 +4965,26 @@ function editAnnouncement(id) {
 
 function saveAnnouncement() {
   if (!validateFields(['ann-text'])) return;
-  const text = document.getElementById('ann-text').value.trim();
-  const a = {
+  var existing = editingId ? (state.announcements || []).find(function(x) { return x.id === editingId; }) : null;
+  var a = {
     id: editingId || uid(),
-    text,
+    title: document.getElementById('ann-title').value.trim(),
+    text: document.getElementById('ann-text').value.trim(),
+    type: document.getElementById('ann-type').value || 'general',
     date: document.getElementById('ann-date').value,
-    urgent: document.getElementById('ann-urgent').value === '1',
     pinned: document.getElementById('ann-pinned').checked,
-    expiresAfter: document.getElementById('ann-expires').value
+    expiresAfter: document.getElementById('ann-expires').value,
+    authorId:    window.currentUser ? window.currentUser.googleId : '',
+    authorName:  window.currentUser ? (window.currentUser.name || '') : '',
+    authorPhoto: window.currentUser ? (window.currentUser.photo || '') : '',
+    createdAt:   (existing && existing.createdAt) || Date.now(),
+    reactions:   (existing && existing.reactions) || {},
+    seenBy:      (existing && existing.seenBy) || [],
   };
-  state.announcements = editingId ? state.announcements.map(x => x.id === editingId ? a : x) : [...state.announcements, a];
-  saveState(); closeModal('modal-announcement'); showToast('Announcement saved!'); renderDash();
+  state.announcements = editingId
+    ? state.announcements.map(function(x) { return x.id === editingId ? a : x; })
+    : [...(state.announcements || []), a];
+  saveState(); closeModal('modal-announcement'); showToast('Announcement posted!', 'success'); renderDash();
 }
 
 function togglePinAnnouncement(id) {
@@ -5738,6 +5866,13 @@ Together For Health — [School], 2026–2027
 // ====== INIT ======
 // Must be declared before the render calls below (const is not hoisted)
 const AVATAR_COLORS = ['#C4788A','#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+var ANN_TYPES = {
+  general:  { label:'General',  emoji:'📢', color:'#d97706', bg:'#fffbeb' },
+  meeting:  { label:'Meeting',  emoji:'🗓',  color:'#2563eb', bg:'#eff6ff' },
+  event:    { label:'Event',    emoji:'🎉', color:'#7c3aed', bg:'#f5f3ff' },
+  reminder: { label:'Reminder', emoji:'🔔', color:'#059669', bg:'#ecfdf5' },
+  urgent:   { label:'Urgent',   emoji:'🚨', color:'#dc2626', bg:'#fef2f2' },
+};
 var _socialFilter = 'all'; // must be declared before renderSocial() is called below
 seedDefaultEvents();
 seedNewFeatures();
