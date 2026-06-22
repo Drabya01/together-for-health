@@ -5558,24 +5558,24 @@ function hpContentGeneric(g, name) {
 
 // ===== PPTX BUILDER =====
 
-// ---- Topic image keywords (Unsplash source API) ----
+// ---- Topic image keywords (Unsplash) — hero: full-bleed dramatic, content: informational ----
 var HP_IMG = {
-  'mental-health':    'mental+health+calm+mindfulness',
-  'depression':       'hope+support+therapy+light',
-  'vaping':           'no+smoking+lungs+health+warning',
-  'nutrition':        'healthy+food+vegetables+colorful',
-  'physical-activity':'running+exercise+fitness+outdoor',
-  'sleep':            'sleep+rest+peaceful+night',
-  'stress':           'calm+breathing+nature+relax',
-  'bullying':         'friendship+kindness+support+teens',
-  'cpr':              'first+aid+medical+emergency+training',
-  'body-image':       'confidence+wellness+diverse+active'
+  'mental-health':    { hero:'mental+health+peaceful+calm+nature+light', content:'support+teens+community+wellbeing+group' },
+  'depression':       { hero:'hope+sunrise+light+recovery+nature+path', content:'counseling+support+friendship+people+healing' },
+  'vaping':           { hero:'smoke+cigarette+awareness+health+lungs', content:'teen+health+choice+lifestyle+wellness' },
+  'nutrition':        { hero:'colorful+vegetables+healthy+food+fresh+market', content:'cooking+meal+family+healthy+eating+kitchen' },
+  'physical-activity':{ hero:'running+sunset+fitness+athlete+outdoor+trail', content:'sports+exercise+team+active+youth+field' },
+  'sleep':            { hero:'peaceful+night+bedroom+cozy+rest+dark', content:'morning+energy+refreshed+wellness+awake+sunrise' },
+  'stress':           { hero:'calm+nature+mountains+ocean+serene+relax', content:'yoga+meditation+breathing+mindful+wellness' },
+  'bullying':         { hero:'kindness+friendship+diverse+inclusive+together+hands', content:'students+community+support+school+friends+smiling' },
+  'cpr':              { hero:'first+aid+emergency+heart+medical+hospital', content:'CPR+training+rescue+community+paramedic+hands' },
+  'body-image':       { hero:'confidence+diverse+people+wellness+empowerment+active', content:'self+esteem+positive+fitness+youth+healthy' }
 };
 
 async function hpFetchImg(keywords) {
   try {
-    var url = 'https://source.unsplash.com/600x400/?' + keywords;
-    var resp = await fetch(url, { mode: 'cors' });
+    var url = 'https://source.unsplash.com/1200x800/?' + keywords;
+    var resp = await fetch(url, { mode:'cors' });
     if (!resp.ok) return null;
     var blob = await resp.blob();
     return await new Promise(function(resolve) {
@@ -5596,157 +5596,239 @@ function hpFgColor(bg) {
   return light.indexOf(bg) >= 0 ? '1F2937' : 'FFFFFF';
 }
 
-function hpDrawTopBar(slide, color, title) {
-  slide.addShape('rect', { x:0, y:0, w:13.33, h:1.15, fill:{ color:color }, line:{ type:'none' } });
-  slide.addText(title, { x:0.45, y:0, w:12.4, h:1.15, fontSize:26, bold:true, color:HP.WHT, valign:'middle', wrap:true });
-}
-
 function hpDrawBrand(slide, textColor) {
-  slide.addText('Together For Health', { x:0.4, y:7.08, w:7, h:0.35, fontSize:10, color: textColor || HP.LGRY, align:'left', italic:true });
+  slide.addText('Together For Health', { x:0.4, y:7.1, w:7, h:0.3, fontSize:9, color:textColor || HP.LGRY, align:'left', italic:true });
 }
 
-function hpSlideTitle(pptx, slide, s, meta, imgData) {
+// ---- TITLE — full-bleed cinematic photo ----
+function hpSlideTitle(pptx, slide, s, meta, imgHero) {
   var bg = hpBgColor(s.bg || 'pink');
-  if (imgData) {
-    // Left half: pink panel with text. Right half: photo.
-    slide.background = { color: bg };
-    slide.addImage({ data: imgData, x:6.5, y:0, w:6.83, h:7.5 });
-    // Fade strip to blend image into pink
-    slide.addShape('rect', { x:6.0, y:0, w:1.2, h:7.5, fill:{ color: bg }, line:{ type:'none' }, transparency:40 });
-    slide.addShape('rect', { x:0, y:0, w:7.2, h:7.5, fill:{ color: bg }, line:{ type:'none' } });
+  if (imgHero) {
+    slide.addImage({ data:imgHero, x:0, y:0, w:13.33, h:7.5 });
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:7.5, fill:{ color:'0A0A0A', transparency:30 }, line:{ type:'none' } });
+    slide.addShape('rect', { x:0, y:4.0, w:13.33, h:3.5, fill:{ color:HP.DARK, transparency:38 }, line:{ type:'none' } });
   } else {
-    slide.background = { color: bg };
+    slide.background = { color:bg };
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:7.5, fill:{ color:HP.DARK, transparency:20 }, line:{ type:'none' } });
   }
-  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.DARK }, line:{ type:'none' } });
-  var cx = imgData ? 3.6 : 6.67, cw = imgData ? 7.0 : 13.33;
+  // Left accent stripe + top line
+  slide.addShape('rect', { x:0, y:0, w:0.25, h:7.5, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.12, fill:{ color:HP.PINK }, line:{ type:'none' } });
   if (s.emoji) {
-    slide.addText(s.emoji, { x:0, y:0.8, w:cw, h:2.0, fontSize:76, align:'center', valign:'bottom' });
+    slide.addText(s.emoji, { x:0.4, y:0.5, w:12.5, h:1.6, fontSize:72, align:'center', valign:'middle' });
   }
-  slide.addText(s.title, { x:0.4, y:3.0, w: imgData ? 6.5 : 11.33, h:2.2, fontSize:imgData ? 34 : 38, bold:true, color:HP.WHT, align: imgData ? 'left' : 'center', valign:'middle', wrap:true });
-  slide.addText(meta.grade || '', { x:0, y:5.35, w: imgData ? 7.0 : 13.33, h:0.55, fontSize:17, color:'F9B8C4', align: imgData ? 'left' : 'center', valign:'middle', indent: imgData ? 0.5 : 0 });
+  var titleY = s.emoji ? 2.2 : 1.4;
+  slide.addText(s.title, {
+    x:0.6, y:titleY, w:12.1, h:3.0,
+    fontSize:54, bold:true, color:HP.WHT,
+    align:'center', valign:'middle', wrap:true,
+    shadow:{ type:'outer', color:'000000', blur:10, offset:3, angle:45, opacity:0.75 }
+  });
+  // Grade badge
+  slide.addShape('rect', { x:4.5, y:5.5, w:4.33, h:0.55, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  slide.addText(meta.grade || '', { x:4.5, y:5.5, w:4.33, h:0.55, fontSize:16, color:HP.WHT, align:'center', valign:'middle', bold:true });
+  // Bottom bar
+  slide.addShape('rect', { x:0, y:6.8, w:13.33, h:0.7, fill:{ color:'000000', transparency:52 }, line:{ type:'none' } });
+  slide.addText('Together For Health', { x:0.5, y:6.82, w:6, h:0.55, fontSize:10, color:'F9B8C4', align:'left', valign:'middle', italic:true });
   if (meta.presenter || meta.school) {
-    var presLine = [meta.presenter, meta.school].filter(Boolean).join(' - ');
-    slide.addText(presLine, { x:0.5, y:7.05, w:12.33, h:0.35, fontSize:11, color:'F9B8C4', align:'right' });
+    var presLine = [meta.presenter, meta.school].filter(Boolean).join('  |  ');
+    slide.addText(presLine, { x:0.5, y:6.82, w:12.3, h:0.55, fontSize:11, color:'F9B8C4', align:'right', valign:'middle' });
+  }
+}
+
+// ---- BULLETS — full-width image-banner header + clean bold content ----
+function hpSlideBullets(pptx, slide, s, imgContent) {
+  slide.background = { color:HP.WHT };
+  var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
+  var BH = 2.55;
+  if (imgContent) {
+    slide.addImage({ data:imgContent, x:0, y:0, w:13.33, h:BH });
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:BH, fill:{ color:barColor, transparency:32 }, line:{ type:'none' } });
+  } else {
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:BH, fill:{ color:barColor }, line:{ type:'none' } });
+  }
+  // Left stripe inside banner
+  slide.addShape('rect', { x:0, y:0, w:0.25, h:BH, fill:{ color:HP.WHT, transparency:48 }, line:{ type:'none' } });
+  slide.addText(s.title, {
+    x:0.45, y:0, w:12.4, h:BH,
+    fontSize:33, bold:true, color:HP.WHT,
+    valign:'middle', wrap:true,
+    shadow:{ type:'outer', color:'000000', blur:6, offset:2, angle:45, opacity:0.65 }
+  });
+  // Left accent continues below banner
+  slide.addShape('rect', { x:0, y:BH, w:0.25, h:7.5 - BH, fill:{ color:barColor }, line:{ type:'none' } });
+  var pts = s.points || [];
+  var contentH = 7.5 - BH - 0.42;
+  var spacing = Math.min(1.02, contentH / Math.max(pts.length, 1));
+  pts.forEach(function(pt, i) {
+    var yy = BH + 0.28 + (i * spacing);
+    // Square bullet marker
+    slide.addShape('rect', { x:0.42, y:yy + 0.16, w:0.24, h:0.24, fill:{ color:barColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:0.84, y:yy, w:12.1, h:spacing - 0.06, fontSize:20, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+// ---- BIGNUM — dramatic split panel: stat left, context right ----
+function hpSlideBignum(pptx, slide, s) {
+  slide.background = { color:HP.WHT };
+  var panelColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : HP.PINK;
+  // Full-height color panel on left
+  slide.addShape('rect', { x:0, y:0, w:5.8, h:7.5, fill:{ color:panelColor }, line:{ type:'none' } });
+  // Decorative large circle in panel
+  slide.addShape('ellipse', { x:0.2, y:1.3, w:5.4, h:5.4, fill:{ color:HP.DARK, transparency:58 }, line:{ type:'none' } });
+  // Giant stat number
+  slide.addText(s.stat || '', { x:0.1, y:0.8, w:5.6, h:3.8, fontSize:100, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  // Stat label below number
+  slide.addText(s.statLabel || '', { x:0.2, y:4.65, w:5.4, h:1.5, fontSize:17, color:'F9B8C4', align:'center', valign:'top', wrap:true });
+  // Vertical divider
+  slide.addShape('rect', { x:5.8, y:0.8, w:0.06, h:5.9, fill:{ color:HP.LGRY }, line:{ type:'none' } });
+  // Context on right
+  var rightText = s.context || s.statLabel || '';
+  slide.addText(rightText, { x:6.3, y:1.2, w:6.6, h:5.2, fontSize:23, color:HP.BLK, valign:'middle', wrap:true, align:'left' });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+// ---- STEPS — image-banner header + alternating card rows ----
+function hpSlideSteps(pptx, slide, s, imgContent) {
+  slide.background = { color:HP.WHT };
+  var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
+  var BH = 2.0;
+  if (imgContent) {
+    slide.addImage({ data:imgContent, x:0, y:0, w:13.33, h:BH });
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:BH, fill:{ color:barColor, transparency:35 }, line:{ type:'none' } });
+  } else {
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:BH, fill:{ color:barColor }, line:{ type:'none' } });
+  }
+  slide.addText(s.title, {
+    x:0.45, y:0, w:12.4, h:BH,
+    fontSize:30, bold:true, color:HP.WHT,
+    valign:'middle', wrap:true,
+    shadow:{ type:'outer', color:'000000', blur:5, offset:2, angle:45, opacity:0.55 }
+  });
+  var pts = s.points || [];
+  var contentH = 7.5 - BH - 0.3;
+  var spacing = Math.min(1.1, contentH / Math.max(pts.length, 1));
+  pts.forEach(function(step, i) {
+    var yy = BH + 0.18 + (i * spacing);
+    // Alternating card background
+    var cardBg = i % 2 === 0 ? 'F9FAFB' : HP.WHT;
+    slide.addShape('rect', { x:0.3, y:yy, w:12.75, h:spacing - 0.07, fill:{ color:cardBg }, line:{ type:'none' } });
+    // Left color accent per card
+    slide.addShape('rect', { x:0.3, y:yy, w:0.22, h:spacing - 0.07, fill:{ color:barColor }, line:{ type:'none' } });
+    // Numbered circle
+    var cY = yy + (spacing - 0.07 - 0.56) / 2;
+    slide.addShape('ellipse', { x:0.65, y:cY, w:0.56, h:0.56, fill:{ color:barColor }, line:{ type:'none' } });
+    slide.addText(String(i + 1), { x:0.65, y:cY, w:0.56, h:0.56, fontSize:18, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+    slide.addText(step, { x:1.38, y:yy, w:11.2, h:spacing - 0.07, fontSize:18, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+// ---- TWOCOL — side-by-side framed cards ----
+function hpSlideTwocol(pptx, slide, s) {
+  slide.background = { color:'F1F5F9' };
+  var L = s.left || {}, R = s.right || {};
+  var lColor = L.color === 'TEAL' ? HP.TEAL : L.color === 'ORG' ? HP.ORG : L.color === 'DARK' ? HP.DARK : HP.PINK;
+  var rColor = R.color === 'TEAL' ? HP.TEAL : R.color === 'ORG' ? HP.ORG : R.color === 'DARK' ? HP.DARK : HP.TEAL;
+  // Header bar
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:1.12, fill:{ color:HP.DARK }, line:{ type:'none' } });
+  slide.addShape('rect', { x:0, y:0, w:0.25, h:1.12, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  slide.addText(s.title || '', { x:0.45, y:0, w:12.4, h:1.12, fontSize:26, bold:true, color:HP.WHT, valign:'middle', wrap:true });
+  // Left card
+  slide.addShape('rect', { x:0.3, y:1.3, w:6.05, h:6.0, fill:{ color:HP.WHT }, line:{ color:'E2E8F0', w:1 } });
+  slide.addShape('rect', { x:0.3, y:1.3, w:6.05, h:0.72, fill:{ color:lColor }, line:{ type:'none' } });
+  slide.addText(L.title || '', { x:0.3, y:1.3, w:6.05, h:0.72, fontSize:18, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  var lPts = L.points || [];
+  lPts.forEach(function(pt, i) {
+    var yy = 2.18 + (i * 0.86);
+    slide.addShape('rect', { x:0.52, y:yy + 0.3, w:0.18, h:0.18, fill:{ color:lColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:0.84, y:yy, w:5.3, h:0.82, fontSize:16, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  // Right card
+  slide.addShape('rect', { x:6.98, y:1.3, w:6.05, h:6.0, fill:{ color:HP.WHT }, line:{ color:'E2E8F0', w:1 } });
+  slide.addShape('rect', { x:6.98, y:1.3, w:6.05, h:0.72, fill:{ color:rColor }, line:{ type:'none' } });
+  slide.addText(R.title || '', { x:6.98, y:1.3, w:6.05, h:0.72, fontSize:18, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  var rPts = R.points || [];
+  rPts.forEach(function(pt, i) {
+    var yy = 2.18 + (i * 0.86);
+    slide.addShape('rect', { x:7.2, y:yy + 0.3, w:0.18, h:0.18, fill:{ color:rColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:7.52, y:yy, w:5.3, h:0.82, fontSize:16, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+// ---- CALLOUT — dramatic photo backdrop with centered fact card ----
+function hpSlideCallout(pptx, slide, s, imgHero) {
+  if (imgHero) {
+    slide.addImage({ data:imgHero, x:0, y:0, w:13.33, h:7.5 });
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:7.5, fill:{ color:'060606', transparency:38 }, line:{ type:'none' } });
+  } else {
+    slide.background = { color:HP.DARK };
+  }
+  // Translucent card overlay
+  slide.addShape('rect', { x:0.85, y:1.0, w:11.63, h:5.65, fill:{ color:'000000', transparency:45 }, line:{ type:'none' } });
+  // Pink left accent on card
+  slide.addShape('rect', { x:0.85, y:1.0, w:0.25, h:5.65, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  if (s.emoji) {
+    slide.addText(s.emoji, { x:1.2, y:1.05, w:10.9, h:1.0, fontSize:44, align:'center', valign:'middle' });
+  }
+  var hY = s.emoji ? 2.08 : 1.35;
+  // "Did You Know?" label bar
+  slide.addShape('rect', { x:2.2, y:hY, w:8.93, h:0.55, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  slide.addText(s.title || 'Did You Know?', { x:2.2, y:hY, w:8.93, h:0.55, fontSize:16, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  // Main fact text
+  slide.addText(s.fact || '', {
+    x:1.3, y:hY + 0.65, w:10.8, h:2.85,
+    fontSize:28, bold:true, color:HP.WHT,
+    align:'center', valign:'middle', wrap:true,
+    shadow:{ type:'outer', color:'000000', blur:5, offset:2, angle:45, opacity:0.55 }
+  });
+  if (s.context) {
+    slide.addText(s.context, { x:2.0, y:hY + 3.65, w:9.33, h:0.85, fontSize:16, color:'F9B8C4', align:'center', italic:true, wrap:true });
   }
   hpDrawBrand(slide, 'F9B8C4');
 }
 
-function hpSlideBullets(pptx, slide, s, imgData) {
-  slide.background = { color: HP.WHT };
-  var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
-  hpDrawTopBar(slide, barColor, s.title);
-  var textW = imgData ? 7.4 : 9.8;
-  if (imgData) {
-    slide.addImage({ data: imgData, x:8.4, y:1.2, w:4.55, h:5.85 });
-  } else if (s.emoji) {
-    slide.addText(s.emoji, { x:10.4, y:1.2, w:2.5, h:5.5, fontSize:96, align:'center', valign:'middle', transparency:70 });
+// ---- CLOSING — full-bleed photo finale ----
+function hpSlideClosing(pptx, slide, s, meta, imgHero) {
+  if (imgHero) {
+    slide.addImage({ data:imgHero, x:0, y:0, w:13.33, h:7.5 });
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:7.5, fill:{ color:HP.DARK, transparency:35 }, line:{ type:'none' } });
+  } else {
+    slide.background = { color:HP.PINK };
+    slide.addShape('rect', { x:0, y:0, w:13.33, h:7.5, fill:{ color:HP.DARK, transparency:18 }, line:{ type:'none' } });
   }
-  var pts = s.points || [];
-  var spacing = Math.min(0.98, (5.8 / Math.max(pts.length, 1)));
-  pts.forEach(function(pt, i) {
-    var yy = 1.35 + (i * spacing);
-    slide.addShape('ellipse', { x:0.5, y:yy + 0.22, w:0.14, h:0.14, fill:{ color: barColor }, line:{ type:'none' } });
-    slide.addText(pt, { x:0.78, y:yy, w:textW, h:spacing - 0.04, fontSize:18, color:HP.BLK, valign:'middle', wrap:true });
-  });
-  hpDrawBrand(slide, '9CA3AF');
-}
-
-function hpSlideBignum(pptx, slide, s) {
-  slide.background = { color: HP.LIGHT };
-  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.PINK }, line:{ type:'none' } });
-  slide.addText(s.stat || '', { x:0.5, y:1.0, w:12.33, h:2.6, fontSize:96, bold:true, color:HP.DARK, align:'center', valign:'bottom' });
-  slide.addShape('rect', { x:3.5, y:3.8, w:6.33, h:0.04, fill:{ color: HP.PINK }, line:{ type:'none' } });
-  slide.addText(s.statLabel || '', { x:0.8, y:4.0, w:11.73, h:1.4, fontSize:20, color:HP.BLK, align:'center', valign:'top', wrap:true });
-  if (s.context) {
-    slide.addText(s.context, { x:1.2, y:5.5, w:10.93, h:1.0, fontSize:16, color:HP.GRY, align:'center', italic:true, wrap:true });
-  }
-  hpDrawBrand(slide, '9CA3AF');
-}
-
-function hpSlideSteps(pptx, slide, s, imgData) {
-  slide.background = { color: HP.WHT };
-  var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
-  hpDrawTopBar(slide, barColor, s.title);
-  var textW = imgData ? 7.0 : 11.5;
-  if (imgData) {
-    slide.addImage({ data: imgData, x:8.4, y:1.2, w:4.55, h:5.85 });
-  }
-  var pts = s.points || [];
-  var spacing = Math.min(1.05, (5.8 / Math.max(pts.length, 1)));
-  pts.forEach(function(step, i) {
-    var yy = 1.3 + (i * spacing);
-    slide.addShape('ellipse', { x:0.45, y:yy + 0.02, w:0.52, h:0.52, fill:{ color: barColor }, line:{ type:'none' } });
-    slide.addText(String(i + 1), { x:0.45, y:yy + 0.02, w:0.52, h:0.52, fontSize:16, bold:true, color:HP.WHT, align:'center', valign:'middle' });
-    slide.addText(step, { x:1.12, y:yy, w:textW, h:0.9, fontSize:17, color:HP.BLK, valign:'middle', wrap:true });
-  });
-  hpDrawBrand(slide, '9CA3AF');
-}
-
-function hpSlideTwocol(pptx, slide, s) {
-  slide.background = { color: HP.WHT };
-  hpDrawTopBar(slide, HP.DARK, s.title);
-  var L = s.left || {}, R = s.right || {};
-  var lColor = L.color === 'TEAL' ? HP.TEAL : L.color === 'ORG' ? HP.ORG : L.color === 'DARK' ? HP.DARK : HP.PINK;
-  var rColor = R.color === 'TEAL' ? HP.TEAL : R.color === 'ORG' ? HP.ORG : R.color === 'DARK' ? HP.DARK : HP.PINK;
-  slide.addShape('rect', { x:0.4, y:1.3, w:5.7, h:0.72, fill:{ color: lColor }, line:{ type:'none' } });
-  slide.addText(L.title || '', { x:0.4, y:1.3, w:5.7, h:0.72, fontSize:17, bold:true, color:HP.WHT, align:'center', valign:'middle' });
-  var lPts = L.points || [];
-  lPts.forEach(function(pt, i) {
-    var yy = 2.18 + (i * 0.82);
-    slide.addShape('ellipse', { x:0.55, y:yy + 0.26, w:0.11, h:0.11, fill:{ color: lColor }, line:{ type:'none' } });
-    slide.addText(pt, { x:0.75, y:yy, w:5.1, h:0.78, fontSize:16, color:HP.BLK, valign:'middle', wrap:true });
-  });
-  slide.addShape('rect', { x:7.2, y:1.3, w:5.7, h:0.72, fill:{ color: rColor }, line:{ type:'none' } });
-  slide.addText(R.title || '', { x:7.2, y:1.3, w:5.7, h:0.72, fontSize:17, bold:true, color:HP.WHT, align:'center', valign:'middle' });
-  var rPts = R.points || [];
-  rPts.forEach(function(pt, i) {
-    var yy = 2.18 + (i * 0.82);
-    slide.addShape('ellipse', { x:7.35, y:yy + 0.26, w:0.11, h:0.11, fill:{ color: rColor }, line:{ type:'none' } });
-    slide.addText(pt, { x:7.55, y:yy, w:5.1, h:0.78, fontSize:16, color:HP.BLK, valign:'middle', wrap:true });
-  });
-  hpDrawBrand(slide, '9CA3AF');
-}
-
-function hpSlideCallout(pptx, slide, s) {
-  slide.background = { color: HP.LIGHT };
-  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.PINK }, line:{ type:'none' } });
+  // Top pink line + left stripe
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.14, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  slide.addShape('rect', { x:0, y:0, w:0.25, h:7.5, fill:{ color:HP.PINK }, line:{ type:'none' } });
   if (s.emoji) {
-    slide.addText(s.emoji, { x:0, y:0.3, w:13.33, h:1.5, fontSize:52, align:'center', valign:'middle' });
+    slide.addText(s.emoji, { x:0.4, y:0.18, w:12.5, h:1.1, fontSize:46, align:'center', valign:'middle' });
   }
-  var headerY = s.emoji ? 1.85 : 1.1;
-  slide.addShape('rect', { x:1.5, y:headerY, w:10.33, h:0.65, fill:{ color: HP.PINK }, line:{ type:'none' }, rounding:0.1 });
-  slide.addText(s.title || 'Did You Know?', { x:1.5, y:headerY, w:10.33, h:0.65, fontSize:17, bold:true, color:HP.WHT, align:'center', valign:'middle' });
-  slide.addText(s.fact || '', { x:0.8, y: headerY + 0.8, w:11.73, h:1.9, fontSize:24, bold:true, color:HP.DARK, align:'center', valign:'middle', wrap:true });
-  if (s.context) {
-    slide.addText(s.context, { x:1.0, y: headerY + 2.85, w:11.33, h:1.2, fontSize:17, color:HP.GRY, align:'center', italic:true, wrap:true });
-  }
-  hpDrawBrand(slide, '9CA3AF');
-}
-
-function hpSlideClosing(pptx, slide, s, meta) {
-  slide.background = { color: HP.PINK };
-  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.DARK }, line:{ type:'none' } });
-  if (s.emoji) {
-    slide.addText(s.emoji, { x:0, y:0.3, w:13.33, h:1.2, fontSize:48, align:'center', valign:'middle' });
-  }
-  slide.addText('Key Takeaways', { x:0.6, y:1.55, w:12.13, h:0.7, fontSize:26, bold:true, color:HP.WHT, align:'center' });
-  slide.addShape('rect', { x:2.5, y:2.35, w:8.33, h:0.05, fill:{ color: 'F9B8C4' }, line:{ type:'none' } });
+  slide.addText('Key Takeaways', {
+    x:0.6, y:1.35, w:12.13, h:0.74,
+    fontSize:32, bold:true, color:HP.WHT, align:'center',
+    shadow:{ type:'outer', color:'000000', blur:8, offset:3, angle:45, opacity:0.7 }
+  });
+  slide.addShape('rect', { x:1.5, y:2.15, w:10.33, h:0.07, fill:{ color:'F9B8C4' }, line:{ type:'none' } });
   var pts = s.points || [];
   pts.forEach(function(pt, i) {
-    var yy = 2.5 + (i * 0.7);
-    slide.addText('✓  ' + pt, { x:1.5, y:yy, w:10.33, h:0.65, fontSize:17, color:HP.WHT, valign:'middle', wrap:true });
+    var yy = 2.32 + (i * 0.7);
+    slide.addShape('ellipse', { x:1.6, y:yy + 0.1, w:0.46, h:0.46, fill:{ color:HP.PINK }, line:{ type:'none' } });
+    slide.addText('✓', { x:1.6, y:yy + 0.1, w:0.46, h:0.46, fontSize:13, color:HP.WHT, align:'center', valign:'middle', bold:true });
+    slide.addText(pt, { x:2.22, y:yy, w:10.65, h:0.65, fontSize:17, color:HP.WHT, valign:'middle', wrap:true });
   });
   if (s.resources && s.resources.length) {
-    var resY = 2.5 + (pts.length * 0.7) + 0.25;
-    slide.addShape('rect', { x:0.8, y:resY, w:11.73, h:0.04, fill:{ color: 'F9B8C4' }, line:{ type:'none' } });
-    slide.addText('Resources', { x:0, y: resY + 0.12, w:13.33, h:0.42, fontSize:13, bold:true, color:'F9B8C4', align:'center' });
+    var resY = 2.32 + (pts.length * 0.7) + 0.2;
+    slide.addShape('rect', { x:0.8, y:resY, w:11.73, h:0.06, fill:{ color:'F9B8C4' }, line:{ type:'none' } });
+    slide.addText('Resources', { x:0, y:resY + 0.12, w:13.33, h:0.4, fontSize:13, bold:true, color:'F9B8C4', align:'center' });
     s.resources.forEach(function(r, i) {
-      slide.addText(r, { x:1.0, y: resY + 0.58 + (i * 0.36), w:11.33, h:0.34, fontSize:12, color:'FDE8EE', align:'center', wrap:true });
+      slide.addText(r, { x:1.0, y:resY + 0.57 + (i * 0.36), w:11.33, h:0.34, fontSize:12, color:'FDE8EE', align:'center', wrap:true });
     });
   }
   if (meta.presenter || meta.school) {
-    var presLine = [meta.presenter, meta.school].filter(Boolean).join(' - ');
-    slide.addText(presLine, { x:0.5, y:7.05, w:12.33, h:0.35, fontSize:10, color:'F9B8C4', align:'right' });
+    var presLine = [meta.presenter, meta.school].filter(Boolean).join('  |  ');
+    slide.addText(presLine, { x:0.5, y:7.1, w:12.33, h:0.3, fontSize:10, color:'F9B8C4', align:'right' });
   }
 }
 
@@ -5756,20 +5838,23 @@ async function hpBuildPPTX(slides, meta) {
   pptx.title = meta.title;
   pptx.author = meta.presenter || 'Together For Health';
 
-  // Pre-fetch one topic photo — used on title, bullets, and steps slides
-  var imgKeywords = HP_IMG[meta.topicKey] || 'health+wellness+people';
-  var imgData = await hpFetchImg(imgKeywords);
+  // Fetch hero (full-bleed: title/callout/closing) and content (banner: bullets/steps) images in parallel
+  var heroKW = (HP_IMG[meta.topicKey] || {}).hero || 'health+wellness+people+together';
+  var contentKW = (HP_IMG[meta.topicKey] || {}).content || 'health+community+education+students';
+  var imgs = await Promise.all([hpFetchImg(heroKW), hpFetchImg(contentKW)]);
+  var imgHero = imgs[0];
+  var imgContent = imgs[1] || imgHero;
 
   slides.forEach(function(s) {
     var slide = pptx.addSlide();
     switch (s.type) {
-      case 'title':   hpSlideTitle(pptx, slide, s, meta, imgData); break;
-      case 'bullets': hpSlideBullets(pptx, slide, s, imgData);      break;
-      case 'bignum':  hpSlideBignum(pptx, slide, s);                break;
-      case 'steps':   hpSlideSteps(pptx, slide, s, imgData);        break;
-      case 'twocol':  hpSlideTwocol(pptx, slide, s);                break;
-      case 'callout': hpSlideCallout(pptx, slide, s);               break;
-      case 'closing': hpSlideClosing(pptx, slide, s, meta);         break;
+      case 'title':   hpSlideTitle(pptx, slide, s, meta, imgHero);   break;
+      case 'bullets': hpSlideBullets(pptx, slide, s, imgContent);    break;
+      case 'bignum':  hpSlideBignum(pptx, slide, s);                 break;
+      case 'steps':   hpSlideSteps(pptx, slide, s, imgContent);      break;
+      case 'twocol':  hpSlideTwocol(pptx, slide, s);                 break;
+      case 'callout': hpSlideCallout(pptx, slide, s, imgHero);       break;
+      case 'closing': hpSlideClosing(pptx, slide, s, meta, imgHero); break;
       default: break;
     }
   });
