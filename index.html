@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -4938,2433 +4938,801 @@ function canvaGenerateSlides(d) {
   return slides.slice(0, num);
 }
 
-// ====== HEALTH PRESENTATION ENGINE ======
+// ====== HEALTH PRESENTATION ENGINE v2 ======
+
+var HP = {
+  PINK:  'C4788A', DARK: '9A5068', LIGHT: 'FCEEF2',
+  TEAL:  '0E7490', TEALX: 'CFFAFE',
+  ORG:   'C2410C', ORGX:  'FFF7ED',
+  WHT:   'FFFFFF', BLK:   '1F2937', GRY: '6B7280', LGRY: 'F3F4F6'
+};
 
 function openPresGenerator() {
   document.getElementById('pg-topic').value = '';
   document.getElementById('pg-grade').value = 'Grades 4-6';
   document.getElementById('pg-school').value = '';
   document.getElementById('pg-status').innerHTML = '';
-
-  var presenterInput = document.getElementById('pg-presenter');
-  presenterInput.value = '';
-  if (window.currentUser && window.currentUser.name) {
-    presenterInput.value = window.currentUser.name;
-  }
-
-  if (canvaIsConnected()) {
-    document.getElementById('pg-status').innerHTML =
-      '<span style="color:#2e7d32;">&#10003; Canva connected - design will open after download.</span>';
-  } else {
-    document.getElementById('pg-status').innerHTML =
-      '<span style="color:#888;">Canva not connected. PPTX will be downloaded only.</span>';
-  }
-
+  var pi = document.getElementById('pg-presenter');
+  pi.value = '';
+  if (window.currentUser && window.currentUser.name) pi.value = window.currentUser.name;
+  document.getElementById('pg-status').innerHTML = canvaIsConnected()
+    ? '<span style="color:#2e7d32;">&#10003; Canva connected - design will open after download.</span>'
+    : '<span style="color:#888;">PPTX will download to your device.</span>';
   openModal('modal-pres-gen');
 }
 
 function hpFindTopic(input) {
   var s = (input || '').toLowerCase();
-
-  if (/mental health|anxiety|anxious|stress(?:ed|ful)?|emotional|worry|worr(?:ied|ying)|feelings?|panic|overwhelm|wellbeing|well-being/.test(s)) {
-    return 'mental-health';
-  }
-  if (/depress(?:ion|ed|ing)?|low mood|hopeless|unhappy|sadness/.test(s)) {
-    return 'depression';
-  }
-  if (/vap(?:ing|e|ed)?|e-?cigarette|smok(?:ing|e|ed)?|nicotine|tobacco|drug|substance|alcohol|cannabis|marijuana|weed/.test(s)) {
-    return 'vaping';
-  }
-  if (/nutrition|food|eating|diet|meals?|nutrients?|healthy eating|obes(?:ity|e)|vegetable|fruit|hunger/.test(s)) {
-    return 'nutrition';
-  }
-  if (/physical activity|exercise|fitness|sports?|active|movement|sedentary|workout|gym|running/.test(s)) {
-    return 'physical-activity';
-  }
-  if (/sleep|sleeping|rest|insomnia|tired(?:ness)?|fatigue|bedtime|screen time at night/.test(s)) {
-    return 'sleep';
-  }
-  if (/stress(?: management)?|coping|burnout|pressure|overwhelm/.test(s)) {
-    return 'stress';
-  }
-  if (/bully(?:ing)?|cyberbull(?:ying|y)|harassment|harass(?:ing|ed)?|online safety|teasing/.test(s)) {
-    return 'bullying';
-  }
-  if (/cpr|first aid|emergency|resuscitat(?:ion|e)?|aed|cardiac|choking|heart attack|heimlich/.test(s)) {
-    return 'cpr';
-  }
-  if (/body image|self-?esteem|eating disorder|anorex(?:ia|ic)|bulim(?:ia|ic)|confiden(?:ce|t)|appearance|body shame/.test(s)) {
-    return 'body-image';
-  }
+  if (/mental health|anxiety|anxious|emotional|feelings?|panic|overwhelm|wellbeing|well-being|worry|worr/.test(s)) return 'mental-health';
+  if (/depress|low mood|hopeless|unhappy|sadness/.test(s)) return 'depression';
+  if (/vap|e-?cig|smok|nicotine|tobacco|drug|substance|cannabis|marijuana|weed|alcohol/.test(s)) return 'vaping';
+  if (/nutrition|food|eating|diet|meal|nutrients?|healthy eating|obes|vegetable|fruit|hunger/.test(s)) return 'nutrition';
+  if (/physical activity|exercise|fitness|sport|active|movement|sedentary|workout|gym|running/.test(s)) return 'physical-activity';
+  if (/sleep|sleeping|rest|insomnia|tired|fatigue|bedtime/.test(s)) return 'sleep';
+  if (/stress|coping|burnout|pressure/.test(s)) return 'stress';
+  if (/bully|cyberbull|harass|online safety|teas/.test(s)) return 'bullying';
+  if (/cpr|cardiac|heart|resus|first aid|aed|defib|choking|chest compress/.test(s)) return 'cpr';
+  if (/body image|self.?image|appearance|eating disorder|anorex|bulim|self.?esteem|weight/.test(s)) return 'body-image';
   return 'generic';
 }
 
-// â”€â”€ Content: Mental Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentMentalHealth(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is Mental Health?',
-        points: [
-          'Mental health is how we think, feel, and handle everyday life.',
-          'Just like our bodies, our minds need care and attention too.',
-          '1 in 5 children in Canada experiences a mental health challenge.',
-          'Having big feelings is normal - it\'s how we handle them that matters.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Common Feelings We All Have',
-        points: [
-          'Feeling worried, sad, angry, or scared happens to everyone.',
-          'These feelings are messages - they tell us something important.',
-          'Feelings are not "good" or "bad" - all feelings are okay to have.',
-          'It\'s what we do with feelings that makes a difference.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Signs Your Mind Needs a Break',
-        points: [
-          'Trouble sleeping or having bad dreams more than usual.',
-          'Feeling grumpy, sad, or worried almost every day.',
-          'Not wanting to do things you used to enjoy.',
-          'Stomachaches or headaches when nothing is physically wrong.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What Helps Our Mental Health?',
-        points: [
-          'Moving your body - even a short walk outside improves your mood.',
-          'Talking to someone you trust: a parent, teacher, or friend.',
-          'Getting 9-11 hours of sleep every night.',
-          'Taking deep breaths when feelings feel really big.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'How to Help a Friend',
-        points: [
-          'Listen without interrupting - just being there matters.',
-          'Say "I care about you" or "I\'m here for you."',
-          'Never promise to keep secrets about safety - tell a trusted adult.',
-          'Small kind acts (a smile, a note) can make a big difference.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'It\'s Okay to Ask for Help',
-        points: [
-          'Asking for help is brave - not weak.',
-          'Talk to a parent, guardian, teacher, or school counsellor.',
-          'Kids Help Phone: 1-800-668-6868 (free, 24/7, in English & French).',
-          'You deserve to feel well - help is always available.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Understanding Mental Health',
-        points: [
-          'Mental health includes our emotional, psychological, and social well-being.',
-          'About 1 in 5 Canadians will experience a mental health problem each year (CAMH).',
-          '75% of mental health problems begin before age 25 - early action matters.',
-          'Mental health exists on a spectrum and changes throughout life.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Common Mental Health Challenges in Youth',
-        points: [
-          'Anxiety disorders are the most common in youth - affecting ~5% of children and teens.',
-          'Depression affects about 4-8% of Canadian youth at any given time (CAMH).',
-          'ADHD, OCD, and eating disorders also commonly emerge during adolescence.',
-          'Social media use is linked to increased anxiety and lower self-esteem in teens.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Warning Signs to Watch For',
-        points: [
-          'Persistent sadness, hopelessness, or irritability lasting more than 2 weeks.',
-          'Withdrawing from friends, family, and activities you used to enjoy.',
-          'Changes in eating or sleeping patterns - too much or too little.',
-          'Difficulty concentrating, declining grades, or increased absences.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Protective Factors That Build Resilience',
-        points: [
-          'Strong social connections with peers and trusted adults reduce risk.',
-          'Regular physical activity (60 min/day) significantly improves mood.',
-          'Mindfulness and breathing exercises lower cortisol (stress hormone) levels.',
-          'A consistent sleep schedule of 8-10 hours supports emotional regulation.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Stigma: The Biggest Barrier',
-        points: [
-          'Only 1 in 3 young Canadians with a mental health problem gets help (CAMH).',
-          'Stigma - negative attitudes about mental illness - keeps people silent.',
-          'Language matters: say "person living with depression," not "depressed person."',
-          'Speaking openly about mental health reduces stigma for everyone.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Where to Get Support',
-        points: [
-          'Your school counsellor is trained to help - visits are confidential.',
-          'Kids Help Phone: 1-800-668-6868 or text HELLO to 686868 (24/7).',
-          'Crisis Text Line Canada: text HOME to 686868.',
-          'camh.ca and cmha.ca have free resources for youth and families.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'The State of Youth Mental Health in Canada',
-      points: [
-        'CAMH: 1 in 5 Canadians experiences a mental illness or addiction problem annually.',
-        'Mental illness is the leading cause of disability in Canada for people under 40.',
-        '70% of mental health problems have their onset during childhood or adolescence.',
-        'Only 1 in 5 children who need mental health services receive them (CAMH, 2023).'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'How Stress Affects the Brain',
-      points: [
-        'Chronic stress elevates cortisol, impairing memory, focus, and emotional regulation.',
-        'The amygdala (threat detector) becomes hyperactive under sustained stress.',
-        'Adolescent brains are especially vulnerable - the prefrontal cortex isn\'t fully developed.',
-        'Sleep deprivation amplifies emotional reactivity by up to 60% (UC Berkeley, 2023).'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Recognizing Mental Health Crisis Signs',
-      points: [
-        'Expressing hopelessness, worthlessness, or feeling like a burden to others.',
-        'Giving away possessions, saying goodbye, or making "final" statements.',
-        'Self-harm: cutting, burning, or other deliberate self-injury.',
-        'Drastic changes in personality, energy, or behaviour over a short period.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Evidence-Based Coping Strategies',
-      points: [
-        'Cognitive Behavioural Therapy (CBT) is the gold standard - identify and reframe thoughts.',
-        'Diaphragmatic breathing (4-7-8 technique) activates the parasympathetic nervous system.',
-        'Aerobic exercise 3-5x per week shown to match antidepressant effects in mild depression.',
-        'Social connection is one of the strongest predictors of mental wellness across all ages.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Dismantling Stigma: Your Role',
-      points: [
-        'Stigma is a learned attitude - it can be unlearned through education and exposure.',
-        'Check your language: avoid "crazy," "psycho," "insane" in everyday speech.',
-        'Disclosure is personal - never pressure others to share, but create safe space.',
-        'Allyship looks like listening without judgment and helping connect someone to support.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Crisis Resources & Next Steps',
-      points: [
-        'Kids Help Phone: 1-800-668-6868 (24/7, free, confidential).',
-        'Crisis Services Canada: 1-833-456-4566 or text 45645.',
-        'Talk to your school counsellor, family doctor, or a trusted adult today.',
-        'CAMH: camh.ca | CMHA: cmha.ca - free evidence-based information and referrals.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Depression â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentDepression(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is Feeling Really Sad?',
-        points: [
-          'Everyone feels sad sometimes - it\'s a normal part of life.',
-          'When sadness sticks around for a long time, it might be depression.',
-          'Depression is not a choice or a weakness - it\'s a health condition.',
-          'With the right help, people with depression feel much better.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Signs Someone Might Need Help',
-        points: [
-          'Feeling sad, empty, or grumpy almost every single day.',
-          'Not caring about things they used to love - games, food, friends.',
-          'Sleeping too much or not being able to sleep at night.',
-          'Feeling very tired even when they haven\'t been running around.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Depression Is Not Your Fault',
-        points: [
-          'Depression can happen to anyone - kids, teenagers, and adults.',
-          'It\'s caused by a mix of biology, life events, and our surroundings.',
-          'Just like a broken leg isn\'t your fault, neither is depression.',
-          'Nobody should feel ashamed for needing help with their feelings.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Things That Can Help',
-        points: [
-          'Talking to a counsellor or therapist about your feelings.',
-          'Spending time outside and moving your body every day.',
-          'Staying connected to friends and family - don\'t hide away.',
-          'Doctors can also prescribe medicine that helps the brain feel better.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'How You Can Help a Friend',
-        points: [
-          'Be kind and patient - don\'t tell them to "just cheer up."',
-          'Invite them to join activities even if they say no at first.',
-          'Tell a trusted adult if you\'re worried about a friend\'s safety.',
-          'A simple "I care about you" can mean the whole world.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Help Is There for You',
-        points: [
-          'Your school counsellor is a safe person to talk to.',
-          'Kids Help Phone: 1-800-668-6868 - free and available any time.',
-          'You can also text HELLO to 686868 if talking feels hard.',
-          'You deserve to feel happy - please ask for help.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is Depression?',
-        points: [
-          'Depression is a medical condition - not a mood or a personality trait.',
-          'It involves persistent sadness, loss of interest, and other symptoms for 2+ weeks.',
-          'Approximately 4-8% of Canadian youth experience depression at any given time (CAMH).',
-          'Depression is the leading cause of disability worldwide according to the WHO.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Types of Depression',
-        points: [
-          'Major Depressive Disorder: severe episodes affecting daily functioning.',
-          'Persistent Depressive Disorder (dysthymia): milder but lasting 2+ years.',
-          'Seasonal Affective Disorder (SAD): depression linked to reduced sunlight in winter.',
-          'Postpartum depression and bipolar disorder also involve depressive episodes.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Warning Signs in Teens',
-        points: [
-          'Persistent sadness, tearfulness, irritability, or emotional numbness.',
-          'Loss of interest in sports, hobbies, social activities, or friends.',
-          'Low energy, inability to concentrate, and significant drop in school performance.',
-          'Physical symptoms: unexplained aches, changes in appetite, and disrupted sleep.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Causes and Risk Factors',
-        points: [
-          'Brain chemistry: imbalances in serotonin, dopamine, and norepinephrine.',
-          'Genetics: family history of depression increases personal risk.',
-          'Life stressors: trauma, loss, abuse, academic pressure, bullying.',
-          'Social media exposure is linked to increased depressive symptoms in teens.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Treatment Works',
-        points: [
-          'Cognitive Behavioural Therapy (CBT) is highly effective for adolescent depression.',
-          'Physical activity has been shown to reduce depressive symptoms significantly.',
-          'Medication prescribed by a doctor can help correct brain chemistry imbalances.',
-          '80% of people with depression improve with proper treatment (CAMH).'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Getting Help',
-        points: [
-          'Talk to a school counsellor, parent, or doctor - you don\'t have to wait.',
-          'Kids Help Phone: 1-800-668-6868 (24/7, free, confidential).',
-          'Crisis Text Line: text HOME to 686868 any time.',
-          'CAMH Youth Addictions & Concurrent Disorders: camh.ca/en/your-health'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Depression: Clinical Overview',
-      points: [
-        'MDD requires 5+ symptoms for â‰¥2 weeks, including depressed mood or anhedonia (DSM-5).',
-        'Depression affects ~300 million people globally - WHO ranks it #1 cause of disability.',
-        'Lifetime prevalence in Canada: ~11% (men) and ~16% (women) (Statistics Canada, 2022).',
-        'Adolescent-onset depression predicts higher recurrence rates throughout adulthood.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Neurobiological Mechanisms',
-      points: [
-        'Reduced serotonin, dopamine, and norepinephrine signalling in key brain circuits.',
-        'Hippocampal volume loss observed in chronic depression due to elevated cortisol.',
-        'HPA axis dysregulation drives the stress-depression cycle in vulnerable individuals.',
-        'Neuroinflammation is an emerging model explaining treatment-resistant depression.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Risk & Protective Factors',
-      points: [
-        'Risk: genetic loading, adverse childhood experiences (ACEs), chronic illness, isolation.',
-        'Risk: rumination, perfectionism, substance use, social media overconsumption.',
-        'Protective: strong social support, physical activity, sense of purpose, sleep hygiene.',
-        'Protective: access to mental health services, positive school climate, self-efficacy.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Recognizing Depression vs. Typical Sadness',
-      points: [
-        'Sadness lifts; depression persists - it permeates every area of functioning.',
-        'Anhedonia (inability to feel pleasure) is a hallmark distinguishing feature.',
-        'Suicidal ideation occurs in ~60% of those with severe MDD - always take it seriously.',
-        'Masked depression in teens: irritability, anger, somatic complaints, risk-taking.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Evidence-Based Treatment Approaches',
-      points: [
-        'First-line: CBT and Interpersonal Therapy (IPT) - both with strong clinical evidence.',
-        'SSRIs (e.g., fluoxetine) are approved for adolescent depression with medical oversight.',
-        'Exercise RCTs show effect sizes comparable to antidepressants for mild-moderate MDD.',
-        'Combination therapy (CBT + medication) yields the best outcomes for moderate-severe cases.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Crisis Response & Resources',
-      points: [
-        'If someone expresses suicidal thoughts: stay with them, listen, remove means, seek help.',
-        'Kids Help Phone: 1-800-668-6868 | Crisis Services Canada: 1-833-456-4566.',
-        'Suicide Crisis Helpline: call or text 9-8-8 (Canada-wide, launched Nov 2023).',
-        'CAMH: camh.ca | Find a therapist: psychologytoday.com/ca'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Vaping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentVaping(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Are Vapes and E-Cigarettes?',
-        points: [
-          'E-cigarettes (vapes) are battery-powered devices that make aerosol to breathe in.',
-          'They come in colourful colours and sweet flavours to attract young people.',
-          'Many contain nicotine - a drug that makes your brain want more and more.',
-          'Even some "nicotine-free" vapes contain harmful chemicals and metals.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Why Vaping Is Dangerous for Kids',
-        points: [
-          'Your brain is still growing until around age 25 - nicotine damages it.',
-          'Vaping can cause coughing, wheezing, and breathing problems.',
-          'People can become addicted after only a few tries.',
-          'Some vapes have been found to contain lead, arsenic, and other toxic metals.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'The Trick of Flavours',
-        points: [
-          'Flavours like "mango," "bubblegum," and "candy" are designed to appeal to kids.',
-          'Companies were fined for deliberately marketing to youth in Canada.',
-          'Sweet flavours don\'t make vapes safe - the harmful chemicals are still there.',
-          'Health Canada bans vape ads aimed at youth, but products still reach schools.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What Nicotine Does to Your Body',
-        points: [
-          'Nicotine goes from your lungs to your brain in about 10 seconds.',
-          'It makes you feel a little buzz at first - but then you need more to feel normal.',
-          'Addiction means your brain changes and feels bad without the drug.',
-          'Quitting is very hard - that\'s why it\'s best never to start.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Saying No Is a Super Power',
-        points: [
-          'It takes real courage to say no when others are doing something.',
-          'You can say: "No thanks, that\'s not for me" - and walk away.',
-          'True friends won\'t keep pressuring you after you say no.',
-          'You are in charge of your body and your choices.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'If You Need to Talk',
-        points: [
-          'If someone offers you a vape, you can tell a trusted adult.',
-          'Kids Help Phone: 1-800-668-6868 - free and private, any time.',
-          'Your school counsellor can help you make a plan to stay safe.',
-          'Your health and your future are worth protecting.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Vaping in Canada: The Facts',
-        points: [
-          '26% of Canadian students in Grades 7-12 have tried vaping (Health Canada, 2023).',
-          'Vaping rates among youth surged over 74% between 2017 and 2020 in Canada.',
-          'The legal age to purchase vaping products in Ontario is 19.',
-          'Despite laws, vapes are widely available in schools and social circles.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What\'s Actually in Vape Aerosol?',
-        points: [
-          'Propylene glycol and vegetable glycerin - the main vapour-producing bases.',
-          'Nicotine: pods can contain 50 mg/mL - equivalent to a pack of cigarettes.',
-          'Formaldehyde, acrolein, and heavy metals (lead, nickel, chromium) detected.',
-          'Flavouring chemicals like diacetyl are linked to severe lung disease.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Health Risks for Teenagers',
-        points: [
-          'Nicotine reshapes the developing brain, reducing impulse control and focus.',
-          'EVALI (e-cigarette or vaping product use-associated lung injury) - can be fatal.',
-          'Respiratory symptoms: chronic cough, shortness of breath, increased asthma attacks.',
-          'Early nicotine use triples the risk of addiction to other substances (CAMH).'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'The Addiction Trap',
-        points: [
-          'Nicotine addiction can develop in days to weeks - faster in adolescent brains.',
-          'Withdrawal: irritability, anxiety, difficulty concentrating, intense cravings.',
-          'Youth-focused JUUL pods (now recalled) delivered 59 mg/mL nicotine per pod.',
-          'Many teens who start vaping "to quit smoking" end up using both products.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Resisting Social Pressure',
-        points: [
-          'Peer influence is the #1 reason teens start vaping (Canadian Lung Association).',
-          'Rehearse refusal: "I\'m good, thanks" or "I don\'t want to get addicted."',
-          'Change the subject or suggest an activity - distraction is a valid strategy.',
-          'Identify one trusted friend who shares your values - it\'s easier to say no together.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Quitting & Getting Help',
-        points: [
-          'Speak to a school counsellor, pharmacist, or doctor about nicotine replacement.',
-          'Health Canada\'s "Crush the Crave" app: free support for quitting smoking/vaping.',
-          'Kids Help Phone: 1-800-668-6868 offers counselling about substance use.',
-          'Canadian Lung Association Lung Health Line: 1-888-344-LUNG (5864).'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Vaping Epidemic: Canadian Data',
-      points: [
-        'Health Canada 2023: 29% of Grade 10-12 students vaped in the past 30 days.',
-        'Youth vaping rates exceeded adult rates in Canada for the first time in 2019.',
-        'JUUL Labs paid $462 M USD to settle US claims of targeting youth.',
-        'Canada\'s Tobacco and Vaping Products Act (2018) restricts but has not stopped youth use.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Chemical Composition & Toxicology',
-      points: [
-        'Nicotine salt formulations (50-60 mg/mL) create a smoother hit, masking harshness.',
-        'Thermal decomposition of PG/VG generates carbonyls: formaldehyde, acetaldehyde.',
-        'EVALI: ~2,800 cases reported in the US (CDC, 2020), linked to vitamin E acetate in THC pods.',
-        'Heavy metals from coil degradation (lead, nickel) accumulate in lung tissue over time.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Neurobiological Impact on the Adolescent Brain',
-      points: [
-        'Prefrontal cortex development continues to age 25 - nicotine disrupts synaptic pruning.',
-        'Nicotine increases dopamine release, reinforcing compulsive use in 3-4 uses on average.',
-        'Adolescent nicotine exposure linked to lasting deficits in attention and working memory.',
-        'Gateway effect: 3× higher likelihood of cigarette smoking initiation after vaping (JAMA).'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'The Marketing Machine',
-      points: [
-        'Flavour names (mango, cotton candy) tested in focus groups to maximize youth appeal.',
-        'Social media influencers paid to promote vaping brands to under-18 audiences.',
-        'Tobacco industry acquired major vape brands (Altria bought 35% of JUUL for $12.8B).',
-        'Nicotine pouches (Zyn, Velo) are the newest industry pivot targeting youth.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Cessation Strategies',
-      points: [
-        'NRT (nicotine patch, gum, lozenge) reduces withdrawal severity and doubles quit rates.',
-        'Varenicline (Champix) and bupropion are prescription options with clinical evidence.',
-        'Behavioural interventions: identify triggers, break routines, manage stress differently.',
-        'Most people require multiple quit attempts - relapse is part of the process, not failure.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Policy, Advocacy & Resources',
-      points: [
-        'Advocate for school policies banning vaping on and near school property.',
-        'Health Canada: canada.ca/tobacco-vaping | Quit line: 1-877-513-5333.',
-        'Canadian Lung Association: lung.ca/vaping | Kids Help Phone: 1-800-668-6868.',
-        'Crush the Crave App (free iOS/Android) - evidence-based quit support for youth.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Nutrition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentNutrition(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'Food Is Fuel for Your Body',
-        points: [
-          'Your body needs food for energy to think, play, grow, and heal.',
-          'Different foods give us different things: energy, building blocks, and protection.',
-          'Canada\'s Food Guide says: fill half your plate with vegetables and fruit.',
-          'Water is the best drink - your body is about 60% water!'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Building a Balanced Plate',
-        points: [
-          'Â½ plate: colourful vegetables and fruits (the more colours, the better).',
-          'Â¼ plate: whole grain foods like whole wheat bread, oats, or brown rice.',
-          'Â¼ plate: protein foods - beans, eggs, fish, chicken, tofu.',
-          'Choose water instead of juice or pop with most meals and snacks.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Why Breakfast Matters',
-        points: [
-          'Breakfast "breaks the fast" after sleeping - your brain needs fuel to learn.',
-          'Kids who eat breakfast do better in school and have more energy.',
-          'Quick ideas: yogurt and fruit, whole-grain cereal, or peanut butter on toast.',
-          'Even a small breakfast is better than none at all.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Snack Smart',
-        points: [
-          'Choose snacks that give lasting energy: fruit, cheese, nuts, or veggies with hummus.',
-          'Ultra-processed snacks (chips, candy) cause an energy crash after a short burst.',
-          'Reading labels: if sugar is one of the first 3 ingredients, it\'s a treat, not a snack.',
-          'Eating slowly helps your brain know when you\'re full.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Staying Hydrated',
-        points: [
-          'Kids need about 6-8 cups of water per day.',
-          'Signs of dehydration: headache, tiredness, difficulty concentrating.',
-          'Sugary drinks (juice, pop, sports drinks) have lots of sugar and few nutrients.',
-          'Add cucumber, lemon, or berries to water to make it more fun to drink.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Growing Strong with Good Food',
-        points: [
-          'Calcium in milk, cheese, and fortified plant milks builds strong bones.',
-          'Iron in meat, beans, and leafy greens keeps your blood healthy.',
-          'Vitamin D (from sunlight and fortified foods) helps absorb calcium.',
-          'Eating a variety of foods is the easiest way to get all the nutrients you need.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Nutrition Basics for Growing Teens',
-        points: [
-          'Adolescence is the second-fastest growth period - nutritional needs are at their peak.',
-          'Caloric needs: ~2,200 kcal/day for active teens (varies by size and activity level).',
-          'Canada\'s Food Guide (2019) emphasizes whole foods and limits processed foods.',
-          'Adequate calcium and vitamin D in teen years determines lifelong bone density.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Macronutrients: The Big Three',
-        points: [
-          'Carbohydrates: primary fuel source - choose whole grains over refined (white) options.',
-          'Protein: builds and repairs muscles, organs, and immune cells - aim for varied sources.',
-          'Fats: essential for brain development - focus on unsaturated fats (avocado, nuts, fish).',
-          'Avoid trans fats (partially hydrogenated oils) - linked to heart disease risk.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Micronutrients Teens Often Miss',
-        points: [
-          'Iron: teens need 8-15 mg/day - deficiency causes fatigue and poor concentration.',
-          'Calcium: 1,300 mg/day for 9-18 year olds - critical for bone density peak.',
-          'Vitamin D: 600 IU/day - most Canadians are deficient, especially in winter.',
-          'Folate: important for cell growth - found in leafy greens, beans, and fortified cereals.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Ultra-Processed Foods: The Problem',
-        points: [
-          '57% of calories consumed by Canadian youth come from ultra-processed foods (UPFs).',
-          'UPFs are engineered to override fullness signals and promote overconsumption.',
-          'High in sodium, sugar, and refined carbs - low in fibre, vitamins, and minerals.',
-          'Regular UPF consumption is linked to higher rates of obesity, depression, and acne.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Eating Well on a Student\'s Life',
-        points: [
-          'Meal prep Sunday: spend 30-60 min prepping lunches for the week.',
-          'Read the Nutrition Facts table - compare sodium, sugar, and fibre.',
-          'Eating breakfast improves academic performance and reduces mid-day energy crash.',
-          'Mindful eating: put your phone down and eat slowly to recognize fullness cues.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Food, Mood & Mental Health',
-        points: [
-          'The gut-brain axis: ~90% of serotonin is produced in the gut.',
-          'Diets rich in fruits, vegetables, and omega-3s are linked to lower depression rates.',
-          'Skipping meals leads to blood sugar drops, causing irritability and brain fog.',
-          'Hydration: even mild dehydration impairs memory and increases anxiety.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Nutrition Science & Adolescent Health',
-      points: [
-        'Adolescence accounts for 50% of adult bone mass accumulation - nutrition is critical.',
-        'Canadian Community Health Survey: only 30% of youth meet daily vegetable/fruit targets.',
-        'The gut microbiome is shaped by diet and directly influences immunity and mental health.',
-        'Metabolic programming: dietary patterns in adolescence predict adult disease risk.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Reading the Research: Macros & Micros',
-      points: [
-        'Low glycaemic index carbohydrates sustain energy and improve insulin sensitivity.',
-        'Protein adequacy: 0.85 g/kg/day for non-athletes; 1.2-1.7 g/kg for those in sport.',
-        'Omega-3 fatty acids (EPA/DHA from fatty fish) reduce neuroinflammation.',
-        'Vitamin D deficiency affects ~40% of Canadians and is linked to depression and fatigue.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Ultra-Processed Food Industry Tactics',
-      points: [
-        'NOVA classification: Group 4 UPFs are industrially formulated for hyper-palatability.',
-        'Food engineers exploit the "bliss point" - optimal sugar/salt/fat to maximize craving.',
-        'Food marketing to youth: $1.8 billion CAD/year spent targeting children in Canada.',
-        'Front-of-package health claims ("low fat," "natural") are often misleading by design.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Diet, Mental Health & Performance',
-      points: [
-        'Mediterranean dietary pattern associated with 33% lower risk of depression (meta-analysis).',
-        'Tryptophan (turkey, dairy, seeds) is the serotonin precursor - diet affects mood directly.',
-        'Breakfast consumption is linked to better working memory and reduced cortisol response.',
-        'Dehydration of just 1-2% body weight impairs cognitive performance significantly.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Disordered Eating Awareness',
-      points: [
-        '1 in 10 Canadians will develop an eating disorder - highest mortality of any mental illness.',
-        'Diet culture and "clean eating" content online can trigger orthorexia and restriction.',
-        'Warning signs: rigid food rules, fear around eating, body-checking, social withdrawal.',
-        'Recovery requires medical, nutritional, and psychological support - seek help early.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Practical Application & Resources',
-      points: [
-        'Canada\'s Food Guide recipe tool: food-guide.canada.ca - free, practical, evidence-based.',
-        'Aim for food variety, not dietary restriction - variety equals micronutrient coverage.',
-        'Cook at home when possible: improves diet quality and reduces caloric intake.',
-        'For eating concerns: NEDIC helpline 1-866-NEDIC-20 | nedic.ca'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Physical Activity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentPhysicalActivity(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'Why Moving Your Body Matters',
-        points: [
-          'Exercise makes your heart, muscles, and bones stronger.',
-          'Being active helps your brain work better and improves your mood.',
-          'Kids should be active for at least 60 minutes every single day (Health Canada).',
-          'Activity can be anything - dancing, biking, swimming, playing tag!'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Three Types of Exercise',
-        points: [
-          'Aerobic (cardio): makes your heart pump faster - running, swimming, skipping.',
-          'Muscle-strengthening: builds muscles - climbing, push-ups, carrying groceries.',
-          'Bone-strengthening: builds strong bones - jumping, hopping, skipping rope.',
-          'Try to do all three types throughout the week for a balanced, healthy body.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Exercise and Your Brain',
-        points: [
-          'Exercise sends more blood and oxygen to your brain - helping you focus.',
-          'It releases endorphins - chemicals that make you feel happy.',
-          'Studies show that active kids do better in math and reading at school.',
-          'Even a 10-minute walk can help you feel calmer when you\'re stressed.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Less Screen, More Move',
-        points: [
-          'Canadian guidelines suggest no more than 2 hours of recreational screen time per day.',
-          'Screen time is sedentary (sitting still) time - it can\'t replace physical activity.',
-          'For every hour of screen time, try 10-15 minutes of movement.',
-          'Outdoor play is especially great - fresh air and sunlight boost vitamin D and mood.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Fun Ways to Be Active',
-        points: [
-          'Walk or bike to school instead of taking the bus or being driven.',
-          'Join a team sport, dance class, martial arts, or swimming lessons.',
-          'Play in the backyard or park - unstructured play counts!',
-          'Invite a friend - activities are more fun and easier to stick with together.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Making Activity a Habit',
-        points: [
-          'Pick activities you genuinely enjoy - you\'ll stick with them longer.',
-          'Start small: 10 minutes more each day adds up to over an hour per week.',
-          'Celebrate being active - not just winning or being "the best."',
-          'Your body is amazing - exercise helps it be the best it can be!'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Physical Activity Guidelines for Youth',
-        points: [
-          'Canada\'s 24-Hour Movement Guidelines: 60 min of moderate-to-vigorous activity daily.',
-          'Include vigorous activity 3 days per week to build cardiorespiratory fitness.',
-          'Muscle and bone strengthening activities 3 days per week are also recommended.',
-          'Limit sedentary recreational screen time to 2 hours per day or less.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Canadian Youth Activity Report Card',
-        points: [
-          'ParticipACTION 2022: Canadian kids earned a D+ for overall physical activity.',
-          'Only 39% of Canadian children and youth meet daily activity guidelines.',
-          'Physical activity declines sharply at age 13 and continues through high school.',
-          'Girls experience a steeper drop in activity levels during adolescence than boys.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Benefits Beyond Fitness',
-        points: [
-          'Reduces symptoms of anxiety and depression by releasing endorphins and serotonin.',
-          'Improves academic performance: aerobic fitness is linked to better grades and focus.',
-          'Reduces risk of type 2 diabetes, heart disease, and certain cancers in adulthood.',
-          'Social benefits: team sports build communication, cooperation, and leadership skills.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Barriers & How to Overcome Them',
-        points: [
-          '"I don\'t have time": even 3x 20-minute walks meets the daily guideline.',
-          '"It costs too much": community centres, school gyms, and parks are free or low-cost.',
-          '"I\'m not sporty": walking, yoga, and cycling count just as much as team sports.',
-          '"My friends don\'t do it": be the leader - suggest active hangouts like hikes or bike rides.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Exercise and Mental Health',
-        points: [
-          '20-30 minutes of aerobic exercise shown to reduce anxiety within hours (JAMA).',
-          'Regular activity buffers the brain against stress by reducing cortisol sensitivity.',
-          'Exercise promotes neuroplasticity - growth of new brain connections.',
-          'Physical activity is a recommended first-line treatment for mild to moderate depression.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Getting Started & Staying Active',
-        points: [
-          'Set a SMART goal: Specific, Measurable, Achievable, Relevant, Time-bound.',
-          'Track your activity with a free app or simple journal - accountability helps.',
-          'Find an "exercise friend" - commitment to another person doubles follow-through.',
-          'ParticipACTION app (free) offers personalized activity challenges for Canadian youth.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'The Physical Inactivity Crisis',
-      points: [
-        'WHO: physical inactivity is the 4th leading risk factor for global mortality.',
-        'ParticipACTION 2023: Canadian youth earn D+ for physical activity - down from D.',
-        'Healthcare costs attributable to physical inactivity in Canada: ~$6.8 billion/year.',
-        'Only 19% of Canadian adolescents meet the 60 min/day guideline (Stats Canada, 2022).'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Physiology of Exercise',
-      points: [
-        'Aerobic exercise increases VOâ‚‚ max - improving cardiac output and oxygen delivery.',
-        'HIIT (High-Intensity Interval Training) produces equivalent cardio benefits in 20 min.',
-        'Resistance training stimulates IGF-1 and testosterone release, building lean mass.',
-        'BDNF (brain-derived neurotrophic factor) surges after exercise - the "brain fertilizer."'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Exercise, Mental Health & Cognitive Function',
-      points: [
-        'Meta-analysis (2023): exercise reduces depression symptoms with effect size d=0.68.',
-        'Hippocampal neurogenesis triggered by aerobic exercise improves memory consolidation.',
-        'Exercise reduces amygdala reactivity - dampening anxiety and fear responses.',
-        'Students who exercise before school show 20% better focus and academic performance.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Sedentary Behaviour: The Separate Risk',
-      points: [
-        'Sedentary behaviour is independently harmful - you can\'t "out-exercise" 8 hrs sitting.',
-        'Every hour of TV watching after age 25 reduces life expectancy by 22 minutes (Lancet).',
-        'Break up sitting: 2-minute walks every 30 min reduce blood glucose spikes by 24%.',
-        'Standing desks and walk-and-talk meetings show measurable productivity improvements.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Building Lifelong Activity Habits',
-      points: [
-        'Identity-based habit change: "I am someone who moves daily" outperforms goal-setting.',
-        'Habit stacking: attach activity to an existing habit (walk after lunch, stretch before bed).',
-        'Social environment is the strongest predictor of long-term activity maintenance.',
-        'Variety prevents dropout: rotate activities every 6-8 weeks to sustain motivation.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Resources & Action Steps',
-      points: [
-        'Canada\'s 24-Hour Movement Guidelines: 24hrmovement.ca - evidence-based, free.',
-        'ParticipACTION (participaction.com) - national movement platform for Canadians.',
-        'Book a free fitness consultation at your school gym or community recreation centre.',
-        'CSEP (Canadian Society for Exercise Physiology): csep.ca for certified trainers & tools.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Sleep â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentSleep(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'Why Sleep Is So Important',
-        points: [
-          'Sleep is when your brain and body repair and grow.',
-          'While you sleep, your brain sorts and stores everything you learned that day.',
-          'Kids aged 6-12 need 9-11 hours of sleep every night (Health Canada).',
-          'Good sleep helps you feel happy, focused, and ready to learn.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What Happens When You Don\'t Sleep Enough',
-        points: [
-          'You feel grumpy, sad, or get upset more easily.',
-          'It\'s harder to pay attention, remember things, or solve problems.',
-          'You might get sick more often - sleep helps your immune system fight germs.',
-          'Feeling really tired can make doing fun activities feel hard and not enjoyable.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Screen Time and Sleep',
-        points: [
-          'Screens (phones, tablets, TVs) give off blue light that confuses your brain.',
-          'Blue light tricks your brain into thinking it\'s still daytime and delays sleep.',
-          'Turn off screens at least 1 hour before bedtime for better sleep.',
-          'Charge your phone outside your bedroom so it doesn\'t wake you up.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Your Sleep Routine',
-        points: [
-          'Going to bed at the same time every night helps set your body\'s internal clock.',
-          'Wind-down activities: reading, drawing, or taking a warm bath.',
-          'Keep your bedroom dark, cool (~18°C), and quiet for the best sleep.',
-          'Avoid big meals or sugary snacks close to bedtime.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Dreams and Sleep Stages',
-        points: [
-          'You cycle through light sleep, deep sleep, and dream sleep (REM) all night.',
-          'Deep sleep is when your body grows and heals - especially important for kids!',
-          'REM (dream) sleep helps your brain process emotions and store memories.',
-          'Everyone dreams every night - even if you don\'t always remember them.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Tips for a Great Night\'s Sleep',
-        points: [
-          'Have a consistent bedtime and wake-up time - even on weekends.',
-          'Keep your room dark: use blackout curtains or a sleep mask.',
-          'If your mind is racing, write down your worries in a journal before bed.',
-          'Try deep breathing: breathe in for 4 counts, hold 4, breathe out for 4.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Sleep Needs for Teenagers',
-        points: [
-          'Teens aged 13-18 need 8-10 hours of sleep per night (Health Canada guidelines).',
-          'Only 20% of Canadian teens get the recommended amount of sleep (CAMH, 2022).',
-          'Adolescent biology: melatonin releases later (11pm), making early rising harder.',
-          'Chronic sleep deprivation is as common as any other major teen health issue.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'The Science of Sleep Architecture',
-        points: [
-          'Sleep occurs in 90-minute cycles: light NREM, deep NREM (slow-wave), and REM.',
-          'Deep sleep (N3) drives physical restoration: growth hormone peaks during this phase.',
-          'REM sleep consolidates emotional memories and enhances creative thinking.',
-          'Hitting snooze interrupts sleep cycles and worsens daytime grogginess.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Effects of Sleep Deprivation',
-        points: [
-          'Cognitive: 20% decline in memory retention and reaction time after one bad night.',
-          'Emotional: heightened amygdala reactivity makes you more impulsive and irritable.',
-          'Academic: sleep-deprived students have significantly lower GPA on average.',
-          'Physical: impaired immune function, increased appetite, and elevated cortisol.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Technology and Sleep',
-        points: [
-          'Blue light (480 nm) from screens suppresses melatonin production by up to 50%.',
-          'Social media use in bed increases sleep latency (time to fall asleep) by 30+ minutes.',
-          'Phone notifications disrupt sleep architecture even if you don\'t fully wake up.',
-          'Phone-free bedrooms: teens who charge devices outside rooms sleep 42 min longer.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Sleep Hygiene Strategies',
-        points: [
-          'Consistent schedule: same bedtime and wake time within 30 minutes daily.',
-          'Screen curfew: no devices 60-90 minutes before sleep.',
-          'Cool, dark room: ideal temperature is 16-19°C; blackout curtains help.',
-          'Avoid caffeine after 2 pm - it has a 5-7 hour half-life in your system.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Sleep Disorders in Youth',
-        points: [
-          'Insomnia: difficulty falling or staying asleep - affects ~10% of teens.',
-          'Delayed sleep phase syndrome: common in teens, makes early school starts difficult.',
-          'Sleep apnea: interrupted breathing during sleep - linked to ADHD-like symptoms.',
-          'If sleep problems persist over 4 weeks, speak to a doctor or school nurse.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Sleep Deprivation: A Public Health Crisis',
-      points: [
-        '73% of Canadian high school students are chronically sleep-deprived (CAMH, 2022).',
-        'Drowsy driving causes ~20% of fatal motor vehicle crashes annually in Canada.',
-        'WHO classifies night-shift work (circadian disruption) as a probable carcinogen.',
-        'CDC: insufficient sleep is a public health epidemic - linked to all leading causes of death.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Circadian Biology & Adolescent Sleep',
-      points: [
-        'Circadian rhythm: 24-hr endogenous clock regulated by the suprachiasmatic nucleus (SCN).',
-        'Puberty delays melatonin onset by 1.5-2 hours - biological, not laziness.',
-        'School start times before 8:30 AM are classified as harmful by the AAP.',
-        'Social jet lag: misalignment between biological clock and social/academic schedule.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Neurological Impact of Sleep Deprivation',
-      points: [
-        'Prefrontal cortex function degrades after 17-19 hours awake - impairs judgement.',
-        'Glymphatic system clears neurotoxic waste (including amyloid-Î²) during deep sleep.',
-        'One night of poor sleep increases amygdala reactivity by 60% (Walker, UC Berkeley).',
-        'Chronic deprivation accelerates cortical thinning - structural brain damage over time.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Sleep, Mental Health & Performance',
-      points: [
-        '90% of people with depression report sleep disturbances - bidirectional relationship.',
-        'Sleep deprivation increases suicidal ideation independent of other risk factors.',
-        'Athletes who sleep 10 hrs/night improve speed, accuracy, and reaction time (Stanford).',
-        'Exam performance: students who sleep 8+ hrs score 15-25% higher than peers under 6 hrs.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Evidence-Based Sleep Optimization',
-      points: [
-        'Stimulus control: bed is for sleep only - no work, screens, or eating in bed.',
-        'Sleep restriction therapy: temporarily limit time in bed to build homeostatic sleep drive.',
-        'CBT-I (Cognitive Behavioural Therapy for Insomnia): gold standard, more effective than pills.',
-        'Morning sunlight (10+ min) within 1 hour of waking anchors the circadian clock.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Advocacy & Resources',
-      points: [
-        'Canadian Sleep Society: css-scs.ca - sleep health education and clinician locator.',
-        'Start School Later movement: advocating evidence-based school start time reform.',
-        'Sleep Foundation (sleepfoundation.org) - evidence-reviewed articles on sleep disorders.',
-        'Persistent sleep difficulty: ask your doctor for a referral to a sleep specialist.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Stress Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentStress(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is Stress?',
-        points: [
-          'Stress is what we feel when something seems too hard, scary, or overwhelming.',
-          'Everyone feels stressed sometimes - it\'s a normal human experience.',
-          'A little stress can help us do our best (like before a race or a test).',
-          'Too much stress for too long can make us feel tired, sick, or sad.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What Causes Kids to Feel Stressed?',
-        points: [
-          'School tests, homework, or not understanding something in class.',
-          'Problems with friends or feeling left out or bullied.',
-          'Family changes like moving, a new sibling, or parents arguing.',
-          'Big world events can also make kids feel worried and scared.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'How Stress Feels in Your Body',
-        points: [
-          'Heart beats faster, palms get sweaty, stomach feels like butterflies.',
-          'These are your body\'s alarm signals - they\'re trying to protect you.',
-          'When the stressful thing passes, these feelings go away on their own.',
-          'Learning to notice these signals helps you manage them before they get too big.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Calming Your Body Down',
-        points: [
-          'Deep breathing: breathe in for 4 counts, hold for 4, breathe out for 4.',
-          'Move your body: walk, jump, stretch - physical movement burns stress hormones.',
-          'The 5-4-3-2-1 trick: name 5 things you see, 4 you hear, 3 you feel, 2 you smell, 1 you taste.',
-          'Squeeze and release your muscles tightly - it helps tension leave your body.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Dealing with Big Feelings',
-        points: [
-          'Name it to tame it: say "I feel anxious about my test" - naming helps.',
-          'Talk to someone: a parent, friend, teacher, or counsellor.',
-          'Write or draw your feelings in a journal - it gets them out of your head.',
-          'Break big problems into small steps: "What\'s the first small thing I can do?"'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Building Your Stress Toolkit',
-        points: [
-          'Sleep and eat well - stress feels bigger when we\'re tired or hungry.',
-          'Make time for things you enjoy - hobbies and play are medicine for stress.',
-          'Ask for help before you reach your breaking point.',
-          'Kids Help Phone: 1-800-668-6868 - confidential support any time.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Understanding Stress',
-        points: [
-          'Stress is the body\'s physiological response to demands that exceed perceived resources.',
-          'Eustress (positive) vs. distress (negative) - not all stress is harmful.',
-          'The stress response evolved for short-term survival - not modern academic pressure.',
-          '54% of Canadian teens report feeling overwhelmed by stress (CAMH, 2021).'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'The Stress Response System',
-        points: [
-          'The amygdala detects a threat and triggers the hypothalamic-pituitary-adrenal (HPA) axis.',
-          'Adrenaline (epinephrine) released in seconds: heart rate up, muscles tense, senses sharpen.',
-          'Cortisol released in minutes: suppresses digestion, immune response, and growth.',
-          'Chronic activation of this system leads to burnout, illness, and mental health problems.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Teen-Specific Stressors',
-        points: [
-          'Academic pressure: marks, university applications, parental and peer expectations.',
-          'Social dynamics: friendships, romantic relationships, identity formation, belonging.',
-          'Digital world: cyberbullying, social comparison, FOMO, constant connectivity.',
-          'Family stressors: financial pressure, conflict, divorce, immigration, health crises.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Effective Coping Strategies',
-        points: [
-          'Problem-focused coping: make a plan, break tasks into steps, ask for help.',
-          'Emotion-focused coping: journaling, talking to friends, creative expression.',
-          'Physiological regulation: 4-7-8 breathing, progressive muscle relaxation, cold water.',
-          'Cognitive reframing: "Is this actually as catastrophic as it feels right now?"'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What Doesn\'t Help (Even If It Feels Like It Does)',
-        points: [
-          'Avoidance: procrastination, skipping class, isolating - makes stress worse over time.',
-          'Substance use: alcohol/cannabis may numb stress but worsen anxiety long-term.',
-          'Rumination: replaying stressful events in your mind amplifies their emotional impact.',
-          'Perfectionism: setting impossibly high standards guarantees chronic stress.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Building Stress Resilience',
-        points: [
-          'Resilience is a skill - it\'s built through practice, not something you\'re born with.',
-          'Social support is the #1 buffer against chronic stress - invest in your relationships.',
-          'Regular self-care: sleep 8-10 hrs, move daily, eat consistently, spend time offline.',
-          'Kids Help Phone: 1-800-668-6868 | School counsellor - free, confidential support.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Stress & the Adolescent Brain',
-      points: [
-        'CAMH 2021: 45% of Canadian post-secondary students rated their mental health as fair/poor.',
-        'Allostatic load: accumulated biological wear from chronic stress across multiple systems.',
-        'Adolescent HPA axis is more reactive and slower to return to baseline than adults.',
-        'Academic pressure is the #1 stressor for Canadian youth aged 15-24 (Statistics Canada).'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Psychoneuroimmunology of Stress',
-      points: [
-        'Chronic cortisol elevation reduces telomere length - accelerating cellular ageing.',
-        'Stress suppresses NK cell activity, increasing susceptibility to viral infections.',
-        'Gut microbiome is altered by stress, affecting mood, immunity, and cognition.',
-        'Inflammatory cytokines elevated in chronic stress are a key driver of depression.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Burnout: Recognizing the Threshold',
-      points: [
-        'Burnout triad: exhaustion (depleted), depersonalization (detachment), reduced efficacy.',
-        'Academic burnout affects ~40% of high school students in Ontario (CAMH survey, 2021).',
-        'Unlike fatigue, burnout does not resolve with rest alone - structural change is needed.',
-        'Warning signs: chronic cynicism, emotional numbness, physical illness, apathy toward goals.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Evidence-Based Stress Management',
-      points: [
-        'MBSR (Mindfulness-Based Stress Reduction): 8-week program with robust clinical evidence.',
-        'Reappraisal outperforms suppression for long-term emotional regulation (Gross, 2014).',
-        'Cold water exposure (face immersion) activates the dive reflex - rapid HRV improvement.',
-        'Time-blocking and pre-commitment reduce decision fatigue and task-switching costs.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Systems-Level Perspective',
-      points: [
-        'Individual coping is insufficient when systemic stressors (poverty, racism) are the cause.',
-        'School environment design: autonomy, belonging, and competence reduce chronic stress.',
-        'Rest ethics: the counter-cultural act of protecting rest is a radical health choice.',
-        'Community and collective action are stress buffers - isolation amplifies the stress response.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Support & Resources',
-      points: [
-        'Kids Help Phone: 1-800-668-6868 | 9-8-8 Suicide Crisis Helpline (Canada, 24/7).',
-        'CAMH: camh.ca/wellness-recovery | Headspace, Calm - free student subscriptions available.',
-        'School counsellor: free, confidential, and trained in academic and personal stress.',
-        'If symptoms persist 4+ weeks: speak to your family doctor about a mental health referral.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Bullying â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentBullying(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is Bullying?',
-        points: [
-          'Bullying is when someone hurts another person on purpose, more than once.',
-          'It can be physical (hitting), verbal (name-calling), or social (leaving someone out).',
-          'Cyberbullying is bullying that happens online or through phones.',
-          'Bullying is never okay - and it is never the target\'s fault.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'How Bullying Feels',
-        points: [
-          'Being bullied can make you feel sad, scared, angry, or embarrassed.',
-          'It can make kids not want to go to school or see their friends.',
-          'Stomachaches, headaches, and trouble sleeping can all be signs of being bullied.',
-          'You are not alone - about 1 in 3 students in Canada experiences bullying.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'What You Can Do If You\'re Bullied',
-        points: [
-          'Walk away calmly - staying calm takes away the bully\'s power.',
-          'Tell a trusted adult right away: a teacher, parent, or principal.',
-          'You don\'t have to face this alone - asking for help is the smart thing to do.',
-          'Save mean messages or screenshots - this is evidence that adults need to see.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Being an Upstander (Not a Bystander)',
-        points: [
-          'A bystander watches bullying happen. An upstander does something about it.',
-          'You can say: "That\'s not cool" or "Stop, leave them alone."',
-          'Include others who are left out - your invitation can change their whole day.',
-          'Report what you saw to an adult - even if you\'re worried about being called a "tattletale."'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Online Safety',
-        points: [
-          'Never share personal information (address, school, photos) with strangers online.',
-          'Block and report people who are mean to you online.',
-          'Screenshots of cyberbullying should be saved and shown to a trusted adult.',
-          'If something online makes you uncomfortable, you always have the right to log off.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Every School Has Rules Against Bullying',
-        points: [
-          'All Ontario schools must have a safe school policy - you have the right to be safe.',
-          'Talk to your teacher or school counsellor - it\'s their job to help you.',
-          'Kids Help Phone: 1-800-668-6868 - free, confidential, any time.',
-          'You deserve to feel safe, respected, and included - always.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Defining Bullying',
-        points: [
-          'Bullying: repeated, intentional aggressive behaviour with a real or perceived power imbalance.',
-          'Types: physical, verbal, social/relational, cyberbullying.',
-          'Conflict vs. bullying: conflict is mutual; bullying is one-sided and repeated.',
-          '1 in 3 Canadian students reports being bullied (Statistics Canada, 2019).'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Cyberbullying in Canada',
-        points: [
-          '23% of Canadian teens have experienced cyberbullying (MediaSmarts, 2022).',
-          'Forms: harassment, impersonation, doxing, pile-ons, exclusion from group chats.',
-          'Cyberbullying can happen 24/7 and follow victims into their homes - no escape.',
-          'Girls experience cyberbullying at higher rates; boys experience more physical bullying.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Impact on Mental Health',
-        points: [
-          'Bullying victims are 2-9× more likely to consider suicide than non-victims.',
-          'Chronic bullying linked to anxiety, depression, PTSD symptoms, and low self-esteem.',
-          'Academic impact: higher absenteeism, concentration difficulties, grade decline.',
-          'Bullies also suffer: higher rates of substance use and antisocial behaviour in adulthood.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Responding as a Bystander',
-        points: [
-          'Bystanders are present in ~85% of bullying incidents yet intervene in only ~25%.',
-          'The "bystander effect" weakens when individuals feel personal responsibility.',
-          'Upstander strategies: speak up, refuse to laugh, support the target privately.',
-          'Reporting is not tattling - it is taking responsibility for a safe school community.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Digital Safety & Online Rights',
-        points: [
-          'Ontario\'s Accepting Schools Act (2012) requires anti-bullying programs in all schools.',
-          'Document cyberbullying: screenshots with timestamps are evidence for school/police.',
-          'Block, report, and restrict - every platform has safety tools, learn to use them.',
-          'Criminal harassment laws can apply to cyberbullying - involve police for serious cases.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Where to Get Help',
-        points: [
-          'Tell a teacher, counsellor, or parent - your safety is their legal responsibility.',
-          'Kids Help Phone: 1-800-668-6868 or text HELLO to 686868.',
-          'BullyingCanada.ca - support chat, resources, and crisis intervention.',
-          'PREVNet (prevnet.ca) - Canada\'s leading bullying research and prevention network.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'The Epidemiology of Bullying in Canada',
-      points: [
-        'Statistics Canada: ~33% of youth aged 12-17 experience bullying in any given year.',
-        'PREVNet estimates $2.2 billion in lost productivity attributed to childhood bullying effects.',
-        'LGBTQ+ youth are 3× more likely to be bullied than their cisgender/straight peers (CAMH).',
-        'Racialized youth experience higher rates of discrimination-based bullying in schools.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Power, Social Dynamics & Group Behaviour',
-      points: [
-        'Social dominance theory: bullying as a strategy for establishing peer hierarchy.',
-        'Group dynamics: 85% of bullying occurs in front of peers - audience reinforces the bully.',
-        'Social exclusion activates the same neural pathways as physical pain (Eisenberger, 2003).',
-        'Online disinhibition effect: anonymity reduces empathy and escalates aggression online.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Long-Term Consequences',
-      points: [
-        'Childhood bullying victimization predicts adult anxiety, depression, and self-harm (BMJ).',
-        'Complex trauma from chronic bullying overlaps with PTSD symptom profiles.',
-        'Bullies: higher risk of criminal behaviour, domestic violence, and substance use in adulthood.',
-        'Bystanders: vicarious trauma, moral injury, and increased anxiety - complicity has a cost.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Legal & Policy Framework',
-      points: [
-        'Ontario\'s Accepting Schools Act (2012): all schools must have an anti-bullying plan.',
-        'Criminal Code of Canada: criminal harassment, uttering threats, identity fraud apply online.',
-        'Cyberbullying resulting in suicide: two Nova Scotia cases led to the Rehtaeh Parsons Act.',
-        'Schools have a duty to investigate and respond - document and escalate through the system.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Becoming an Effective Upstander',
-      points: [
-        'Upstander behaviour is contagious - one person speaking up shifts group norms.',
-        'Call-in vs. call-out: private correction preserves dignity and is more effective long-term.',
-        'Amplify marginalized voices and centre the target\'s experience, not the bully\'s.',
-        'Self-care for upstanders: vicarious trauma is real - debrief with a counsellor if needed.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Reporting & Support Resources',
-      points: [
-        'BullyingCanada.ca - crisis support for youth experiencing bullying (chat + phone).',
-        'Kids Help Phone: 1-800-668-6868 (24/7) | Crisis Text Line: text HOME to 686868.',
-        'PREVNet (prevnet.ca) - research, tools, and training for schools and parents.',
-        'For serious harassment: contact school administration AND local police non-emergency.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: CPR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentCPR(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is CPR?',
-        points: [
-          'CPR stands for Cardiopulmonary Resuscitation - it keeps blood moving when the heart stops.',
-          'You don\'t need to be a doctor to save a life - anyone can learn CPR.',
-          'CPR can double or triple a person\'s chances of surviving a cardiac emergency.',
-          'In Canada, about 40,000 people suffer cardiac arrest outside of hospitals each year.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'When to Use CPR',
-        points: [
-          'A person is unresponsive - they don\'t wake up when you tap and call their name.',
-          'They are not breathing normally - no chest rise or only gasping.',
-          'Always call 911 first (or have someone else call) before starting CPR.',
-          'Keep going until paramedics arrive or the person starts breathing on their own.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Step 1: Check & Call',
-        points: [
-          'TAP the person on the shoulder firmly and shout: "Are you okay? Are you okay?"',
-          'If no response: CALL 911 immediately or ask a bystander to call.',
-          'If you\'re alone, call 911 yourself, put it on speakerphone, then begin CPR.',
-          'The dispatcher will guide you - follow their instructions while you help.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Step 2: Push Hard and Fast',
-        points: [
-          'Place your hands on the centre of the chest (on the breastbone).',
-          'Push down about 5 centimetres (about 2 inches) - hard!',
-          'Push at a rate of 100-120 times per minute - like the beat of "Stayin\' Alive."',
-          'Let the chest rise back up completely between each push.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Using an AED',
-        points: [
-          'An AED (Automated External Defibrillator) is a machine that can restart the heart.',
-          'AEDs are found in schools, arenas, malls - often near first aid signs.',
-          'Turn it on and follow the voice instructions - it tells you exactly what to do.',
-          'The AED will only shock if the heart needs it - it is safe to use.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'You Can Save a Life',
-        points: [
-          'Every 30 seconds without CPR, survival odds drop by 10%.',
-          'You cannot hurt someone who is already unconscious and not breathing.',
-          'Good Samaritan laws in Canada protect helpers who try to save a life.',
-          'Take a certified CPR course: St. John Ambulance, Red Cross, or Heart & Stroke.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Cardiac Arrest: What\'s Happening in the Body',
-        points: [
-          'Cardiac arrest: the heart stops pumping due to an abnormal electrical rhythm (VF/VT/PEA).',
-          'Without blood flow, brain cells begin dying within 4-6 minutes.',
-          '40,000 out-of-hospital cardiac arrests occur in Canada annually; survival rate ~10%.',
-          'Bystander CPR can more than double survival - most Canadians never witness it being done.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'The Chain of Survival',
-        points: [
-          'Link 1: Early recognition and call to 911.',
-          'Link 2: Early CPR - minimizes brain damage while waiting for EMS.',
-          'Link 3: Early defibrillation (AED) - restores normal heart rhythm.',
-          'Link 4: Early advanced care - paramedics and hospital treatment.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Hands-Only CPR - The Steps',
-        points: [
-          '1. Check for response: tap shoulder, shout "Are you okay?" twice.',
-          '2. Call 911 or delegate: point at one person and say "You - call 911 now."',
-          '3. Position: heel of hand on centre of chest, second hand on top, arms straight.',
-          '4. Compressions: push down 5-6 cm at 100-120/min - let chest fully recoil.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'When to Add Rescue Breaths',
-        points: [
-          'Compression-only CPR is recommended for untrained bystanders - effective and simpler.',
-          'Rescue breaths: tilt head back, lift chin, pinch nose, give 1 breath over 1 second.',
-          'Ratio for trained responders: 30 compressions : 2 rescue breaths.',
-          'For children (1-8 yrs): use 2 fingers or one hand; same rate and depth ratio.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Using an AED',
-        points: [
-          'Turn on the AED - it will provide step-by-step audio and visual prompts.',
-          'Attach pads: one below right collarbone, one on left side below armpit.',
-          'AED analyzes rhythm - if shock needed, it charges and says "Stand clear."',
-          'Resume compressions immediately after shock - do not wait to check for pulse.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Choking Response',
-        points: [
-          'Mild choking: encourage coughing - do not intervene.',
-          'Severe choking (cannot speak, cough, or breathe): perform the Heimlich manoeuvre.',
-          'Heimlich: stand behind, fist between navel and ribs, pull sharply inward and upward.',
-          'For infants: alternate 5 back blows and 5 chest thrusts - never abdominal thrusts.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Out-of-Hospital Cardiac Arrest: Epidemiology',
-      points: [
-        'OHCA affects ~40,000 Canadians annually; survival to hospital discharge: ~9% (CIHI, 2022).',
-        'Ventricular fibrillation (VF): most common shockable rhythm in witnessed adult arrest.',
-        'Survival doubles or triples with immediate bystander CPR + AED within 5 minutes.',
-        'Despite high awareness, only ~50% of cardiac arrests receive bystander CPR in Canada.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Pathophysiology of Cardiac Arrest',
-      points: [
-        'VF: chaotic electrical activity - heart quivers rather than pumps. Defibrillation needed.',
-        'PEA (Pulseless Electrical Activity): organized rhythm without perfusion - not shockable.',
-        'Asystole: "flat line" - requires CPR and epinephrine, not defibrillation.',
-        'CPR maintains ~30% of normal cardiac output - enough to preserve brain viability.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'High-Quality CPR: Technical Standards',
-      points: [
-        'Rate: 100-120 compressions per minute (AHA/HSFC 2020 guidelines).',
-        'Depth: 5-6 cm (adult); 4-5 cm (child 1-8 yrs); 1.5-3.5 cm (infant).',
-        'Full chest recoil between compressions: lean minimally, reduce recoil interruption.',
-        'Minimize hands-off time: CPR pauses of >10 seconds significantly reduce survival.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'AED Operation & Defibrillation',
-      points: [
-        'AEDs analyze ECG rhythm and advise shock only for VF or pulseless VT.',
-        'Pad placement: right sub-clavicular and left mid-axillary (anatomically referenced).',
-        'Resume CPR immediately post-shock - do not check pulse until 2-minute cycle complete.',
-        'Public AED access programs (PAD): AEDs in schools, arenas, airports, transit hubs.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Special Situations',
-      points: [
-        'Drowning: give 5 rescue breaths BEFORE starting compressions - hypoxia is primary cause.',
-        'Opioid overdose: give naloxone AND call 911 - CPR if no pulse/breathing.',
-        'Pregnancy: tilt patient 15-30° left to relieve aortocaval compression.',
-        'Hypothermia: "Not dead until warm and dead" - continue CPR until hospital rewarming.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Certification & Legal Framework',
-      points: [
-        'HSFC CPR & AED Certification: heartstroke.ca - Standard and Healthcare Provider levels.',
-        'St. John Ambulance and Canadian Red Cross also offer nationally recognized courses.',
-        'Ontario\'s Good Samaritan Act: protects lay rescuers acting in good faith from liability.',
-        'School CPR programs: mandatory in several provinces - advocate for yours if not included.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Body Image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentBodyImage(grade) {
-  if (grade === 'elem') {
-    return [
-      {
-        type: 'content',
-        title: 'What Is Body Image?',
-        points: [
-          'Body image is how you think and feel about the way your body looks.',
-          'Positive body image means liking and respecting your body the way it is.',
-          'Negative body image is when you feel bad or embarrassed about your body.',
-          'Our bodies come in all different shapes, sizes, and colours - that\'s perfectly normal.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Where Body Image Ideas Come From',
-        points: [
-          'TV, movies, and social media show a very narrow idea of what bodies "should" look like.',
-          'Comments from family, friends, or peers can affect how we feel about our bodies.',
-          'Many photos on social media are edited or filtered - they don\'t show real bodies.',
-          'The diet and beauty industry makes $80 billion/year by making people feel not enough.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Your Body Does Amazing Things',
-        points: [
-          'Your body helps you run, dance, laugh, hug, create, and explore the world.',
-          'Focus on what your body can DO, not just how it looks.',
-          'Every body is different - even twins have different shapes and features.',
-          'You grow and change a lot during childhood - these changes are normal and healthy.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Being a Good Friend to Your Body',
-        points: [
-          'Feed your body nourishing food without punishing yourself for treats.',
-          'Move your body in ways that feel fun and good - not to change how it looks.',
-          'Rest when you\'re tired - your body communicates what it needs.',
-          'Talk to your body kindly: replace "I hate my stomach" with "my body keeps me safe."'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Supporting Friends',
-        points: [
-          'Don\'t comment on other people\'s bodies - even complimenting can cause harm.',
-          'Change the subject if friends are talking negatively about their appearance.',
-          'Tell a trusted adult if a friend is skipping meals or seems worried about their weight.',
-          'Compliment people on their character, skills, and kindness - not just their looks.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'All Bodies Deserve Respect',
-        points: [
-          'You are more than your appearance - your kindness, creativity, and heart matter most.',
-          'Never tease or comment on someone\'s body - it can hurt more than you know.',
-          'If body worries are making you sad, talk to a counsellor or Kids Help Phone.',
-          'Kids Help Phone: 1-800-668-6868 - free, private, and available any time.'
-        ]
-      }
-    ];
-  }
-
-  if (grade === 'mid') {
-    return [
-      {
-        type: 'content',
-        title: 'Body Image in Adolescence',
-        points: [
-          'Body image: the subjective picture of one\'s own body formed through self-perception.',
-          'Adolescence involves rapid physical change - body dissatisfaction peaks during this period.',
-          '61% of Canadian girls and 34% of Canadian boys report negative body image (NEDIC, 2021).',
-          'Body dissatisfaction is one of the strongest predictors of eating disorder development.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Social Media and Body Image',
-        points: [
-          'Social comparison theory: we measure our appearance against others - social media amplifies this.',
-          'Instagram use linked to increased body dissatisfaction in teen girls (Royal Society, 2017).',
-          'Filters and editing tools create an unachievable standard of appearance.',
-          'Body-shaming content viewed online increases self-objectification and disordered eating.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'The Diet Culture Problem',
-        points: [
-          'Diet culture: the belief that thinness equals health, virtue, and worth.',
-          'The diet industry generates $80 billion/year - but 95% of diets fail within 5 years.',
-          '"Clean eating" trends on social media can escalate into orthorexia and restriction.',
-          'Dieting in adolescence is a significant risk factor for eating disorder development.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Eating Disorders: Know the Signs',
-        points: [
-          'Anorexia: severely restricting food; extreme fear of weight gain; distorted body perception.',
-          'Bulimia: cycles of binge eating followed by purging (vomiting, laxatives, over-exercise).',
-          'Binge Eating Disorder (BED): most common eating disorder - distress from uncontrolled eating.',
-          'Eating disorders have the highest mortality of any mental health condition - get help early.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Building Body Respect',
-        points: [
-          'Body neutrality: appreciate your body for what it does, not how it looks.',
-          'Curate your social media - unfollow accounts that make you feel bad about your body.',
-          'Challenge appearance-based compliments: redirect to personality and strengths.',
-          'Movement for joy: exercise for how it makes you feel, not to change your shape.'
-        ]
-      },
-      {
-        type: 'content',
-        title: 'Support & Resources',
-        points: [
-          'NEDIC Helpline: 1-866-NEDIC-20 (1-866-633-4220) - free eating disorder support.',
-          'Kids Help Phone: 1-800-668-6868 | Text HELLO to 686868.',
-          'Bulimia Anorexia Nervosa Association: banthelabel.ca - body image resources for youth.',
-          'If worried about a friend: tell a trusted adult. Early intervention saves lives.'
-        ]
-      }
-    ];
-  }
-
-  // high
-  return [
-    {
-      type: 'content',
-      title: 'Body Image: The Research Landscape',
-      points: [
-        'NEDIC 2021: 1 in 10 Canadians will develop an eating disorder in their lifetime.',
-        'Body dissatisfaction is prevalent in 60%+ of adolescent girls and 30%+ of boys.',
-        'Weight-based stigma is one of the last socially acceptable forms of discrimination.',
-        'Appearance pressure begins before age 7 and intensifies significantly at puberty.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Objectification Theory & Media Influence',
-      points: [
-        'Fredrickson & Roberts (1997): sexual objectification internalizes an outside observer\'s view.',
-        'Self-objectification: habitually monitoring appearance as a measure of self-worth.',
-        'Instagram\'s own internal research: 32% of teen girls felt worse about their bodies after use.',
-        'Algorithmic amplification of thin-ideal content: body dissatisfaction content creates engagement.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Eating Disorders: Clinical Framework',
-      points: [
-        'DSM-5 classifications: AN, BN, BED, ARFID, OSFED - all require medical/psych treatment.',
-        'Anorexia nervosa has the highest mortality rate of any psychiatric disorder (5-10%).',
-        'Muscle dysmorphia ("bigorexia"): underrecognized in males - compulsion to build mass.',
-        'Genetic factors account for 50-80% of eating disorder risk - bio not just cultural.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Fat Liberation & Critical Perspectives',
-      points: [
-        'Health At Every Size (HAES): health is multidimensional, not determined by weight alone.',
-        'BMI is a historical tool not designed for individual health assessment (Keys, 1972).',
-        'Weight cycling ("yo-yo dieting") is associated with worse cardiovascular outcomes than stable weight.',
-        'Structural anti-fat bias in healthcare leads to underdiagnosis and poorer treatment for larger bodies.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Cultivating Body Respect',
-      points: [
-        'Body neutrality vs. body positivity: neutrality is more sustainable and less performative.',
-        'Media literacy training reduces internalization of thin-ideal in experimental studies.',
-        'Somatic awareness practices (yoga, dance, body scanning) rebuild body trust after dissociation.',
-        'Advocacy: support for weight-inclusive healthcare, school anti-diet policies, and HAES education.'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Crisis Support & Resources',
-      points: [
-        'NEDIC Helpline: 1-866-633-4220 | NEDIC online: nedic.ca - free eating disorder support.',
-        'Sheena\'s Place (Toronto): sheenasplace.org - eating disorder groups and counselling.',
-        'National Eating Disorder Association (US): nationaleatingdisorders.org.',
-        'If someone is medically compromised: this is a medical emergency - call 911.'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Content: Generic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpContentGeneric(grade, topicName) {
-  var safeTopicName = topicName || 'Health Topic';
-  return [
-    {
-      type: 'content',
-      title: 'Introduction to ' + safeTopicName,
-      points: [
-        '[Presenter: Add an opening definition or overview of ' + safeTopicName + ' here.]',
-        '[Include a relevant Canadian statistic from Health Canada or CAMH.]',
-        '[Explain why this topic matters to students in this age group.]',
-        '[Add a personal connection or story that makes this topic relevant.]'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Key Facts About ' + safeTopicName,
-      points: [
-        '[Add 2-3 evidence-based facts about ' + safeTopicName + ' from credible sources.]',
-        '[Include a statistic relevant to Canadian youth if possible.]',
-        '[Presenter: Cite your source (e.g., Health Canada, WHO, CAMH).]',
-        '[Consider including a visual, chart, or infographic on this slide.]'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Why This Affects You',
-      points: [
-        '[Explain how ' + safeTopicName + ' affects young people specifically.]',
-        '[Include context relevant to this grade level and local community.]',
-        '[Connect to students\' lived experience, interests, or current events.]',
-        '[Avoid fearmongering - frame as empowering information, not scary facts.]'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Risks & Warning Signs',
-      points: [
-        '[List 3-4 warning signs or risk factors related to ' + safeTopicName + '.]',
-        '[Describe physical, emotional, and social indicators.]',
-        '[Emphasize that noticing signs is the first step to getting help.]',
-        '[Include age-appropriate language for this grade level.]'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'What You Can Do',
-      points: [
-        '[List 3-4 practical, actionable steps students can take regarding ' + safeTopicName + '.]',
-        '[Include both personal strategies and ways to support others.]',
-        '[Emphasize accessible, low-cost options available to all students.]',
-        '[Frame positively: these are skills and strengths, not just warnings.]'
-      ]
-    },
-    {
-      type: 'content',
-      title: 'Resources & Support',
-      points: [
-        '[List school-based resources: counsellor, nurse, teacher, trusted adult.]',
-        '[Include Kids Help Phone: 1-800-668-6868 (free, 24/7, confidential).]',
-        '[Add any community or online resources specifically relevant to ' + safeTopicName + '.]',
-        '[Remind students: asking for help is always the right choice.]'
-      ]
-    }
-  ];
-}
-
-// â”€â”€ Dispatcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function hpGetSlides(topicKey, grade, topicInput) {
-  if (topicKey === 'mental-health') return hpContentMentalHealth(grade);
-  if (topicKey === 'depression') return hpContentDepression(grade);
-  if (topicKey === 'vaping') return hpContentVaping(grade);
-  if (topicKey === 'nutrition') return hpContentNutrition(grade);
-  if (topicKey === 'physical-activity') return hpContentPhysicalActivity(grade);
-  if (topicKey === 'sleep') return hpContentSleep(grade);
-  if (topicKey === 'stress') return hpContentStress(grade);
-  if (topicKey === 'bullying') return hpContentBullying(grade);
-  if (topicKey === 'cpr') return hpContentCPR(grade);
-  if (topicKey === 'body-image') return hpContentBodyImage(grade);
-  return hpContentGeneric(grade, topicInput);
-}
-
 function hpGetTitle(topicKey, topicInput, grade) {
-  if (topicKey === 'mental-health') {
-    if (grade === 'elem') return 'Understanding Our Feelings';
-    if (grade === 'mid') return 'Mental Health Matters';
-    return 'Mental Health Awareness';
-  }
-  if (topicKey === 'depression') return 'Understanding Depression';
-  if (topicKey === 'vaping') {
-    if (grade === 'elem') return 'Say No to Vaping';
-    if (grade === 'mid') return 'Vaping: The Hidden Risks';
-    return 'The Truth About Vaping';
-  }
-  if (topicKey === 'nutrition') {
-    if (grade === 'elem') return 'Eating Well, Feeling Great';
-    if (grade === 'mid') return 'Fuelling Your Body Right';
-    return 'Nutrition Science for Life';
-  }
-  if (topicKey === 'physical-activity') {
-    if (grade === 'elem') return 'Move More, Feel Great!';
-    if (grade === 'mid') return 'Get Moving: Why Activity Matters';
-    return 'Physical Activity & Health';
-  }
-  if (topicKey === 'sleep') {
-    if (grade === 'elem') return 'Sleep: Your Superpower';
-    if (grade === 'mid') return 'Why Sleep Matters for Teens';
-    return 'The Science of Sleep';
-  }
-  if (topicKey === 'stress') {
-    if (grade === 'elem') return 'Dealing with Big Feelings';
-    if (grade === 'mid') return 'Managing Stress & Staying Well';
-    return 'Stress, Burnout & Resilience';
-  }
-  if (topicKey === 'bullying') {
-    if (grade === 'elem') return 'Be Kind: Understanding Bullying';
-    if (grade === 'mid') return 'Bullying & Cyberbullying';
-    return 'Bullying, Harassment & Online Safety';
-  }
-  if (topicKey === 'cpr') return 'CPR & First Aid: Life-Saving Skills';
-  if (topicKey === 'body-image') {
-    if (grade === 'elem') return 'Every Body Is Amazing';
-    if (grade === 'mid') return 'Body Image & Self-Esteem';
-    return 'Body Image, Media & Eating Disorders';
-  }
-
-  // generic - use topic input in title case
-  var words = (topicInput || 'Health').split(' ');
-  var titled = '';
-  for (var i = 0; i < words.length; i++) {
-    if (words[i].length > 0) {
-      titled += (i > 0 ? ' ' : '') + words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase();
-    }
-  }
-  return titled;
+  var map = {
+    'mental-health':    { elem: 'Your Feelings Are Normal',         mid: 'Mental Health Matters',             high: 'Taking Care of Your Mental Health' },
+    'depression':       { elem: 'Understanding Sadness',            mid: 'Depression: What to Know',          high: 'Depression: The Facts' },
+    'vaping':           { elem: 'Vaping: Know the Truth',           mid: 'Vaping: The Truth',                 high: 'Vaping, Nicotine, and Your Future' },
+    'nutrition':        { elem: 'Food Is Fuel',                     mid: 'Eat Well, Feel Well',               high: 'Nutrition: Fuel Your Best Self' },
+    'physical-activity':{ elem: 'Get Moving!',                      mid: 'Move More, Feel Better',            high: 'Exercise and Your Health' },
+    'sleep':            { elem: 'Sleep Is Your Superpower',         mid: 'Why You Are Always Tired',          high: 'Sleep Science: Why It Matters' },
+    'stress':           { elem: 'Handling Big Feelings',            mid: 'Stress: Use It, Control It',        high: 'Managing Stress in Real Life' },
+    'bullying':         { elem: 'Stand Up. Speak Up.',              mid: 'Bullying Stops Here',               high: 'Bullying, Power, and Bystanders' },
+    'cpr':              { elem: 'Be a Helper!',                     mid: 'CPR: You Could Save a Life',        high: 'CPR and Emergency Response' },
+    'body-image':       { elem: 'Every Body Is Amazing',            mid: 'Your Body Is Not the Problem',      high: 'Body Image in the Social Media Age' }
+  };
+  var t = map[topicKey];
+  if (t && t[grade]) return t[grade];
+  var c = topicInput ? topicInput.charAt(0).toUpperCase() + topicInput.slice(1) : 'Health';
+  return c + ': What You Need to Know';
 }
 
-// â”€â”€ PPTX Builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function hpGetSlides(topicKey, gradeCode, topicInput) {
+  switch (topicKey) {
+    case 'mental-health':    return hpContentMentalHealth(gradeCode);
+    case 'depression':       return hpContentDepression(gradeCode);
+    case 'vaping':           return hpContentVaping(gradeCode);
+    case 'nutrition':        return hpContentNutrition(gradeCode);
+    case 'physical-activity':return hpContentPhysicalActivity(gradeCode);
+    case 'sleep':            return hpContentSleep(gradeCode);
+    case 'stress':           return hpContentStress(gradeCode);
+    case 'bullying':         return hpContentBullying(gradeCode);
+    case 'cpr':              return hpContentCPR(gradeCode);
+    case 'body-image':       return hpContentBodyImage(gradeCode);
+    default:                 return hpContentGeneric(gradeCode, topicInput || 'Health');
+  }
+}
+
+// ---- CONTENT: MENTAL HEALTH ----
+function hpContentMentalHealth(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🧠', title:'Your Feelings Are Normal', bg:'pink' },
+    { type:'callout', emoji:'💛', title:'Here is Something Important',
+      fact:'1 in 5 kids will deal with a mental health problem.',
+      context:"That's about 6 people in a class of 30. You are not alone." },
+    { type:'bullets', emoji:'💭', title:'What Is Mental Health?', bg:'pink',
+      points:['Your mental health is how you think, feel, and cope', 'It changes from day to day - that is completely normal', 'Just like your body can get sick, your mind can too', 'And just like your body, your mind can heal'] },
+    { type:'bullets', emoji:'😊', title:'Normal vs. Getting Help', bg:'pink',
+      points:['Feeling sad after something bad happens - normal', 'Feeling nervous before a test - normal', 'Feeling sad or scared for weeks for no reason - get help', 'There is zero shame in asking for support'] },
+    { type:'steps', emoji:'🌿', title:'When You Are Feeling Overwhelmed', bg:'pink',
+      points:['Take 5 slow, deep breaths', "Say out loud what you are feeling: 'I feel anxious'", 'Do something physical - walk, stretch, or dance', 'Talk to someone you trust'] },
+    { type:'twocol', title:'Who Can Help?',
+      left: { title:'At School', color:'PINK', points:['Your teacher', 'School counsellor', 'A friend you trust'] },
+      right:{ title:'Outside School', color:'TEAL', points:['A parent or guardian', 'Kids Help Phone (free + private)', 'Your doctor'] } },
+    { type:'closing', emoji:'💙',
+      points:['Your feelings are always valid', 'Asking for help is brave', 'You do not have to figure it out alone'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Text HOME to 686868 (free, 24/7)', 'Talk to a trusted adult today'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'🧠', title:'Mental Health Matters', bg:'pink' },
+    { type:'bignum',  stat:'1 in 5', statLabel:'Canadians experiences a mental health problem each year (CAMH)', context:'That includes many people your age. It is more common than most people think.' },
+    { type:'bullets', emoji:'🌱', title:'What Affects Your Mental Health?', bg:'pink',
+      points:['Big life changes: moving, loss, family stress', 'Sleep, food, and how much you move', 'Social media and constantly comparing yourself to others', 'Pressure at school or from family', 'Genetics - it can run in families, just like height'] },
+    { type:'bullets', emoji:'👀', title:'Signs a Friend Might Need Support', bg:'teal',
+      points:['Pulling away from friends and activities they used to love', 'Sleeping way too much or not at all', 'Big, sudden changes in mood or personality', 'Saying they feel hopeless or like nothing matters', 'Talking about not wanting to be here'] },
+    { type:'steps', emoji:'🤝', title:'How to Actually Help a Friend', bg:'pink',
+      points:["Ask directly: 'Are you okay? I noticed you seem down lately.'", 'Listen. You do not have to fix anything - just be there', 'Do not promise to keep it secret if they are in danger', 'Tell a trusted adult if you are worried about them', 'Check in again. One conversation is not enough.'] },
+    { type:'callout', emoji:'💪', title:'Things That Actually Work',
+      fact:'Therapy. Exercise. Talking. Routine.',
+      context:"Scrolling for hours, isolating, or pretending you're fine? Those make it worse." },
+    { type:'closing', emoji:'💙',
+      points:['Mental health is health - treat it the same way', 'Getting help early makes a huge difference', 'You deserve support, always'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Text HOME to 686868', 'CAMH: camh.ca/info_and_support'] }
+  ];
+  return [
+    { type:'title',   emoji:'🧠', title:'Taking Care of Your Mental Health', bg:'pink' },
+    { type:'bignum',  stat:'75%', statLabel:'of mental health problems start before age 24 (CAMH)', context:'Getting support early is the most effective thing you can do.' },
+    { type:'twocol', title:'Stress vs. Anxiety Disorder',
+      left: { title:'Normal Stress', color:'TEAL', points:['Caused by a real situation', 'Goes away when the situation does', 'Can actually motivate you', 'Manageable with coping skills'] },
+      right:{ title:'Anxiety Disorder', color:'PINK', points:['Worry out of proportion to the situation', 'Lingers even when things are fine', 'Interferes with daily life', 'Very common - and very treatable'] } },
+    { type:'bullets', emoji:'🔬', title:'What the Research Actually Says Works', bg:'pink',
+      points:['Therapy - especially CBT (Cognitive Behavioural Therapy)', 'Medication, when recommended by a doctor', 'Consistent sleep schedule (not just on weekdays)', 'Regular exercise - one of the best natural treatments', 'Social connection - even when you do not feel like it'] },
+    { type:'bullets', emoji:'📞', title:'How to Actually Get Help', bg:'teal',
+      points:["Talk to your doctor - they have heard it all, nothing will shock them", 'School counsellor referrals are confidential', 'Kids Help Phone is available up to age 29', 'CAMH has free online self-help tools', "You do not need to be 'sick enough' to deserve support"] },
+    { type:'callout', emoji:'💬', title:'Let\'s Talk About Stigma',
+      fact:"Would you tell someone with a broken leg to just 'get over it'?",
+      context:'Mental health is health. The only difference is you cannot see the wound.' },
+    { type:'closing', emoji:'💙',
+      points:['75% of conditions start before 24 - catch it early', 'Reaching out is a sign of strength', 'Treatment works. Recovery is possible.'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Crisis Text Line: text HOME to 686868', 'CAMH: camh.ca'] }
+  ];
+}
+
+// ---- CONTENT: DEPRESSION ----
+function hpContentDepression(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'💙', title:'Understanding Sadness', bg:'dark' },
+    { type:'callout', emoji:'🌦', title:'Sadness vs. Depression',
+      fact:'Sadness goes away on its own. Depression sticks around for weeks or months.',
+      context:'Depression makes everything feel heavy - even the things you used to enjoy.' },
+    { type:'bullets', emoji:'😔', title:'What Depression Can Look Like', bg:'dark',
+      points:['Feeling sad or empty for a long time, not just a day or two', 'Not wanting to do things you used to enjoy', 'Feeling tired all the time even after sleeping', 'Trouble concentrating at school', 'Feeling like nothing is going to get better'] },
+    { type:'steps', emoji:'🌈', title:'If You or a Friend Feels This Way', bg:'dark',
+      points:['Tell a parent, guardian, or adult you trust', 'Talk to your school counsellor', 'Call Kids Help Phone anytime - it is free and private', 'Know that you will not feel this way forever', 'Depression is an illness, not a choice or weakness'] },
+    { type:'closing', emoji:'💙',
+      points:['Depression is treatable with the right help', 'Telling someone is the hardest and most important step', 'You deserve to feel okay again'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Talk to a school counsellor', 'Tell a trusted adult how you are feeling'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'💙', title:'Depression: What to Know', bg:'dark' },
+    { type:'bignum',  stat:'1 in 8', statLabel:'teens in Canada will experience depression before age 18', context:'It is one of the most common health issues for your age group - and one of the most treatable.' },
+    { type:'twocol', title:'Is It Sadness or Depression?',
+      left: { title:'Regular Sadness', color:'TEAL', points:['Tied to a specific event', 'Comes and goes', 'Does not stop you from doing things', 'Improves over time on its own'] },
+      right:{ title:'Depression', color:'PINK', points:['Persists for 2+ weeks', 'Affects everyday functioning', 'Makes once-enjoyable things feel pointless', 'Usually needs professional support'] } },
+    { type:'bullets', emoji:'👁️', title:'Less Obvious Signs of Depression in Teens', bg:'dark',
+      points:['Irritability and anger more than sadness', 'Physical complaints: headaches, stomach aches with no clear cause', 'Withdrawing from friends and family', 'Drop in grades or not caring about school', 'Changes in eating habits - eating way more or less'] },
+    { type:'steps', emoji:'🧭', title:'Getting Support', bg:'dark',
+      points:['Talk to a doctor - they will not judge you', 'A school counsellor can refer you to free services', 'Therapy (especially CBT) is the most effective treatment', 'In some cases, medication helps alongside therapy', 'Recovery takes time. Getting help early speeds it up significantly.'] },
+    { type:'callout', emoji:'🤝', title:'If a Friend Tells You They Are Depressed',
+      fact:"Listen. Do not try to 'fix' it or tell them to cheer up.",
+      context:'Your job is to be there and encourage them to get professional help. That is enough.' },
+    { type:'closing', emoji:'💙',
+      points:['Depression is a real illness, not a personality flaw', '1 in 8 teens experience it - support is available', 'Treatment works. You can feel like yourself again.'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Text HOME to 686868', 'Talk to your school counsellor'] }
+  ];
+  return [
+    { type:'title',   emoji:'💙', title:'Depression: The Facts', bg:'dark' },
+    { type:'bignum',  stat:'70%', statLabel:'of depressed teens do not get the help they need (CAMH)', context:"Most suffer in silence. You do not have to." },
+    { type:'bullets', emoji:'🔍', title:'Clinical Depression vs. Feeling Depressed', bg:'dark',
+      points:['Clinical depression lasts 2+ weeks and impairs daily life', 'It is not caused by personal weakness or a character flaw', 'Involves changes in brain chemistry, sleep, and appetite', 'Triggered by life events but can also appear without an obvious cause', 'Very different from normal sadness, though both are valid'] },
+    { type:'bullets', emoji:'🧬', title:'What Actually Causes Depression?', bg:'dark',
+      points:['Brain chemistry - serotonin and dopamine regulation', 'Genetics - family history raises risk', 'Life events: trauma, loss, abuse, major stress', 'Chronic illness or certain medications', 'Often a combination of several factors'] },
+    { type:'twocol', title:'Treatment Options',
+      left: { title:'Therapy', color:'TEAL', points:['CBT (Cognitive Behavioural Therapy)', 'Interpersonal therapy', 'Group therapy', 'Most effective first-line treatment'] },
+      right:{ title:'Medication + Support', color:'PINK', points:['Antidepressants when needed', 'Works best alongside therapy', 'Exercise as effective as medication for mild cases', 'Peer support groups'] } },
+    { type:'callout', emoji:'📢', title:'Talking to Someone Who Is Struggling',
+      fact:"Say their name, ask directly, and listen without judgment.",
+      context:"'Are you thinking about suicide?' does not plant the idea. It opens the door." },
+    { type:'closing', emoji:'💙',
+      points:['Depression is highly treatable with the right support', 'The sooner someone gets help, the faster the recovery', 'You can make a difference just by asking'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Text HOME to 686868', 'CAMH: camh.ca', 'Crisis Services Canada: 1-833-456-4566'] }
+  ];
+}
+
+// ---- CONTENT: VAPING ----
+function hpContentVaping(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🚭', title:'Vaping: Know the Truth', bg:'org' },
+    { type:'callout', emoji:'💨', title:'It Is NOT Just Water Vapor',
+      fact:'Vapes release chemicals and metals that go straight into your lungs.',
+      context:'Companies call it vapor to make it sound safe. The science says otherwise.' },
+    { type:'bullets', emoji:'🍬', title:'Why Vapes Are Made to Look Fun', bg:'org',
+      points:['Sold in candy flavors: mango, bubblegum, cotton candy', 'Designed to look like USB drives so they are easy to hide', 'Nicotine is extremely addictive - a few uses can hook you', 'Companies deliberately target teenagers', 'The flavors mask how harmful the chemicals are'] },
+    { type:'steps', emoji:'✋', title:'What to Say If Someone Offers You One', bg:'org',
+      points:["You do not need a reason to say no", "Just say 'No thanks' and walk away", 'True friends will not pressure you', 'If it keeps happening, tell a trusted adult'] },
+    { type:'closing', emoji:'💚',
+      points:['Your lungs are not replaceable', "You do not need to try it to know it is not worth it", 'Saying no takes guts - and it is always the right call'],
+      resources:['Health Canada: canada.ca/vaping', 'Talk to a parent or school counsellor', 'Kids Help Phone: 1-800-668-6868'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'🫁', title:'Vaping: The Truth', bg:'org' },
+    { type:'bignum',  stat:'29%', statLabel:'of Canadian Grade 10-12 students vaped in the last 30 days (Health Canada 2023)', context:'Many started in middle school. The younger you start, the harder it is to stop.' },
+    { type:'bullets', emoji:'☣', title:"What's Actually Inside a Vape", bg:'org',
+      points:['Nicotine - even in "nicotine-free" options, often present', 'Formaldehyde - yes, the same chemical used to preserve dead bodies', 'Heavy metals: lead, tin, and nickel from the heating coil', 'Diacetyl - linked to a permanent lung disease called "popcorn lung"', 'Nobody knows the full long-term effects yet'] },
+    { type:'bullets', emoji:'🧠', title:'What Nicotine Does to Your Developing Brain', bg:'org',
+      points:['Your brain is still developing until age 25', 'Nicotine rewires your reward system after just a few uses', 'Makes stress feel worse when you are not vaping', 'Increases risk of anxiety and depression long-term', '9 out of 10 adults who smoke started before age 18'] },
+    { type:'twocol', title:"The Marketing Trap",
+      left: { title:'What Companies Say', color:'ORG', points:['"Just harmless vapor"', '"Fun flavors"', '"Helps quit smoking"', '"Everyone is doing it"'] },
+      right:{ title:'The Reality', color:'TEAL', points:['Contains dozens of chemicals', 'Flavors are designed to hook teens', 'Most users were never smokers', 'Less than a third of teens actually vape'] } },
+    { type:'steps', emoji:'🛑', title:'If You Want to Quit', bg:'org',
+      points:['Tell one person you trust - accountability helps', 'Text QUIT to 485848 (free Health Canada support)', 'Delete your vaping supplier from your contacts', 'Identify your triggers: stress, boredom, social pressure', 'The cravings peak at 3 minutes and pass - ride them out'] },
+    { type:'closing', emoji:'💚',
+      points:['Your lungs are still growing - protect them', 'Nicotine addiction is real and hard to break', 'Getting out early is always the right move'],
+      resources:['Health Canada Quit: canada.ca/vaping', 'Text QUIT to 485848', 'Kids Help Phone: 1-800-668-6868'] }
+  ];
+  return [
+    { type:'title',   emoji:'🫁', title:'Vaping, Nicotine, and Your Future', bg:'org' },
+    { type:'bignum',  stat:'3x', statLabel:'more likely to start smoking cigarettes if you vape first', context:'The tobacco industry calls vaping a "gateway product." They mean that on purpose.' },
+    { type:'bullets', emoji:'🔬', title:'The Lung Damage That Is Already Happening', bg:'org',
+      points:['EVALI (vaping-associated lung injury) sent 1,000+ Canadians to hospital in 2 years', 'Teens who vape show measurable airway inflammation within months', 'Popcorn lung: diacetyl destroys the tiny sacs in your lungs permanently', 'The damage often does not show symptoms until it is severe', 'Teens are more vulnerable than adults because their lungs are still growing'] },
+    { type:'twocol', title:'Nicotine Addiction: How It Works',
+      left: { title:'The Hook', color:'ORG', points:['Nicotine triggers dopamine release', 'Your brain learns to crave this shortcut', 'Tolerance builds quickly - you need more', 'Withdrawal starts within hours of not vaping'] },
+      right:{ title:'The Trap', color:'PINK', points:['Stress feels unbearable without it', 'Mood crashes between uses', 'Concentration drops when craving', 'Most users want to quit but cannot'] } },
+    { type:'bullets', emoji:'📊', title:'The Industry Playbook', bg:'org',
+      points:['Juul (owned by Altria/Marlboro) was specifically designed to get teens addicted', 'Flavors are banned for cigarettes but still legal for vapes in some provinces', 'Companies pay social media influencers to make vaping look cool', 'A single Juul pod has as much nicotine as 20 cigarettes', 'The industry profits most from getting people addicted young'] },
+    { type:'steps', emoji:'🧭', title:'Supporting Someone Who Wants to Quit', bg:'org',
+      points:['Do not shame them - addiction is a health issue, not a moral failure', 'Help them identify their triggers and plan alternatives', 'Suggest official support: Health Canada has free quit programs', 'Be patient - most people try 3-5 times before quitting for good', 'Celebrate every smoke-free day, not just the big milestones'] },
+    { type:'closing', emoji:'💚',
+      points:['Nicotine addiction starts fast and is hard to reverse', 'The vaping industry profits from your addiction', 'Quitting is hard but support makes it possible'],
+      resources:['Health Canada Quit: 1-866-366-3667', 'Text QUIT to 485848', 'Smoke-Free App: free on iOS and Android'] }
+  ];
+}
+
+// ---- CONTENT: NUTRITION ----
+function hpContentNutrition(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🥗', title:'Food Is Fuel', bg:'org' },
+    { type:'callout', emoji:'🧠', title:'Did You Know?',
+      fact:'Your brain uses 20% of all your energy.',
+      context:'Even though it is only 2% of your body weight! What you eat literally powers your thinking.' },
+    { type:'bullets', emoji:'🍽', title:'What Does a Healthy Plate Look Like?', bg:'org',
+      points:['Half your plate: vegetables and fruit', 'A quarter: whole grains (brown rice, whole wheat bread)', 'A quarter: protein (chicken, beans, eggs, tofu, fish)', 'Drink water most of the time', 'No food is "bad" - it is all about balance'] },
+    { type:'steps', emoji:'🔄', title:'Easy Swaps to Try This Week', bg:'org',
+      points:['Water instead of juice or soda', 'Fruit instead of candy for a sweet snack', 'Whole grain bread instead of white', 'Nuts, cheese, or yogurt instead of chips', 'More color on your plate - different colors = different nutrients'] },
+    { type:'callout', emoji:'🎮', title:'Quick Activity',
+      fact:'If you could build your perfect healthy meal right now, what would it look like?',
+      context:'Share with the person beside you. There is no wrong answer!' },
+    { type:'closing', emoji:'💚',
+      points:['What you eat affects how you feel, think, and sleep', 'You do not have to eat perfectly - consistency matters more', 'Small changes add up over time'],
+      resources:["Canada's Food Guide: canada.ca/food-guide", 'Focus on whole foods, water, and variety'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'🥗', title:'Eat Well, Feel Well', bg:'org' },
+    { type:'bignum',  stat:'Only 40%', statLabel:'of Canadian teens eat the recommended amount of fruits and vegetables daily (Stats Canada)', context:'What you eat has a direct impact on your mood, sleep, and focus - not just your weight.' },
+    { type:'bullets', emoji:'⚡', title:'How Food Affects How You Feel', bg:'org',
+      points:['Sugar spikes give you a rush - followed by a crash in focus and mood', 'Iron deficiency (common in teen girls) causes fatigue and poor concentration', 'Skipping breakfast impairs memory and problem-solving all morning', 'Eating enough protein keeps you full and stabilizes your mood', 'Gut bacteria affect your mental health - fiber-rich foods help'] },
+    { type:'twocol', title:'Processed Food vs. Whole Food',
+      left: { title:'Processed Foods', color:'ORG', points:['Engineered to be addictive', 'Spikes blood sugar fast', 'Low in nutrients', 'Linked to mood swings'] },
+      right:{ title:'Whole Foods', color:'TEAL', points:['Natural nutrients your body recognizes', 'Steady energy release', 'Support brain and gut health', 'Help regulate mood'] } },
+    { type:'bullets', emoji:'🍎', title:'Practical Tips for Eating Well at School', bg:'org',
+      points:['Pack lunch the night before - decision fatigue is real', 'Keep a snack in your bag for energy dips between classes', 'Drink water consistently (not just when thirsty)', 'Eating breakfast - even something small - changes your whole morning', 'You do not need to count calories. Just eat real food mostly.'] },
+    { type:'callout', emoji:'🚫', title:'About Diet Culture',
+      fact:'Fad diets, "clean eating" trends, and cutting food groups rarely work long-term.',
+      context:'Most lead to restriction, binge cycles, or disordered eating. Balanced eating beats all of them.' },
+    { type:'closing', emoji:'💚',
+      points:['Food is fuel, not a reward or punishment', 'Balance beats restriction every time', 'Eating well affects your energy, mood, and focus'],
+      resources:["Canada's Food Guide: canada.ca/food-guide", 'School dietitian or health nurse', 'NEDIC: 1-866-633-4220 (eating concerns)'] }
+  ];
+  return [
+    { type:'title',   emoji:'🥗', title:'Nutrition: Fuel Your Best Self', bg:'org' },
+    { type:'bignum',  stat:'1 in 3', statLabel:'teens in Canada shows early signs of nutritional deficiency (Health Canada)', context:'The most common: iron, vitamin D, and calcium - all critical for energy, mood, and bone health.' },
+    { type:'bullets', emoji:'🔬', title:'The Nutrition-Mental Health Connection', bg:'org',
+      points:['The gut-brain axis: 90% of serotonin is made in your gut', 'Omega-3 fatty acids (fish, walnuts, flaxseed) reduce depression symptoms', 'Blood sugar crashes mimic anxiety symptoms', 'Chronic inflammation from ultra-processed food affects brain function', 'You cannot out-supplement a bad diet - whole foods matter most'] },
+    { type:'twocol', title:'Understanding Macronutrients',
+      left: { title:'What You Need', color:'ORG', points:['Protein: 0.85g/kg/day (more if active)', 'Carbs: main energy source - choose complex', 'Fat: essential for brain function', 'Micronutrients: iron, calcium, vitamin D, B12'] },
+      right:{ title:'Where to Get It', color:'TEAL', points:['Protein: chicken, fish, legumes, tofu, eggs', 'Complex carbs: oats, brown rice, sweet potato', 'Healthy fats: avocado, nuts, olive oil, fish', 'Micronutrients: leafy greens, dairy, fortified foods'] } },
+    { type:'bullets', emoji:'⚠', title:'Disordered Eating: What to Watch For', bg:'org',
+      points:['Skipping meals consistently to control weight', 'Feeling guilt or shame after eating', 'Avoiding social situations involving food', 'Labeling foods as strictly "clean" or "toxic"', 'These patterns can escalate - early intervention matters'] },
+    { type:'callout', emoji:'📱', title:'Social Media and Food',
+      fact:'"What I eat in a day" content is often edited, unsustainable, and medically unsound.',
+      context:'Most nutrition influencers have no credentials. Canada has registered dietitians for a reason.' },
+    { type:'closing', emoji:'💚',
+      points:['Your nutrition directly affects your brain, mood, and energy', 'Balanced eating beats every diet trend', 'If food is causing stress or anxiety, talk to someone'],
+      resources:["Canada's Food Guide: canada.ca/food-guide", 'Registered Dietitians of Canada: dietitians.ca', 'NEDIC Helpline: 1-866-633-4220'] }
+  ];
+}
+
+// ---- CONTENT: PHYSICAL ACTIVITY ----
+function hpContentPhysicalActivity(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🏃', title:'Get Moving!', bg:'teal' },
+    { type:'bignum',  stat:'60', statLabel:'minutes of movement every day is what kids your age need', context:"It sounds like a lot, but it does not have to be all at once. Even 3 short bursts of 20 minutes counts!" },
+    { type:'bullets', emoji:'🎯', title:'Why Moving Is So Good for You', bg:'teal',
+      points:['Makes your heart and lungs stronger', 'Gives you more energy during the day (seriously!)', 'Helps you sleep better at night', 'Boosts your mood - exercise releases feel-good chemicals', 'Helps your brain focus and learn better at school'] },
+    { type:'bullets', emoji:'🌟', title:'Ways to Move Every Day', bg:'teal',
+      points:['Walking, biking, or skating to school', 'Playing at recess - it counts!', 'Dancing at home', 'Playing with pets', 'Joining a sport or club you enjoy'] },
+    { type:'callout', emoji:'📱', title:'The Screen Challenge',
+      fact:"Canadians your age spend an average of 7+ hours on screens every day.",
+      context:'Try swapping 30 minutes of screen time for outdoor time tomorrow. Notice how you feel.' },
+    { type:'closing', emoji:'💚',
+      points:['60 minutes of movement a day keeps your mind and body strong', 'Any movement counts - it does not have to be a sport', 'Find something you enjoy and do it with someone you like'],
+      resources:['ParticipACTION: participaction.com', 'Check out clubs and intramurals at your school'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'🏃', title:'Move More, Feel Better', bg:'teal' },
+    { type:'bignum',  stat:'1 in 3', statLabel:'Canadian teens actually meets the recommended 60 minutes of daily movement (ParticipACTION)', context:'The other two thirds are missing out on sleep, mood, and focus benefits they could be getting for free.' },
+    { type:'bullets', emoji:'🧬', title:'Why Exercise Is Basically a Superpower', bg:'teal',
+      points:['Releases endorphins - your brain\'s natural mood booster', 'Just 20 minutes reduces anxiety as effectively as some medications', 'Improves sleep quality (not just length)', 'Boosts memory and focus for up to 2 hours after activity', 'Lowers risk of depression by up to 30%'] },
+    { type:'bullets', emoji:'🎽', title:'It Does Not Have to Be the Gym', bg:'teal',
+      points:['Walking, biking, skateboarding, dancing - all count', 'Physical chores at home count', 'Playing with younger siblings or pets counts', 'Recreational swimming or shooting hoops counts', 'Any movement beats zero movement, period'] },
+    { type:'steps', emoji:'🚀', title:'Getting Started When You Do Not Feel Like It', bg:'teal',
+      points:['Start with just 10 minutes - seriously, just 10', 'Pick something you do not hate (low bar on purpose)', 'Tell someone else your plan - accountability doubles follow-through', 'Schedule it like any other commitment', 'The hardest part is always starting. It gets easier.'] },
+    { type:'callout', emoji:'⚠', title:'Sitting Is Its Own Problem',
+      fact:'Sitting for 8+ hours is harmful to your health even if you exercise.',
+      context:'Get up and walk around for 5 minutes every hour. Set a reminder if you need to.' },
+    { type:'closing', emoji:'💚',
+      points:['Exercise improves mood, sleep, focus, and confidence', 'Any movement counts - you do not need a gym', 'Find something you enjoy and build from there'],
+      resources:['ParticipACTION: participaction.com', 'School intramurals and community centres', 'Try a new sport or activity this month'] }
+  ];
+  return [
+    { type:'title',   emoji:'🏃', title:'Exercise and Your Health', bg:'teal' },
+    { type:'bignum',  stat:'30%', statLabel:'reduction in depression risk with regular exercise (Harvard Medical School)', context:'Exercise is one of the most evidence-backed treatments for anxiety and depression - and it is free.' },
+    { type:'bullets', emoji:'🔬', title:'What Exercise Does to Your Brain', bg:'teal',
+      points:['Releases BDNF (brain-derived neurotrophic factor) - literally grows new brain cells', 'Reduces cortisol (stress hormone) levels significantly', 'Increases serotonin, dopamine, and norepinephrine', 'Improves sleep architecture (time in deep and REM sleep)', 'Effects last 2-4 hours after exercise'] },
+    { type:'twocol', title:'Cardio vs. Strength Training',
+      left: { title:'Cardio Benefits', color:'TEAL', points:['Heart health and lung capacity', 'Mood and anxiety reduction', 'Endurance and stamina', 'Best: running, cycling, swimming, dancing'] },
+      right:{ title:'Strength Training', color:'PINK', points:['Bone density (especially important for teens)', 'Injury prevention', 'Confidence and body image', 'Best: bodyweight, free weights, yoga'] } },
+    { type:'bullets', emoji:'🧠', title:'Exercise and Mental Health in Practice', bg:'teal',
+      points:['Clinical studies: 3x 45-minute sessions per week equals antidepressant medication for mild-moderate depression', 'High-intensity exercise provides faster anxiety relief than moderate exercise', 'Group sports add social benefits on top of physical ones', 'Outdoor exercise has stronger mood effects than indoor', 'Consistency matters more than intensity'] },
+    { type:'callout', emoji:'📊', title:'The Sedentary Behaviour Problem',
+      fact:"You cannot 'out-exercise' 8 hours of sitting. Both matter independently.",
+      context:'Standing, stretching, and walking throughout the day reduces cardiovascular risk even in active people.' },
+    { type:'closing', emoji:'💚',
+      points:['Exercise is one of the best things you can do for mental and physical health', 'Any movement counts - find what works for your life', 'Consistency over intensity'],
+      resources:['ParticipACTION: participaction.com', 'Canadian Sport for Life: canadiansportforlife.ca', 'Free programs: community centres, school sports'] }
+  ];
+}
+
+// ---- CONTENT: SLEEP ----
+function hpContentSleep(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'😴', title:'Sleep Is Your Superpower', bg:'dark' },
+    { type:'bignum',  stat:'9-11', statLabel:'hours of sleep kids aged 6-12 need every night (Health Canada)', context:"Getting less than 7 hours regularly is like walking around with your brain on low battery." },
+    { type:'bullets', emoji:'✨', title:'What Actually Happens When You Sleep', bg:'dark',
+      points:['Your brain saves memories from the day (like pressing Save on a document)', 'Your body releases hormones that help you grow taller and stronger', 'Your immune system fights off germs while you rest', 'Your mood gets reset for the next day', 'Your brain clears out waste products - like emptying the trash'] },
+    { type:'steps', emoji:'🌙', title:'How to Sleep Better', bg:'dark',
+      points:['No screens 1 hour before bed (blue light keeps your brain awake)', 'Keep your room cool and dark', 'Same bedtime every night - even on weekends', 'No sugary snacks or soda close to bedtime', 'If you cannot sleep, read a book instead of checking your phone'] },
+    { type:'callout', emoji:'📱', title:'The Phone Problem',
+      fact:'Your phone screen tells your brain it is still daytime.',
+      context:'This delays sleep by up to 1 hour. Charging your phone outside your bedroom is the easiest fix.' },
+    { type:'closing', emoji:'💙',
+      points:['Sleep is when your brain and body do their most important work', '9-11 hours is the target for your age group', 'One week of good sleep and you will notice the difference'],
+      resources:['Health Canada sleep guidelines: canada.ca/sleep', 'Try a sleep routine this week and track how you feel'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'😴', title:'Why You Are Always Tired', bg:'dark' },
+    { type:'bignum',  stat:'73%', statLabel:'of Canadian teens get less than 8 hours of sleep on school nights', context:'The recommendation is 8-10 hours. The sleep gap is real - and it is affecting every part of your life.' },
+    { type:'callout', emoji:'🧪', title:'Science Fact: You Are Not Just Being Lazy',
+      fact:'During puberty, melatonin (your sleep hormone) releases 1-2 hours later than in childhood.',
+      context:"So 11pm genuinely feels like 9pm to your body. The problem is school still starts at 8am." },
+    { type:'bullets', emoji:'🧠', title:'What Sleep Deprivation Actually Does', bg:'dark',
+      points:['Impairs memory, attention, and decision-making', 'Makes you more emotionally reactive and irritable', 'Driving after 18 hours awake equals a blood alcohol level of 0.05', 'Chronic sleep loss is linked to anxiety, depression, and weight gain', 'You cannot fully "catch up" by sleeping in on weekends'] },
+    { type:'steps', emoji:'🌙', title:'What Actually Helps', bg:'dark',
+      points:['Phone charger in another room - the biggest game-changer', 'Set a consistent wake time, even on weekends', 'No caffeine after 3pm (yes, energy drinks count)', 'Keep your room around 18 degrees - cooler = deeper sleep', 'Wind-down routine: 30 min of reading, journaling, or stretching'] },
+    { type:'callout', emoji:'⚡', title:'Quick Self-Test',
+      fact:'If you fall asleep within 5 minutes of lying down, you are likely sleep-deprived.',
+      context:'Healthy sleep takes 10-20 minutes. Falling asleep instantly is a warning sign, not a superpower.' },
+    { type:'closing', emoji:'💙',
+      points:['Your teen brain genuinely needs 8-10 hours - not 6', 'Phone in another room is the single easiest fix', 'Even one week of better sleep noticeably changes your mood and focus'],
+      resources:['Sleep Foundation: sleepfoundation.org', 'Health Canada sleep guidelines', 'Try the no-phone-in-bedroom rule for 7 days'] }
+  ];
+  return [
+    { type:'title',   emoji:'😴', title:'Sleep Science: Why It Matters', bg:'dark' },
+    { type:'bignum',  stat:'15-25%', statLabel:'higher exam scores for students sleeping 8+ hours vs. those sleeping under 6 (Harvard)', context:'Sleep is not a luxury. It is literally required for memory consolidation and learning.' },
+    { type:'bullets', emoji:'🔬', title:'The Biology of Sleep', bg:'dark',
+      points:['Stage 1-2 (light sleep): transitions, memory encoding begins', 'Stage 3 (deep sleep): physical repair, immune function, growth hormone', 'REM sleep: emotional processing, creativity, memory integration', 'A full cycle is 90 minutes - ideally complete 5-6 per night', 'Cutting sleep short cuts off the most restorative stages'] },
+    { type:'twocol', title:'Chronobiology: Your Teen Sleep Clock',
+      left: { title:'What Is Happening', color:'TEAL', points:['Melatonin onset delays by 1.5-2 hours during puberty', 'Circadian rhythm shifts toward being a night owl', 'This is biological, not behavioral', 'Peaks around age 16-21, then gradually shifts back'] },
+      right:{ title:'The School Problem', color:'PINK', points:['Most schools start before biological wake time', 'Sleep deprivation is essentially enforced', 'Later start times improve graduation rates', 'Catching up on weekends disrupts your rhythm further'] } },
+    { type:'bullets', emoji:'🌙', title:'Evidence-Based Sleep Hygiene', bg:'dark',
+      points:['Consistent sleep and wake times (even weekends) - most important factor', 'No screens 60-90 min before sleep - blue light suppresses melatonin', 'Room temperature 16-19 degrees for optimal deep sleep', 'No caffeine after 2pm - half-life is 5-7 hours', 'Keep the bed for sleep only - no studying or scrolling in bed'] },
+    { type:'callout', emoji:'📊', title:'Sleep and Mental Health',
+      fact:'Sleep deprivation and depression are bidirectional: each makes the other worse.',
+      context:'Treating sleep problems is often the first step in treating anxiety and depression in teens.' },
+    { type:'closing', emoji:'💙',
+      points:['Sleep directly impacts memory, mood, and academic performance', 'Teen biology makes this hard - but habits make a real difference', 'Start with one change: phone outside the bedroom'],
+      resources:['Sleep Foundation: sleepfoundation.org', 'Health Canada: canada.ca/sleep', 'Circadian rhythm info: CAMH.ca'] }
+  ];
+}
+
+// ---- CONTENT: STRESS ----
+function hpContentStress(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'😤', title:'Handling Big Feelings', bg:'teal' },
+    { type:'callout', emoji:'💭', title:'What Is Stress?',
+      fact:'Stress is your body getting ready to handle something tough.',
+      context:"It is actually useful in small doses - it sharpens your focus and gives you energy. The problem is when it does not turn off." },
+    { type:'bullets', emoji:'👀', title:'What Stress Can Feel Like', bg:'teal',
+      points:['Your heart beats faster', 'Your stomach feels fluttery or upset', 'You feel like you cannot concentrate', 'You might feel grumpy or want to cry', 'Sometimes it is hard to sleep'] },
+    { type:'steps', emoji:'🔄', title:'Ways to Press Reset', bg:'teal',
+      points:['Breathe: 4 counts in, hold for 4, out for 4', 'Move your body - even a 5-minute walk helps', 'Talk to someone you trust about what is bothering you', 'Write down what is stressing you out', 'Do something you enjoy, even for 10 minutes'] },
+    { type:'closing', emoji:'💚',
+      points:['A little stress is normal and can actually help you', 'But too much stress for too long hurts your health', 'There are always people who want to help you'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Text HOME to 686868', 'Talk to a parent, teacher, or counsellor'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'😤', title:'Stress: Use It, Control It', bg:'teal' },
+    { type:'bignum',  stat:'#1', statLabel:'source of stress for Canadian youth ages 15-24 is academic pressure (Statistics Canada)', context:'But social pressure, family stress, and social media comparison are not far behind.' },
+    { type:'twocol', title:'Good Stress vs. Bad Stress',
+      left: { title:'Helpful Stress', color:'TEAL', points:['Short-term, for a real reason', 'Sharpens focus and energy', 'Motivates action', 'Fades when the situation passes'] },
+      right:{ title:'Harmful Stress', color:'PINK', points:['Chronic, ongoing with no off switch', 'Disrupts sleep, eating, and mood', 'Leads to burnout', 'Requires active management'] } },
+    { type:'steps', emoji:'🧘', title:'Techniques That Actually Work', bg:'teal',
+      points:['Box breathing: inhale 4 sec, hold 4, exhale 4, hold 4 - repeat 4 times', "5-4-3-2-1: name 5 things you can see, 4 you can touch, 3 you can hear", 'Break the big thing into the smallest possible next step', 'Get outside for even 10 minutes - nature reduces cortisol measurably', 'Text or call someone instead of scrolling alone'] },
+    { type:'bullets', emoji:'🚫', title:'Things That Feel Helpful But Are Not', bg:'teal',
+      points:['Scrolling on your phone - increases anxiety, does not reduce it', 'Eating junk food - spikes then crashes your mood', 'Avoiding the stressful thing - it gets bigger, not smaller', 'Venting without action - sometimes makes feelings more intense', 'Comparing your stress to others ("at least I don\'t have it as bad as...")'] },
+    { type:'callout', emoji:'💡', title:'A Real Mindset Shift',
+      fact:"You cannot control everything that stresses you. You can control how you respond.",
+      context:'That skill takes practice - and it is one of the most valuable things you can learn.' },
+    { type:'closing', emoji:'💚',
+      points:['Some stress is normal and useful', 'The tools: breathe, move, talk, break it down', 'If stress is constant and overwhelming, that is a sign to get support'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Headspace app: free for teens', 'Talk to your school counsellor'] }
+  ];
+  return [
+    { type:'title',   emoji:'😤', title:'Managing Stress in Real Life', bg:'teal' },
+    { type:'bignum',  stat:'1 in 4', statLabel:'young Canadians reports that stress significantly impacts their daily functioning (CAMH)', context:'Chronic stress is one of the most underdiagnosed health issues in adolescents.' },
+    { type:'bullets', emoji:'🔬', title:'The Physiology of Stress', bg:'teal',
+      points:['Stress activates the HPA axis - releases cortisol and adrenaline', 'Short term: sharpens focus, boosts immune function, increases energy', 'Chronic stress: suppresses immune system, impairs memory, damages cardiovascular health', 'Elevated cortisol disrupts sleep, appetite, and hormonal balance', 'Teens are especially vulnerable because the brain\'s stress regulation is still developing'] },
+    { type:'twocol', title:'Acute vs. Chronic Stress Management',
+      left: { title:'Immediate Relief', color:'TEAL', points:['Box breathing (activates parasympathetic nervous system)', 'Cold water on wrists', 'Progressive muscle relaxation', '5-4-3-2-1 grounding technique'] },
+      right:{ title:'Long-Term Resilience', color:'PINK', points:['Consistent sleep schedule', 'Regular exercise (best cortisol regulator)', 'Social connection - quality over quantity', 'Journaling to externalize worries'] } },
+    { type:'bullets', emoji:'📚', title:'Academic Stress Strategies', bg:'teal',
+      points:['Break large projects into calendar entries with specific tasks', 'Use the Pomodoro technique: 25 min work, 5 min break', 'Study in environments that do not trigger anxiety', 'Practice self-compassion after a poor result - one grade does not define you', 'Know when to ask for extensions - most teachers will work with you'] },
+    { type:'callout', emoji:'⚠', title:'When Stress Becomes a Disorder',
+      fact:"If stress is preventing you from doing things you want or need to do, that is beyond normal.",
+      context:'Generalized Anxiety Disorder affects 1 in 10 teens and is very treatable. Getting help early matters.' },
+    { type:'closing', emoji:'💚',
+      points:['Chronic stress is a health issue that deserves attention', 'Build your toolkit: breath, movement, connection, sleep', 'Getting help is not weakness - it is strategy'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Anxiety Canada: anxietycanada.com', 'CAMH: camh.ca/mental-health-information'] }
+  ];
+}
+
+// ---- CONTENT: BULLYING ----
+function hpContentBullying(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🤝', title:'Stand Up. Speak Up.', bg:'teal' },
+    { type:'callout', emoji:'🔍', title:'Bullying vs. Being Mean',
+      fact:"Someone being mean once is not bullying. Bullying is repeated, intentional, and involves a power difference.",
+      context:'Both hurt - but understanding the difference helps you know what to do about it.' },
+    { type:'bullets', emoji:'📋', title:'Types of Bullying', bg:'teal',
+      points:['Physical: hitting, pushing, or taking someone\'s things', 'Verbal: name-calling, teasing, or threats', 'Social: leaving someone out on purpose or spreading rumors', 'Cyberbullying: mean messages, posts, or videos online', 'All of these cause real harm'] },
+    { type:'steps', emoji:'🛡', title:'If You Are Being Bullied', bg:'teal',
+      points:['You did not deserve it. It is never your fault.', 'Tell a trusted adult right away (teacher, parent, counsellor)', 'If it happens online, save screenshots', 'Do not respond to the bully', 'Stay near friends when you can - bullies look for people who are alone'] },
+    { type:'steps', emoji:'⭐', title:'If You See Bullying Happen', bg:'teal',
+      points:['You do not have to confront the bully yourself', 'Check in with the person being bullied afterward', 'Tell an adult what you witnessed', 'Do not share or like anything that is bullying someone else', 'One small act of kindness can change someone\'s whole day'] },
+    { type:'closing', emoji:'💚',
+      points:['Everyone deserves to feel safe at school', 'Telling an adult is not tattling - it is helping', 'Being an upstander matters more than being a bystander'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Cybertip.ca: report cyberbullying', 'Talk to a teacher or counsellor today'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'🤝', title:'Bullying Stops Here', bg:'teal' },
+    { type:'bignum',  stat:'1 in 3', statLabel:'Canadian students report being bullied at school (PREVNet)', context:'Cyberbullying affects over 25% of teens. Most people know someone it has happened to.' },
+    { type:'bullets', emoji:'🔍', title:'Why People Bully (Understanding, Not Excusing)', bg:'teal',
+      points:['Insecurity - hurting others feels like it gives them power', 'Wanting social status and peer approval', 'Learned behavior from home environments', 'Group pressure - people do things in groups they would never do alone', "None of this makes it okay. But understanding 'why' helps you respond better."] },
+    { type:'twocol', title:'Different Situations, Different Responses',
+      left: { title:'If You Are Being Bullied', color:'TEAL', points:['Tell a trusted adult', 'Document: dates, screenshots, witnesses', 'Do not fight back online - it escalates', "Limit contact where possible", 'You are not alone'] },
+      right:{ title:'If You Witness Bullying', color:'PINK', points:['Report to an adult privately', 'Support the person being bullied afterward', 'Do not share or like bullying content', 'Speak up if it is safe to do so', 'Your silence is not neutral'] } },
+    { type:'bullets', emoji:'📱', title:'Cyberbullying Specifics', bg:'teal',
+      points:['Screenshots travel fast - think before you share anything about anyone', 'Blocking someone does not always stop it - escalate to an adult', 'Most platforms have reporting tools - use them', 'Canadian law allows criminal charges for severe cyberbullying', 'Even sharing something harmful counts - you can be held accountable too'] },
+    { type:'callout', emoji:'💡', title:'Upstander vs. Bystander',
+      fact:"Bystanders who stay silent give bullies permission to continue.",
+      context:"You don't need to confront anyone. Telling an adult privately is one of the most powerful things you can do." },
+    { type:'closing', emoji:'💚',
+      points:['Bullying is not a normal part of growing up - it causes lasting harm', 'Upstanders change school culture over time', 'Support is available for both targets and those doing the bullying'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Cybertip.ca: report online abuse', 'PREVNet: prevnet.ca/bullying/resources'] }
+  ];
+  return [
+    { type:'title',   emoji:'🤝', title:'Bullying, Power, and Bystanders', bg:'teal' },
+    { type:'bignum',  stat:'2-9x', statLabel:'more likely to consider self-harm if you have been the target of bullying (PREVNet)', context:'The mental health impact of bullying is serious and long-lasting. Early intervention matters.' },
+    { type:'bullets', emoji:'🔬', title:'The Psychology of Bullying', bg:'teal',
+      points:['Bullying is fundamentally about power and control, not conflict', 'Social aggression (exclusion, rumor-spreading) is more common than physical', 'Relational aggression is more prevalent in girls; physical in boys - though both genders use both', 'Online tools have amplified reach and permanence of bullying behavior', 'Bystanders make up the majority - their behavior determines whether bullying continues'] },
+    { type:'twocol', title:'The Bystander Effect',
+      left: { title:'Why People Do Nothing', color:'TEAL', points:['Diffusion of responsibility', 'Fear of becoming a target', 'Uncertainty about what is right', 'Social conformity pressure', 'Not knowing how to help'] },
+      right:{ title:'Why It Matters That You Act', color:'PINK', points:['Bullies stop faster when bystanders intervene', 'Victims report that bystander support is healing', 'Even small acts shift the social norm', 'Reporting privately is enough', 'One person really can change the dynamic'] } },
+    { type:'bullets', emoji:'⚖', title:'Cyberbullying and the Law', bg:'teal',
+      points:['Criminal Code of Canada: criminal harassment, defamatory libel, uttering threats', 'Non-consensual sharing of intimate images is a criminal offence', 'Schools have legal duty to investigate and address bullying', 'Victims can request removal of content through platform terms of service', 'Evidence: screenshot with timestamp before blocking'] },
+    { type:'callout', emoji:'🌱', title:'Support for Everyone Involved',
+      fact:'People who bully often have their own serious trauma or mental health needs.',
+      context:'Accountability without support rarely changes behavior. Both the target and the person bullying may need help.' },
+    { type:'closing', emoji:'💚',
+      points:['Bullying is a community problem that requires a community response', 'Bystanders hold the most power to change the culture', 'Resources exist for everyone involved'],
+      resources:['PREVNet: prevnet.ca', 'Cybertip.ca: 1-866-658-9022', 'Kids Help Phone: 1-800-668-6868'] }
+  ];
+}
+
+// ---- CONTENT: CPR ----
+function hpContentCPR(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🆘', title:'Be a Helper!', bg:'teal' },
+    { type:'callout', emoji:'🫀', title:'What Is Cardiac Arrest?',
+      fact:'Sometimes a person\'s heart stops beating. CPR keeps blood moving until help arrives.',
+      context:"Anyone can do CPR. You do not need special training to save a life - you just need to try." },
+    { type:'bullets', emoji:'📋', title:'When You See Someone Collapse', bg:'teal',
+      points:['FIRST: check if it is safe for you to go near', 'Tap their shoulder and shout: "Are you okay?"', 'No response? Yell for a nearby adult to call 911', 'If you are alone, call 911 yourself first, then start helping', 'Stay calm - the 911 operator will guide you'] },
+    { type:'steps', emoji:'🤲', title:'How to Do Chest Compressions', bg:'teal',
+      points:['Put the heel of your hand on the CENTER of their chest', 'Put your other hand on top and push DOWN hard', 'Push 100-120 times per minute (fast!)', 'Think of the song "Baby Shark" - that is the right speed', 'Keep going until an adult or paramedics take over'] },
+    { type:'callout', emoji:'🎵', title:'The Secret Trick',
+      fact:"Push to the beat of 'Baby Shark' or 'Stayin\' Alive' - that is exactly the right speed.",
+      context:'100-120 beats per minute. Your music knowledge might literally save a life.' },
+    { type:'closing', emoji:'💚',
+      points:['Check safe, call 911, push hard and fast on the chest', 'You cannot make things worse by trying - you can only help', 'Every minute counts when someone\'s heart stops'],
+      resources:['Call 911 in any emergency', 'Red Cross CPR training: redcross.ca', 'Ask your school about first aid training'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'🫀', title:'CPR: You Could Save a Life', bg:'teal' },
+    { type:'bignum',  stat:'10%', statLabel:'less chance of survival for every minute without CPR after cardiac arrest', context:"Paramedics take 8-12 minutes on average. You might be the most important person in the room." },
+    { type:'twocol', title:'Heart Attack vs. Cardiac Arrest',
+      left: { title:'Heart Attack', color:'TEAL', points:['Blocked artery to the heart', 'Person is usually conscious', 'Chest pain, shortness of breath', 'Call 911, keep them calm', 'May lead to cardiac arrest'] },
+      right:{ title:'Cardiac Arrest', color:'PINK', points:['Heart stops pumping entirely', 'Person is unconscious with no pulse', 'No breathing or gasping only', 'Start CPR immediately', 'Every second matters'] } },
+    { type:'steps', emoji:'🛑', title:'What to Do - Step by Step', bg:'teal',
+      points:['Check: is the scene safe? (traffic, water, electricity)', 'Tap shoulder, shout "Are you okay?"', 'No response? Shout for someone to call 911 or call yourself', 'Put heel of hand on center of chest', 'Push DOWN 5-6 cm, 100-120 times per minute', 'Keep going until paramedics arrive or you physically cannot'] },
+    { type:'bullets', emoji:'🚫', title:'Myths That Stop People From Helping', bg:'teal',
+      points:['"I might hurt them." - If their heart stopped, you can only help.', '"I need to be certified." - Untrained CPR saves lives too.', '"Wait for professionals." - Every minute without CPR = 10% less chance.', '"What about rescue breaths?" - Hands-only CPR is just as effective.', '"The ribs might crack." - That is okay. Keep going.'] },
+    { type:'callout', emoji:'⚡', title:'The AED: Even Easier Than CPR',
+      fact:"An AED is in most schools, malls, and arenas. Turn it on and follow the voice.",
+      context:"It will NOT shock someone who doesn't need it. It does the thinking for you. You just need to turn it on." },
+    { type:'closing', emoji:'💚',
+      points:['Check the scene, call 911, push hard and fast', 'Hands-only CPR works - no rescue breaths needed', 'You cannot make things worse. Any CPR is better than none.'],
+      resources:['Red Cross CPR training: redcross.ca', 'Heart and Stroke: heartandstroke.ca/cpr', 'Find your nearest AED: aedlocationapp.ca'] }
+  ];
+  return [
+    { type:'title',   emoji:'🫀', title:'CPR and Emergency Response', bg:'teal' },
+    { type:'bignum',  stat:'40,000', statLabel:'Canadians die from sudden cardiac arrest each year - most outside of a hospital', context:'Immediate bystander CPR can double or triple survival rates. Training takes 4 hours.' },
+    { type:'bullets', emoji:'🔬', title:'The Science of Cardiac Arrest', bg:'teal',
+      points:['Brain begins to die after 4-6 minutes without oxygenated blood', 'CPR maintains 20-30% of normal blood flow to the brain', 'Each minute of delay before defibrillation reduces survival by 7-10%', 'Combination of CPR and AED within 5 minutes: survival up to 70%', 'Most cardiac arrests in young people are from undetected heart conditions, not lifestyle'] },
+    { type:'steps', emoji:'📋', title:'Full Protocol', bg:'teal',
+      points:['Scene safety: identify hazards before approaching', 'Check response: tap firmly, shout "Are you okay?"', 'Activate EMS: call 911 or direct a specific person to call', 'Start compressions: 100-120/min, 5-6 cm depth, full recoil', 'Rescue breaths (if trained): 30 compressions, 2 breaths', 'AED as soon as available - follow voice prompts'] },
+    { type:'twocol', title:'AED Electrode Placement',
+      left: { title:'Standard Placement', color:'TEAL', points:['Right pad: upper right chest below collarbone', 'Left pad: lower left side, below armpit', 'Follow pictures on the pads', 'Remove clothing if needed'] },
+      right:{ title:'Special Cases', color:'PINK', points:['Pacemaker: place pad 3cm away from device', 'Wet person: dry chest before placing pads', 'Medication patches: remove before placing pads', 'Chest hair: shave if razor available, otherwise press firmly'] } },
+    { type:'callout', emoji:'⚖', title:'Legal Protection',
+      fact:"Canada's Good Samaritan laws protect you if you provide emergency care in good faith.",
+      context:"You will not be held liable if you act reasonably and in good faith. Not acting carries no legal protection." },
+    { type:'closing', emoji:'💚',
+      points:['Every second matters in cardiac arrest - start CPR immediately', 'Hands-only CPR is effective and anyone can do it', 'AEDs are designed to be used without training'],
+      resources:['Red Cross: redcross.ca/cpr-training', 'Heart and Stroke Foundation: heartandstroke.ca', 'First aid certification: Canada Safety Council'] }
+  ];
+}
+
+// ---- CONTENT: BODY IMAGE ----
+function hpContentBodyImage(g) {
+  if (g === 'elem') return [
+    { type:'title',   emoji:'🌟', title:'Every Body Is Amazing', bg:'pink' },
+    { type:'callout', emoji:'💪', title:'Think About This',
+      fact:'Your body lets you run, laugh, create, feel, and explore the world.',
+      context:'It is doing thousands of jobs right now without you even thinking about it. That is pretty incredible.' },
+    { type:'bullets', emoji:'🌈', title:'Bodies Come in All Shapes and Sizes', bg:'pink',
+      points:['No two bodies are exactly the same', 'Healthy bodies come in every shape, size, and color', 'What you see in ads and social media is often edited', 'The most important thing is how you feel - not how you look', 'Comparing yourself to others is a habit you can unlearn'] },
+    { type:'steps', emoji:'💙', title:'How to Be Kinder to Yourself', bg:'pink',
+      points:['Notice when you say something mean about yourself and stop', 'Say 3 things your body can DO that you appreciate', 'Follow accounts online that make you feel good about yourself', 'Talk to a trusted adult if how your body looks is making you really unhappy', 'Remember: you are more than what you look like'] },
+    { type:'closing', emoji:'💙',
+      points:['Your body is on your team - treat it like one', 'Healthy looks different on every person', 'How you feel matters more than how you look'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'NEDIC: 1-866-633-4220 (body image support)', 'Talk to a trusted adult if you are struggling'] }
+  ];
+  if (g === 'mid') return [
+    { type:'title',   emoji:'💪', title:'Your Body Is Not the Problem', bg:'pink' },
+    { type:'bignum',  stat:'9 in 10', statLabel:'Canadian teen girls say they feel pressure to look a certain way (Dove Canada)', context:'Boys face this too. We just talk about it less. The pressure is real and it is everywhere.' },
+    { type:'bullets', emoji:'📱', title:'What Social Media Does to Body Image', bg:'pink',
+      points:['Filters and editing are used on nearly every photo - including the ones that claim to be "real"', 'Even the models do not look like their own photos', 'Algorithms push extreme appearance content to keep you scrolling', 'Constant comparison to curated, filtered images harms self-esteem', 'Teens who use social media more have higher rates of body dissatisfaction'] },
+    { type:'twocol', title:'Think About Your Body Differently',
+      left: { title:'What Your Body Does', color:'TEAL', points:['Gets you places', 'Lets you create, feel, connect', 'Heals when injured', 'Keeps you alive every second', 'Allows every experience you have'] },
+      right:{ title:'What Your Body Is Not', color:'PINK', points:['A problem to fix', 'Your worth or value', 'Something for others to judge', 'Finished or perfect', 'Ever supposed to look one specific way'] } },
+    { type:'bullets', emoji:'⚠', title:'Signs of Unhealthy Body Image', bg:'pink',
+      points:['Skipping meals or over-exercising to change your body', 'Feeling like your worth depends on your appearance', 'Avoiding social events because of how you look', 'Spending a lot of time checking or hiding your body', 'These patterns can develop into eating disorders - early help matters'] },
+    { type:'callout', emoji:'💬', title:'If You Are Struggling',
+      fact:'Disordered eating and body dysmorphia are real health conditions - not vanity.',
+      context:"Telling someone is the hardest and most important first step. You deserve support." },
+    { type:'closing', emoji:'💙',
+      points:['Your body is not an ornament - it is the vehicle for your whole life', 'Social media is designed to make you feel inadequate', 'Support exists if body image is affecting your daily life'],
+      resources:['NEDIC: 1-866-633-4220', 'Body Brave: bodybrave.ca', 'Kids Help Phone: 1-800-668-6868'] }
+  ];
+  return [
+    { type:'title',   emoji:'💪', title:'Body Image in the Social Media Age', bg:'pink' },
+    { type:'bignum',  stat:'30%', statLabel:'of teens say body image concerns affect their mental health daily (CAMH)', context:'Body image is a mental health issue - and it deserves the same attention as any other.' },
+    { type:'bullets', emoji:'🔬', title:'The Research on Social Media and Body Image', bg:'pink',
+      points:['Experimental studies show that even 10 minutes on Instagram increases body dissatisfaction', 'Appearance comparison is the specific mechanism (not just screen time)', 'Fitness and wellness content causes as much harm as diet culture content', 'Instagram\'s own research (leaked 2021) showed they knew their app harmed teen girls', 'Limiting appearance-focused accounts measurably improves body image'] },
+    { type:'twocol', title:'Eating Disorders: Know the Difference',
+      left: { title:'Disordered Eating', color:'TEAL', points:['Irregular patterns, some restriction', 'Does not meet clinical criteria', 'Still requires support and attention', 'Can escalate to a full disorder'] },
+      right:{ title:'Eating Disorders', color:'PINK', points:['Anorexia, bulimia, binge eating, ARFID', 'Clinically diagnosed conditions', 'Highest mortality rate of any mental illness', 'Require professional treatment'] } },
+    { type:'bullets', emoji:'🧠', title:'Body Dysmorphic Disorder (BDD)', bg:'pink',
+      points:['Obsessive focus on perceived physical flaws that others cannot see or consider minor', 'Affects 1-2% of people, more common in teens', 'Causes significant distress and impairs daily functioning', 'Not vanity - a real mental health condition with effective treatments', 'Often co-occurs with OCD and anxiety disorders'] },
+    { type:'callout', emoji:'🌱', title:'Building Genuine Body Respect',
+      fact:"Body positivity is a movement. Body respect is a practice. You don't have to love your body to treat it well.",
+      context:'Focus on what your body can do. That perspective shift is often more sustainable than trying to love how you look.' },
+    { type:'closing', emoji:'💙',
+      points:['Social media is designed to make you feel not enough - it is intentional', 'Body image concerns are mental health concerns, full stop', 'Recovery from eating disorders is possible with professional support'],
+      resources:['NEDIC: 1-866-633-4220', 'Body Brave: bodybrave.ca', 'Glenn Gould Foundation BDD resources', 'Kids Help Phone: 1-800-668-6868'] }
+  ];
+}
+
+// ---- CONTENT: GENERIC ----
+function hpContentGeneric(g, name) {
+  var n = name.charAt(0).toUpperCase() + name.slice(1);
+  var gradeLabel = g === 'elem' ? 'Grades 4-6' : g === 'mid' ? 'Grades 7-9' : 'Grades 10-12';
+  return [
+    { type:'title',   emoji:'💡', title:n + ': What You Need to Know', bg:'pink' },
+    { type:'callout', emoji:'📖', title:'Why This Matters',
+      fact:'Understanding ' + name + ' is an important part of taking care of your health.',
+      context:'This presentation will cover the key facts for ' + gradeLabel + '.' },
+    { type:'bullets', emoji:'🔍', title:'Key Facts', bg:'pink',
+      points:['[Add key facts about ' + name + ' here]', '[What do students this age typically experience?]', '[What are common misconceptions?]', '[What does research say?]'] },
+    { type:'bullets', emoji:'👀', title:'Signs and What to Watch For', bg:'pink',
+      points:['[Early warning signs]', '[What to look for in yourself]', '[What to look for in a friend]', '[When to reach out for help]'] },
+    { type:'steps', emoji:'🛠', title:'What You Can Do', bg:'pink',
+      points:['[Step 1: most immediate action]', '[Step 2: getting more information]', '[Step 3: finding support]', '[Step 4: long-term habits]'] },
+    { type:'callout', emoji:'💬', title:'Starting the Conversation',
+      fact:"Talking about it is the first step.",
+      context:"It is okay not to have all the answers. Asking for help and being honest about what you're going through is what matters." },
+    { type:'closing', emoji:'💚',
+      points:['You are not alone in dealing with this', 'Help and information are available', 'Reaching out is always the right move'],
+      resources:['Kids Help Phone: 1-800-668-6868', 'Text HOME to 686868', 'Speak to a school counsellor or trusted adult'] }
+  ];
+}
+
+// ===== PPTX BUILDER =====
+
+function hpBgColor(key) {
+  var map = { pink:'C4788A', dark:'9A5068', light:'FCEEF2', teal:'0E7490', tealx:'CFFAFE', org:'C2410C', orgx:'FFF7ED', white:'FFFFFF' };
+  return map[key] || map.white;
+}
+function hpFgColor(bg) {
+  var light = ['FCEEF2','CFFAFE','FFF7ED','FFFFFF','F3F4F6'];
+  return light.indexOf(bg) >= 0 ? '1F2937' : 'FFFFFF';
+}
+
+function hpDrawTopBar(slide, color, title) {
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:1.15, fill:{ color:color }, line:{ type:'none' } });
+  slide.addText(title, { x:0.45, y:0, w:12.4, h:1.15, fontSize:26, bold:true, color:HP.WHT, valign:'middle', wrap:true });
+}
+
+function hpDrawBrand(slide, textColor) {
+  slide.addText('Together For Health', { x:0.4, y:7.08, w:7, h:0.35, fontSize:10, color: textColor || HP.LGRY, align:'left', italic:true });
+}
+
+function hpSlideTitle(pptx, slide, s, meta) {
+  var bg = hpBgColor(s.bg || 'pink');
+  slide.background = { color: bg };
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.DARK }, line:{ type:'none' } });
+  if (s.emoji) {
+    slide.addText(s.emoji, { x:0, y:1.0, w:13.33, h:2.0, fontSize:80, align:'center', valign:'bottom' });
+  }
+  slide.addText(s.title, { x:1.0, y:3.2, w:11.33, h:2.0, fontSize:38, bold:true, color:HP.WHT, align:'center', valign:'middle', wrap:true });
+  slide.addText(meta.grade || '', { x:0, y:5.3, w:13.33, h:0.6, fontSize:17, color:'F9B8C4', align:'center', valign:'middle' });
+  if (meta.presenter || meta.school) {
+    var presLine = [meta.presenter, meta.school].filter(Boolean).join(' - ');
+    slide.addText(presLine, { x:0.5, y:7.05, w:12.33, h:0.35, fontSize:11, color:'F9B8C4', align:'right' });
+  }
+  hpDrawBrand(slide, 'F9B8C4');
+}
+
+function hpSlideBullets(pptx, slide, s) {
+  slide.background = { color: HP.WHT };
+  var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
+  hpDrawTopBar(slide, barColor, s.title);
+  if (s.emoji) {
+    slide.addText(s.emoji, { x:10.4, y:1.2, w:2.5, h:5.5, fontSize:96, align:'center', valign:'middle', transparency:70 });
+  }
+  var pts = s.points || [];
+  var spacing = Math.min(0.98, (5.8 / Math.max(pts.length, 1)));
+  pts.forEach(function(pt, i) {
+    var yy = 1.35 + (i * spacing);
+    slide.addShape('ellipse', { x:0.5, y:yy + 0.22, w:0.14, h:0.14, fill:{ color: barColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:0.78, y:yy, w:9.8, h:spacing - 0.04, fontSize:18, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+function hpSlideBignum(pptx, slide, s) {
+  slide.background = { color: HP.LIGHT };
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.PINK }, line:{ type:'none' } });
+  slide.addText(s.stat || '', { x:0.5, y:1.0, w:12.33, h:2.6, fontSize:96, bold:true, color:HP.DARK, align:'center', valign:'bottom' });
+  slide.addShape('rect', { x:3.5, y:3.8, w:6.33, h:0.04, fill:{ color: HP.PINK }, line:{ type:'none' } });
+  slide.addText(s.statLabel || '', { x:0.8, y:4.0, w:11.73, h:1.4, fontSize:20, color:HP.BLK, align:'center', valign:'top', wrap:true });
+  if (s.context) {
+    slide.addText(s.context, { x:1.2, y:5.5, w:10.93, h:1.0, fontSize:16, color:HP.GRY, align:'center', italic:true, wrap:true });
+  }
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+function hpSlideSteps(pptx, slide, s) {
+  slide.background = { color: HP.WHT };
+  var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
+  hpDrawTopBar(slide, barColor, s.title);
+  var pts = s.points || [];
+  var spacing = Math.min(1.05, (5.8 / Math.max(pts.length, 1)));
+  pts.forEach(function(step, i) {
+    var yy = 1.3 + (i * spacing);
+    slide.addShape('ellipse', { x:0.45, y:yy + 0.02, w:0.52, h:0.52, fill:{ color: barColor }, line:{ type:'none' } });
+    slide.addText(String(i + 1), { x:0.45, y:yy + 0.02, w:0.52, h:0.52, fontSize:16, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+    slide.addText(step, { x:1.12, y:yy, w:11.5, h:0.9, fontSize:17, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+function hpSlideTwocol(pptx, slide, s) {
+  slide.background = { color: HP.WHT };
+  hpDrawTopBar(slide, HP.DARK, s.title);
+  var L = s.left || {}, R = s.right || {};
+  var lColor = L.color === 'TEAL' ? HP.TEAL : L.color === 'ORG' ? HP.ORG : L.color === 'DARK' ? HP.DARK : HP.PINK;
+  var rColor = R.color === 'TEAL' ? HP.TEAL : R.color === 'ORG' ? HP.ORG : R.color === 'DARK' ? HP.DARK : HP.PINK;
+  slide.addShape('rect', { x:0.4, y:1.3, w:5.7, h:0.72, fill:{ color: lColor }, line:{ type:'none' } });
+  slide.addText(L.title || '', { x:0.4, y:1.3, w:5.7, h:0.72, fontSize:17, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  var lPts = L.points || [];
+  lPts.forEach(function(pt, i) {
+    var yy = 2.18 + (i * 0.82);
+    slide.addShape('ellipse', { x:0.55, y:yy + 0.26, w:0.11, h:0.11, fill:{ color: lColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:0.75, y:yy, w:5.1, h:0.78, fontSize:16, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  slide.addShape('rect', { x:7.2, y:1.3, w:5.7, h:0.72, fill:{ color: rColor }, line:{ type:'none' } });
+  slide.addText(R.title || '', { x:7.2, y:1.3, w:5.7, h:0.72, fontSize:17, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  var rPts = R.points || [];
+  rPts.forEach(function(pt, i) {
+    var yy = 2.18 + (i * 0.82);
+    slide.addShape('ellipse', { x:7.35, y:yy + 0.26, w:0.11, h:0.11, fill:{ color: rColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:7.55, y:yy, w:5.1, h:0.78, fontSize:16, color:HP.BLK, valign:'middle', wrap:true });
+  });
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+function hpSlideCallout(pptx, slide, s) {
+  slide.background = { color: HP.LIGHT };
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.PINK }, line:{ type:'none' } });
+  if (s.emoji) {
+    slide.addText(s.emoji, { x:0, y:0.3, w:13.33, h:1.5, fontSize:52, align:'center', valign:'middle' });
+  }
+  var headerY = s.emoji ? 1.85 : 1.1;
+  slide.addShape('rect', { x:1.5, y:headerY, w:10.33, h:0.65, fill:{ color: HP.PINK }, line:{ type:'none' }, rounding:0.1 });
+  slide.addText(s.title || 'Did You Know?', { x:1.5, y:headerY, w:10.33, h:0.65, fontSize:17, bold:true, color:HP.WHT, align:'center', valign:'middle' });
+  slide.addText(s.fact || '', { x:0.8, y: headerY + 0.8, w:11.73, h:1.9, fontSize:24, bold:true, color:HP.DARK, align:'center', valign:'middle', wrap:true });
+  if (s.context) {
+    slide.addText(s.context, { x:1.0, y: headerY + 2.85, w:11.33, h:1.2, fontSize:17, color:HP.GRY, align:'center', italic:true, wrap:true });
+  }
+  hpDrawBrand(slide, '9CA3AF');
+}
+
+function hpSlideClosing(pptx, slide, s, meta) {
+  slide.background = { color: HP.PINK };
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.DARK }, line:{ type:'none' } });
+  if (s.emoji) {
+    slide.addText(s.emoji, { x:0, y:0.3, w:13.33, h:1.2, fontSize:48, align:'center', valign:'middle' });
+  }
+  slide.addText('Key Takeaways', { x:0.6, y:1.55, w:12.13, h:0.7, fontSize:26, bold:true, color:HP.WHT, align:'center' });
+  slide.addShape('rect', { x:2.5, y:2.35, w:8.33, h:0.05, fill:{ color: 'F9B8C4' }, line:{ type:'none' } });
+  var pts = s.points || [];
+  pts.forEach(function(pt, i) {
+    var yy = 2.5 + (i * 0.7);
+    slide.addText('✓  ' + pt, { x:1.5, y:yy, w:10.33, h:0.65, fontSize:17, color:HP.WHT, valign:'middle', wrap:true });
+  });
+  if (s.resources && s.resources.length) {
+    var resY = 2.5 + (pts.length * 0.7) + 0.25;
+    slide.addShape('rect', { x:0.8, y:resY, w:11.73, h:0.04, fill:{ color: 'F9B8C4' }, line:{ type:'none' } });
+    slide.addText('Resources', { x:0, y: resY + 0.12, w:13.33, h:0.42, fontSize:13, bold:true, color:'F9B8C4', align:'center' });
+    s.resources.forEach(function(r, i) {
+      slide.addText(r, { x:1.0, y: resY + 0.58 + (i * 0.36), w:11.33, h:0.34, fontSize:12, color:'FDE8EE', align:'center', wrap:true });
+    });
+  }
+  if (meta.presenter || meta.school) {
+    var presLine = [meta.presenter, meta.school].filter(Boolean).join(' - ');
+    slide.addText(presLine, { x:0.5, y:7.05, w:12.33, h:0.35, fontSize:10, color:'F9B8C4', align:'right' });
+  }
+}
 
 async function hpBuildPPTX(slides, meta) {
   var pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
-
-  var PINK = 'C4788A';
-  var DARK_PINK = '9A5068';
-  var LIGHT_PINK = 'FCEEF2';
-  var DARK_TEXT = '1A1A1A';
-  var GRAY_TEXT = '555555';
-  var WHITE = 'FFFFFF';
-  var BODY_COLOR = '333333';
-  var FOOTER_COLOR = 'BBBBBB';
-
-  var currentYear = new Date().getFullYear().toString();
-  var audienceLabel = meta.grade || '';
-  var presenterLabel = meta.presenter ? 'Presented by ' + meta.presenter : '';
-  if (meta.school) {
-    presenterLabel += (presenterLabel ? ' \u2022 ' : '') + meta.school;
-  }
-  var subtitleLine = audienceLabel + (presenterLabel ? '  |  ' + presenterLabel : '');
-
-  // â”€â”€ Slide 0: Title slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var titleSlide = pptx.addSlide();
-  titleSlide.background = { color: PINK };
-
-  // Top stripe
-  titleSlide.addShape(pptx.ShapeType.rect, {
-    x: 0, y: 0, w: '100%', h: 0.5,
-    fill: { color: DARK_PINK },
-    line: { type: 'none' }
-  });
-
-  // "Together For Health" branding at top left
-  titleSlide.addText('Together For Health', {
-    x: 0.4, y: 0.08, w: 5, h: 0.36,
-    fontSize: 11,
-    bold: true,
-    color: WHITE,
-    align: 'left',
-    valign: 'middle'
-  });
-
-  // Main title
-  titleSlide.addText(meta.title, {
-    x: 1, y: 1.6, w: 11.3, h: 2.5,
-    fontSize: 36,
-    bold: true,
-    color: WHITE,
-    align: 'center',
-    valign: 'middle',
-    wrap: true
-  });
-
-  // Subtitle
-  titleSlide.addText(subtitleLine, {
-    x: 1, y: 4.3, w: 11.3, h: 0.6,
-    fontSize: 15,
-    color: WHITE,
-    align: 'center',
-    valign: 'middle'
-  });
-
-  // Year bottom right
-  titleSlide.addText(currentYear, {
-    x: 11.5, y: 7.1, w: 1.5, h: 0.35,
-    fontSize: 11,
-    color: WHITE,
-    align: 'right',
-    valign: 'middle'
-  });
-
-  // â”€â”€ Content slides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  for (var i = 0; i < slides.length; i++) {
-    var s = slides[i];
+  pptx.title = meta.title;
+  pptx.author = meta.presenter || 'Together For Health';
+  slides.forEach(function(s) {
     var slide = pptx.addSlide();
-    slide.background = { color: WHITE };
-
-    // Pink top accent stripe
-    slide.addShape(pptx.ShapeType.rect, {
-      x: 0, y: 0, w: '100%', h: 0.12,
-      fill: { color: PINK },
-      line: { type: 'none' }
-    });
-
-    // Light pink title background
-    slide.addShape(pptx.ShapeType.rect, {
-      x: 0, y: 0.12, w: '100%', h: 1.1,
-      fill: { color: LIGHT_PINK },
-      line: { type: 'none' }
-    });
-
-    // Slide title
-    slide.addText(s.title, {
-      x: 0.5, y: 0.2, w: 12.3, h: 0.9,
-      fontSize: 24,
-      bold: true,
-      color: DARK_TEXT,
-      align: 'left',
-      valign: 'middle'
-    });
-
-    // Build bullet array
-    var bulletArr = [];
-    for (var j = 0; j < s.points.length; j++) {
-      bulletArr.push({
-        text: s.points[j],
-        options: {
-          bullet: { type: 'bullet' },
-          paraSpaceAfter: 8
-        }
-      });
+    switch (s.type) {
+      case 'title':   hpSlideTitle(pptx, slide, s, meta);   break;
+      case 'bullets': hpSlideBullets(pptx, slide, s);        break;
+      case 'bignum':  hpSlideBignum(pptx, slide, s);         break;
+      case 'steps':   hpSlideSteps(pptx, slide, s);          break;
+      case 'twocol':  hpSlideTwocol(pptx, slide, s);         break;
+      case 'callout': hpSlideCallout(pptx, slide, s);        break;
+      case 'closing': hpSlideClosing(pptx, slide, s, meta);  break;
+      default: break;
     }
-
-    // Bullet text box
-    slide.addText(bulletArr, {
-      x: 0.5, y: 1.4, w: 12.3, h: 5.5,
-      fontSize: 16,
-      color: BODY_COLOR,
-      valign: 'top',
-      wrap: true
-    });
-
-    // Footer
-    slide.addText('Together For Health', {
-      x: 0.5, y: 7.1, w: 5, h: 0.35,
-      fontSize: 9,
-      color: FOOTER_COLOR,
-      align: 'left',
-      valign: 'middle'
-    });
-  }
-
-  // â”€â”€ Closing slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var closingSlide = pptx.addSlide();
-  closingSlide.background = { color: LIGHT_PINK };
-
-  // Pink top stripe
-  closingSlide.addShape(pptx.ShapeType.rect, {
-    x: 0, y: 0, w: '100%', h: 0.12,
-    fill: { color: PINK },
-    line: { type: 'none' }
   });
-
-  // "Key Takeaways" heading
-  closingSlide.addText('Key Takeaways', {
-    x: 0.5, y: 0.2, w: 12.3, h: 0.75,
-    fontSize: 28,
-    bold: true,
-    color: PINK,
-    align: 'left',
-    valign: 'middle'
-  });
-
-  // Pull last slide's first 3 bullets as takeaways
-  var lastSlide = slides[slides.length - 1];
-  var takeaways = [];
-  var takeawayCount = Math.min(3, lastSlide.points.length);
-  for (var k = 0; k < takeawayCount; k++) {
-    takeaways.push({
-      text: lastSlide.points[k],
-      options: {
-        bullet: { type: 'bullet' },
-        paraSpaceAfter: 6
-      }
-    });
-  }
-
-  closingSlide.addText(takeaways, {
-    x: 0.5, y: 1.1, w: 12.3, h: 2.4,
-    fontSize: 15,
-    color: BODY_COLOR,
-    valign: 'top',
-    wrap: true
-  });
-
-  // Resources heading
-  closingSlide.addText('Canadian Resources:', {
-    x: 0.5, y: 3.6, w: 12.3, h: 0.45,
-    fontSize: 14,
-    bold: true,
-    color: DARK_TEXT,
-    align: 'left',
-    valign: 'middle'
-  });
-
-  var resources = [
-    {
-      text: 'Kids Help Phone: 1-800-668-6868 (24/7, free, confidential)',
-      options: { bullet: { type: 'bullet' }, paraSpaceAfter: 5 }
-    },
-    {
-      text: 'Crisis Text Line: Text HOME to 686868',
-      options: { bullet: { type: 'bullet' }, paraSpaceAfter: 5 }
-    },
-    {
-      text: 'School counsellor \u2014 free and confidential',
-      options: { bullet: { type: 'bullet' }, paraSpaceAfter: 5 }
-    },
-    {
-      text: 'cmha.ca  |  CAMH: camh.ca',
-      options: { bullet: { type: 'bullet' }, paraSpaceAfter: 5 }
-    }
-  ];
-
-  closingSlide.addText(resources, {
-    x: 0.5, y: 4.1, w: 12.3, h: 1.8,
-    fontSize: 13,
-    color: GRAY_TEXT,
-    valign: 'top',
-    wrap: true
-  });
-
-  // Thank you line
-  closingSlide.addText('Thank you!  Questions welcome.', {
-    x: 0.5, y: 6.1, w: 12.3, h: 0.75,
-    fontSize: 22,
-    bold: true,
-    color: PINK,
-    align: 'center',
-    valign: 'middle'
-  });
-
-  // Footer
-  closingSlide.addText('Together For Health', {
-    x: 0.5, y: 7.1, w: 5, h: 0.35,
-    fontSize: 9,
-    color: FOOTER_COLOR,
-    align: 'left',
-    valign: 'middle'
-  });
-
-  // â”€â”€ Write file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var safeFileName = meta.title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_') + '.pptx';
-  await pptx.writeFile({ fileName: safeFileName });
+  var safeName = (meta.title + ' - ' + meta.grade).replace(/[^a-zA-Z0-9 \-]/g, '').replace(/\s+/g, '_');
+  await pptx.writeFile({ fileName: safeName + '.pptx' });
 }
 
-// â”€â”€ Main Generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 async function generatePresentation() {
-  var topicVal = document.getElementById('pg-topic').value.trim();
-  var gradeVal = document.getElementById('pg-grade').value;
+  var topicVal   = document.getElementById('pg-topic').value.trim();
+  var gradeVal   = document.getElementById('pg-grade').value;
   var presenterVal = document.getElementById('pg-presenter').value.trim();
-  var schoolVal = document.getElementById('pg-school').value.trim();
-  var statusEl = document.getElementById('pg-status');
-  var submitBtn = document.getElementById('pg-submit-btn');
+  var schoolVal  = document.getElementById('pg-school').value.trim();
+  var statusEl   = document.getElementById('pg-status');
+  var submitBtn  = document.getElementById('pg-submit-btn');
 
   if (!topicVal) {
     statusEl.innerHTML = '<span style="color:#c62828;">Please enter a topic before generating.</span>';
@@ -7373,77 +5741,39 @@ async function generatePresentation() {
   }
 
   submitBtn.disabled = true;
-  statusEl.innerHTML = '<span style="color:#555;">Generating presentation\u2026 please wait.</span>';
+  statusEl.innerHTML = '<span style="color:#555;">Building your presentation... please wait.</span>';
 
-  var gradeCode;
-  if (gradeVal === 'Grades 4-6') {
-    gradeCode = 'elem';
-  } else if (gradeVal === 'Grades 7-9') {
-    gradeCode = 'mid';
-  } else {
-    gradeCode = 'high';
-  }
-
+  var gradeCode = gradeVal === 'Grades 4-6' ? 'elem' : gradeVal === 'Grades 7-9' ? 'mid' : 'high';
   var topicKey = hpFindTopic(topicVal);
-  var title = hpGetTitle(topicKey, topicVal, gradeCode);
-  var slides = hpGetSlides(topicKey, gradeCode, topicVal);
-
-  var meta = {
-    title: title,
-    grade: gradeVal,
-    presenter: escHtml(presenterVal),
-    school: escHtml(schoolVal)
-  };
+  var title    = hpGetTitle(topicKey, topicVal, gradeCode);
+  var slides   = hpGetSlides(topicKey, gradeCode, topicVal);
+  var meta     = { title: title, grade: gradeVal, presenter: escHtml(presenterVal), school: escHtml(schoolVal) };
 
   try {
     await hpBuildPPTX(slides, meta);
-
-    // Save to presentations list
     if (window.state && Array.isArray(state.presentations)) {
-      state.presentations.push({
-        id: uid(),
-        title: title,
-        topic: topicVal,
-        grade: gradeVal,
-        presenter: presenterVal,
-        school: schoolVal,
-        createdAt: new Date().toISOString()
-      });
+      state.presentations.push({ id: uid(), title: title, topic: topicVal, grade: gradeVal, presenter: presenterVal, school: schoolVal, createdAt: new Date().toISOString() });
       if (typeof saveState === 'function') saveState();
       if (typeof renderPres === 'function') renderPres();
     }
-
-    // Canva integration if connected
     if (typeof canvaIsConnected === 'function' && canvaIsConnected()) {
-      statusEl.innerHTML = '<span style="color:#555;">Opening in Canva\u2026</span>';
+      statusEl.innerHTML = '<span style="color:#555;">Opening in Canva...</span>';
       try {
         var canvaResult = await canvaCreateDesign(title);
-        if (canvaResult && (canvaResult.urls && (canvaResult.urls.edit_url || canvaResult.urls.view_url))) {
-          window.open((canvaResult.urls && (canvaResult.urls.edit_url || canvaResult.urls.view_url)), '_blank');
+        if (canvaResult && canvaResult.urls && (canvaResult.urls.edit_url || canvaResult.urls.view_url)) {
+          window.open(canvaResult.urls.edit_url || canvaResult.urls.view_url, '_blank');
         }
-      } catch (canvaErr) {
-        console.warn('Canva design creation failed:', canvaErr);
-      }
+      } catch (ce) { console.warn('Canva open failed:', ce); }
     }
-
-    if (typeof showToast === 'function') {
-      showToast('Presentation downloaded!', 'success');
-    }
-
-    statusEl.innerHTML = '<span style="color:#2e7d32;">&#10003; Downloaded successfully!</span>';
+    if (typeof showToast === 'function') showToast('Presentation downloaded!', 'success');
+    statusEl.innerHTML = '<span style="color:#2e7d32;">&#10003; Downloaded! Open the .pptx file to present.</span>';
     submitBtn.disabled = false;
   } catch (err) {
-    console.error('Presentation generation failed:', err);
-    statusEl.innerHTML = '<span style="color:#c62828;">Error: ' + escHtml(err.message || 'Generation failed. Please try again.') + '</span>';
+    console.error('Presentation error:', err);
+    statusEl.innerHTML = '<span style="color:#c62828;">Error: ' + escHtml(err.message || 'Generation failed. Try again.') + '</span>';
     submitBtn.disabled = false;
   }
 }
-
-// ====== CANVA INTEGRATION ======
-// Keep existing Canva OAuth functions below (canvaIsConnected, canvaRandStr,
-// canvaPKCEChallenge, canvaConnect, canvaExchangeCode, canvaCreateDesign)
-// - do NOT modify them.
-
 
 
 // ====== MARKETING TEMPLATES ======
