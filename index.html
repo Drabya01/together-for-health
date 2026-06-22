@@ -682,6 +682,73 @@
   .pg-btn-generate:active { transform: none; opacity: 1; }
   .pg-btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
+  /* Canva integration */
+  .pg-canva-btn {
+    background: #7B2D8B;
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 9px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.13s, transform 0.1s, box-shadow 0.13s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: inherit;
+    box-shadow: 0 2px 10px rgba(123,45,139,0.38);
+  }
+  .pg-canva-btn:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(123,45,139,0.48); }
+  .pg-canva-btn:active { transform: none; opacity: 1; }
+
+  .pg-pptx-link {
+    background: none;
+    border: 1.5px solid var(--border-strong);
+    color: var(--text-muted);
+    border-radius: 9px;
+    padding: 9px 13px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.13s;
+    font-family: inherit;
+  }
+  .pg-pptx-link:hover { color: var(--text); border-color: var(--text-muted); }
+
+  .pg-how-it-works {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 10px;
+    margin-bottom: 16px;
+  }
+  .pg-hiw-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+  }
+  .pg-hiw-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #7B2D8B;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .pg-hiw-text { font-size: 11.5px; color: var(--text-muted); line-height: 1.35; max-width: 80px; }
+  .pg-hiw-arrow { color: var(--text-hint); font-size: 16px; padding: 0 4px; margin-top: -14px; flex-shrink: 0; }
+
   /* BADGES */
   .badge {
     display: inline-block;
@@ -3081,17 +3148,38 @@
   <div class="modal-box">
     <!-- Branded gradient header -->
     <div class="pg-header">
-      <div class="pg-header-icon">🎯</div>
+      <div class="pg-header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
       <div class="pg-header-text">
-        <h2>Generate Presentation</h2>
-        <p>Creates a ready-to-use PPTX with real photos</p>
+        <h2>Create Your Presentation</h2>
+        <p>Browse 1,000+ professional templates in Canva</p>
       </div>
       <button class="pg-close" onclick="closeModal('modal-pres-gen')">&times;</button>
     </div>
 
     <div class="pg-body">
+
+      <!-- How it works strip -->
+      <div class="pg-how-it-works">
+        <div class="pg-hiw-step">
+          <div class="pg-hiw-num">1</div>
+          <div class="pg-hiw-text">Pick your topic below</div>
+        </div>
+        <div class="pg-hiw-arrow">›</div>
+        <div class="pg-hiw-step">
+          <div class="pg-hiw-num">2</div>
+          <div class="pg-hiw-text">Choose a template in Canva</div>
+        </div>
+        <div class="pg-hiw-arrow">›</div>
+        <div class="pg-hiw-step">
+          <div class="pg-hiw-num">3</div>
+          <div class="pg-hiw-text">Customize &amp; share</div>
+        </div>
+      </div>
+
       <!-- Quick topic chips -->
-      <div class="pg-section-label">Quick Select Topic</div>
+      <div class="pg-section-label">Topic</div>
       <div class="pg-chips" id="pg-chips">
         <button class="pg-chip" data-topic="Mental Health" onclick="pgSelectChip(this)">Mental Health</button>
         <button class="pg-chip" data-topic="Depression" onclick="pgSelectChip(this)">Depression</button>
@@ -3105,17 +3193,14 @@
         <button class="pg-chip" data-topic="Body Image" onclick="pgSelectChip(this)">Body Image</button>
       </div>
 
-      <div class="pg-divider"></div>
-
       <!-- Topic text input -->
-      <div class="pg-field">
-        <label for="pg-topic">Topic <span style="color:#C4788A;">*</span> <span class="opt">— or type a custom one above</span></label>
-        <input type="text" id="pg-topic" placeholder="e.g. Anxiety, Vaping, Nutrition, CPR…" autocomplete="off" oninput="pgClearChips()" />
+      <div class="pg-field" style="margin-top:10px;">
+        <input type="text" id="pg-topic" placeholder="Or type a custom topic…" autocomplete="off" oninput="pgClearChips()" />
       </div>
 
       <!-- Grade level -->
       <div class="pg-field">
-        <label for="pg-grade">Grade Level <span style="color:#C4788A;">*</span></label>
+        <label for="pg-grade">Grade Level</label>
         <select id="pg-grade">
           <option value="Grades 4-6">Grades 4–6 (Elementary)</option>
           <option value="Grades 7-9">Grades 7–9 (Middle School)</option>
@@ -3123,16 +3208,10 @@
         </select>
       </div>
 
-      <!-- Presenter + School in a two-column row -->
-      <div class="pg-row">
-        <div class="pg-field">
-          <label for="pg-presenter">Presenter <span class="opt">(optional)</span></label>
-          <input type="text" id="pg-presenter" placeholder="Your name" autocomplete="off" />
-        </div>
-        <div class="pg-field">
-          <label for="pg-school">School <span class="opt">(optional)</span></label>
-          <input type="text" id="pg-school" placeholder="School name" autocomplete="off" />
-        </div>
+      <!-- Hidden PPTX fields (still used if fallback is triggered) -->
+      <div style="display:none">
+        <input type="text" id="pg-presenter" />
+        <input type="text" id="pg-school" />
       </div>
 
       <!-- Status bar -->
@@ -3141,9 +3220,13 @@
 
     <div class="pg-footer">
       <button class="pg-btn-cancel" onclick="closeModal('modal-pres-gen')">Cancel</button>
-      <button id="pg-submit-btn" class="pg-btn-generate" onclick="generatePresentation()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Generate &amp; Download
+      <button class="pg-pptx-link" onclick="generatePresentation()" title="Generate a basic PPTX file to your device instead">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PPTX
+      </button>
+      <button class="pg-canva-btn" onclick="openInCanva()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open in Canva
       </button>
     </div>
   </div>
@@ -5167,18 +5250,39 @@ function pgClearChips() {
   document.querySelectorAll('#pg-chips .pg-chip').forEach(function(c) { c.classList.remove('active'); });
 }
 
+var CANVA_QUERIES = {
+  'mental-health':      'mental+health+wellness+awareness+school+presentation',
+  'depression':         'mental+health+depression+support+awareness+presentation',
+  'vaping':             'anti+vaping+no+smoking+health+school+teen+presentation',
+  'nutrition':          'nutrition+healthy+eating+food+wellness+school+presentation',
+  'physical-activity':  'fitness+exercise+active+sport+healthy+lifestyle+school+presentation',
+  'sleep':              'sleep+rest+wellness+health+mindfulness+school+presentation',
+  'stress':             'stress+management+mindfulness+mental+wellness+teen+presentation',
+  'bullying':           'anti+bullying+kindness+inclusion+respect+school+presentation',
+  'cpr':                'first+aid+CPR+emergency+health+safety+school+presentation',
+  'body-image':         'body+positivity+self+esteem+confidence+wellness+teen+presentation'
+};
+
+function openInCanva() {
+  var topicVal = (document.getElementById('pg-topic').value || '').trim();
+  var topicKey = hpFindTopic(topicVal || 'health');
+  var query = CANVA_QUERIES[topicKey] || ('health+wellness+school+presentation');
+  if (!CANVA_QUERIES[topicKey] && topicVal) {
+    query = topicVal.toLowerCase().replace(/\s+/g, '+') + '+health+school+presentation';
+  }
+  var url = 'https://www.canva.com/templates/presentations/?query=' + query;
+  window.open(url, '_blank');
+  closeModal('modal-pres-gen');
+}
+
 function openPresGenerator() {
   document.getElementById('pg-topic').value = '';
   document.getElementById('pg-grade').value = 'Grades 4-6';
   document.getElementById('pg-school').value = '';
+  document.getElementById('pg-presenter').value = '';
   pgClearChips();
-  var pi = document.getElementById('pg-presenter');
-  pi.value = '';
-  if (window.currentUser && window.currentUser.name) pi.value = window.currentUser.name;
   var statusEl = document.getElementById('pg-status');
-  statusEl.innerHTML = canvaIsConnected()
-    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg><span style="color:#2e7d32;font-weight:500;">Canva connected — design will open after download.</span>'
-    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PPTX will download to your device.</span>';
+  statusEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7B2D8B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>Select a topic above, then click <strong>Open in Canva</strong> to browse professional templates.</span>';
   openModal('modal-pres-gen');
 }
 
