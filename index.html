@@ -5558,6 +5558,35 @@ function hpContentGeneric(g, name) {
 
 // ===== PPTX BUILDER =====
 
+// ---- Topic image keywords (Unsplash source API) ----
+var HP_IMG = {
+  'mental-health':    'mental+health+calm+mindfulness',
+  'depression':       'hope+support+therapy+light',
+  'vaping':           'no+smoking+lungs+health+warning',
+  'nutrition':        'healthy+food+vegetables+colorful',
+  'physical-activity':'running+exercise+fitness+outdoor',
+  'sleep':            'sleep+rest+peaceful+night',
+  'stress':           'calm+breathing+nature+relax',
+  'bullying':         'friendship+kindness+support+teens',
+  'cpr':              'first+aid+medical+emergency+training',
+  'body-image':       'confidence+wellness+diverse+active'
+};
+
+async function hpFetchImg(keywords) {
+  try {
+    var url = 'https://source.unsplash.com/600x400/?' + keywords;
+    var resp = await fetch(url, { mode: 'cors' });
+    if (!resp.ok) return null;
+    var blob = await resp.blob();
+    return await new Promise(function(resolve) {
+      var reader = new FileReader();
+      reader.onloadend = function() { resolve(reader.result); };
+      reader.onerror = function() { resolve(null); };
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) { return null; }
+}
+
 function hpBgColor(key) {
   var map = { pink:'C4788A', dark:'9A5068', light:'FCEEF2', teal:'0E7490', tealx:'CFFAFE', org:'C2410C', orgx:'FFF7ED', white:'FFFFFF' };
   return map[key] || map.white;
@@ -5576,15 +5605,25 @@ function hpDrawBrand(slide, textColor) {
   slide.addText('Together For Health', { x:0.4, y:7.08, w:7, h:0.35, fontSize:10, color: textColor || HP.LGRY, align:'left', italic:true });
 }
 
-function hpSlideTitle(pptx, slide, s, meta) {
+function hpSlideTitle(pptx, slide, s, meta, imgData) {
   var bg = hpBgColor(s.bg || 'pink');
-  slide.background = { color: bg };
-  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.DARK }, line:{ type:'none' } });
-  if (s.emoji) {
-    slide.addText(s.emoji, { x:0, y:1.0, w:13.33, h:2.0, fontSize:80, align:'center', valign:'bottom' });
+  if (imgData) {
+    // Left half: pink panel with text. Right half: photo.
+    slide.background = { color: bg };
+    slide.addImage({ data: imgData, x:6.5, y:0, w:6.83, h:7.5 });
+    // Fade strip to blend image into pink
+    slide.addShape('rect', { x:6.0, y:0, w:1.2, h:7.5, fill:{ color: bg }, line:{ type:'none' }, transparency:40 });
+    slide.addShape('rect', { x:0, y:0, w:7.2, h:7.5, fill:{ color: bg }, line:{ type:'none' } });
+  } else {
+    slide.background = { color: bg };
   }
-  slide.addText(s.title, { x:1.0, y:3.2, w:11.33, h:2.0, fontSize:38, bold:true, color:HP.WHT, align:'center', valign:'middle', wrap:true });
-  slide.addText(meta.grade || '', { x:0, y:5.3, w:13.33, h:0.6, fontSize:17, color:'F9B8C4', align:'center', valign:'middle' });
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.22, fill:{ color: HP.DARK }, line:{ type:'none' } });
+  var cx = imgData ? 3.6 : 6.67, cw = imgData ? 7.0 : 13.33;
+  if (s.emoji) {
+    slide.addText(s.emoji, { x:0, y:0.8, w:cw, h:2.0, fontSize:76, align:'center', valign:'bottom' });
+  }
+  slide.addText(s.title, { x:0.4, y:3.0, w: imgData ? 6.5 : 11.33, h:2.2, fontSize:imgData ? 34 : 38, bold:true, color:HP.WHT, align: imgData ? 'left' : 'center', valign:'middle', wrap:true });
+  slide.addText(meta.grade || '', { x:0, y:5.35, w: imgData ? 7.0 : 13.33, h:0.55, fontSize:17, color:'F9B8C4', align: imgData ? 'left' : 'center', valign:'middle', indent: imgData ? 0.5 : 0 });
   if (meta.presenter || meta.school) {
     var presLine = [meta.presenter, meta.school].filter(Boolean).join(' - ');
     slide.addText(presLine, { x:0.5, y:7.05, w:12.33, h:0.35, fontSize:11, color:'F9B8C4', align:'right' });
@@ -5592,11 +5631,14 @@ function hpSlideTitle(pptx, slide, s, meta) {
   hpDrawBrand(slide, 'F9B8C4');
 }
 
-function hpSlideBullets(pptx, slide, s) {
+function hpSlideBullets(pptx, slide, s, imgData) {
   slide.background = { color: HP.WHT };
   var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
   hpDrawTopBar(slide, barColor, s.title);
-  if (s.emoji) {
+  var textW = imgData ? 7.4 : 9.8;
+  if (imgData) {
+    slide.addImage({ data: imgData, x:8.4, y:1.2, w:4.55, h:5.85 });
+  } else if (s.emoji) {
     slide.addText(s.emoji, { x:10.4, y:1.2, w:2.5, h:5.5, fontSize:96, align:'center', valign:'middle', transparency:70 });
   }
   var pts = s.points || [];
@@ -5604,7 +5646,7 @@ function hpSlideBullets(pptx, slide, s) {
   pts.forEach(function(pt, i) {
     var yy = 1.35 + (i * spacing);
     slide.addShape('ellipse', { x:0.5, y:yy + 0.22, w:0.14, h:0.14, fill:{ color: barColor }, line:{ type:'none' } });
-    slide.addText(pt, { x:0.78, y:yy, w:9.8, h:spacing - 0.04, fontSize:18, color:HP.BLK, valign:'middle', wrap:true });
+    slide.addText(pt, { x:0.78, y:yy, w:textW, h:spacing - 0.04, fontSize:18, color:HP.BLK, valign:'middle', wrap:true });
   });
   hpDrawBrand(slide, '9CA3AF');
 }
@@ -5621,17 +5663,21 @@ function hpSlideBignum(pptx, slide, s) {
   hpDrawBrand(slide, '9CA3AF');
 }
 
-function hpSlideSteps(pptx, slide, s) {
+function hpSlideSteps(pptx, slide, s, imgData) {
   slide.background = { color: HP.WHT };
   var barColor = s.bg === 'teal' ? HP.TEAL : s.bg === 'org' ? HP.ORG : s.bg === 'dark' ? HP.DARK : HP.PINK;
   hpDrawTopBar(slide, barColor, s.title);
+  var textW = imgData ? 7.0 : 11.5;
+  if (imgData) {
+    slide.addImage({ data: imgData, x:8.4, y:1.2, w:4.55, h:5.85 });
+  }
   var pts = s.points || [];
   var spacing = Math.min(1.05, (5.8 / Math.max(pts.length, 1)));
   pts.forEach(function(step, i) {
     var yy = 1.3 + (i * spacing);
     slide.addShape('ellipse', { x:0.45, y:yy + 0.02, w:0.52, h:0.52, fill:{ color: barColor }, line:{ type:'none' } });
     slide.addText(String(i + 1), { x:0.45, y:yy + 0.02, w:0.52, h:0.52, fontSize:16, bold:true, color:HP.WHT, align:'center', valign:'middle' });
-    slide.addText(step, { x:1.12, y:yy, w:11.5, h:0.9, fontSize:17, color:HP.BLK, valign:'middle', wrap:true });
+    slide.addText(step, { x:1.12, y:yy, w:textW, h:0.9, fontSize:17, color:HP.BLK, valign:'middle', wrap:true });
   });
   hpDrawBrand(slide, '9CA3AF');
 }
@@ -5709,16 +5755,21 @@ async function hpBuildPPTX(slides, meta) {
   pptx.layout = 'LAYOUT_WIDE';
   pptx.title = meta.title;
   pptx.author = meta.presenter || 'Together For Health';
+
+  // Pre-fetch one topic photo — used on title, bullets, and steps slides
+  var imgKeywords = HP_IMG[meta.topicKey] || 'health+wellness+people';
+  var imgData = await hpFetchImg(imgKeywords);
+
   slides.forEach(function(s) {
     var slide = pptx.addSlide();
     switch (s.type) {
-      case 'title':   hpSlideTitle(pptx, slide, s, meta);   break;
-      case 'bullets': hpSlideBullets(pptx, slide, s);        break;
-      case 'bignum':  hpSlideBignum(pptx, slide, s);         break;
-      case 'steps':   hpSlideSteps(pptx, slide, s);          break;
-      case 'twocol':  hpSlideTwocol(pptx, slide, s);         break;
-      case 'callout': hpSlideCallout(pptx, slide, s);        break;
-      case 'closing': hpSlideClosing(pptx, slide, s, meta);  break;
+      case 'title':   hpSlideTitle(pptx, slide, s, meta, imgData); break;
+      case 'bullets': hpSlideBullets(pptx, slide, s, imgData);      break;
+      case 'bignum':  hpSlideBignum(pptx, slide, s);                break;
+      case 'steps':   hpSlideSteps(pptx, slide, s, imgData);        break;
+      case 'twocol':  hpSlideTwocol(pptx, slide, s);                break;
+      case 'callout': hpSlideCallout(pptx, slide, s);               break;
+      case 'closing': hpSlideClosing(pptx, slide, s, meta);         break;
       default: break;
     }
   });
@@ -5747,7 +5798,7 @@ async function generatePresentation() {
   var topicKey = hpFindTopic(topicVal);
   var title    = hpGetTitle(topicKey, topicVal, gradeCode);
   var slides   = hpGetSlides(topicKey, gradeCode, topicVal);
-  var meta     = { title: title, grade: gradeVal, presenter: escHtml(presenterVal), school: escHtml(schoolVal) };
+  var meta     = { title: title, grade: gradeVal, presenter: escHtml(presenterVal), school: escHtml(schoolVal), topicKey: topicKey };
 
   try {
     await hpBuildPPTX(slides, meta);
