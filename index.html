@@ -490,6 +490,198 @@
     border-top: 1px solid var(--border);
   }
 
+  /* ── Presentation Generator Modal ─────────────────── */
+  #modal-pres-gen {
+    background: rgba(0,0,0,0.55);
+    padding: 16px;
+  }
+
+  .modal-box {
+    background: var(--surface);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 92vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.22), 0 4px 20px rgba(0,0,0,0.12);
+    animation: pgModalIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  }
+
+  @keyframes pgModalIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .pg-header {
+    background: linear-gradient(135deg, #C4788A 0%, #8B3D55 100%);
+    padding: 20px 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .pg-header-icon {
+    width: 46px; height: 46px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .pg-header-text { flex: 1; min-width: 0; }
+  .pg-header-text h2 { color: #fff; font-size: 17px; font-weight: 700; margin-bottom: 3px; letter-spacing: -0.01em; }
+  .pg-header-text p  { color: rgba(255,255,255,0.72); font-size: 12.5px; line-height: 1.4; }
+
+  .pg-close {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 9px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; font-size: 19px; line-height: 1;
+    flex-shrink: 0; transition: background 0.15s;
+  }
+  .pg-close:hover { background: rgba(255,255,255,0.3); }
+
+  .pg-body {
+    padding: 18px 20px 14px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .pg-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+
+  .pg-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .pg-chip {
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1.5px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.13s;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+  }
+  .pg-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .pg-chip.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent-mid);
+    font-weight: 600;
+  }
+
+  .pg-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 13px; }
+  .pg-field:last-child { margin-bottom: 0; }
+  .pg-field label { font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .pg-field label .opt { font-weight: 400; color: var(--text-hint); font-size: 12px; }
+
+  .pg-field input, .pg-field select {
+    background: var(--bg);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 9px;
+    padding: 9px 11px;
+    font-size: 13.5px;
+    color: var(--text);
+    width: 100%;
+    transition: border-color 0.14s, box-shadow 0.14s;
+    outline: none;
+    font-family: inherit;
+    -webkit-appearance: none;
+  }
+  .pg-field input:focus, .pg-field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(196,120,138,0.14);
+    background: var(--surface);
+  }
+  .pg-field input::placeholder { color: var(--text-hint); }
+
+  .pg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 13px; }
+
+  .pg-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0 14px;
+  }
+
+  .pg-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    min-height: 36px;
+  }
+
+  .pg-footer {
+    padding: 14px 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .pg-btn-cancel {
+    background: none;
+    border: 1.5px solid var(--border-strong);
+    color: var(--text-muted);
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.13s;
+    font-family: inherit;
+  }
+  .pg-btn-cancel:hover { color: var(--text); border-color: var(--text-muted); }
+
+  .pg-btn-generate {
+    background: linear-gradient(135deg, #C4788A 0%, #8B3D55 100%);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 9px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.13s, transform 0.1s, box-shadow 0.13s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(196,120,138,0.4);
+  }
+  .pg-btn-generate:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(196,120,138,0.45); }
+  .pg-btn-generate:active { transform: none; opacity: 1; }
+  .pg-btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
   /* BADGES */
   .badge {
     display: inline-block;
@@ -2886,55 +3078,73 @@
 
 <!-- ====== HEALTH PRESENTATION GENERATOR MODAL ====== -->
 <div id="modal-pres-gen" class="modal-overlay">
-  <div class="modal-box" style="max-width:500px;">
-    <div class="modal-header">
-      <h2 class="modal-title">Generate Presentation</h2>
-      <button class="modal-close" onclick="closeModal('modal-pres-gen')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label for="pg-topic">Topic <span style="color:#C4788A;">*</span></label>
-        <input
-          type="text"
-          id="pg-topic"
-          class="form-input"
-          placeholder="e.g. Anxiety, Vaping, Nutrition, CPR..."
-          autocomplete="off"
-        />
+  <div class="modal-box">
+    <!-- Branded gradient header -->
+    <div class="pg-header">
+      <div class="pg-header-icon">🎯</div>
+      <div class="pg-header-text">
+        <h2>Generate Presentation</h2>
+        <p>Creates a ready-to-use PPTX with real photos</p>
       </div>
-      <div class="form-group">
+      <button class="pg-close" onclick="closeModal('modal-pres-gen')">&times;</button>
+    </div>
+
+    <div class="pg-body">
+      <!-- Quick topic chips -->
+      <div class="pg-section-label">Quick Select Topic</div>
+      <div class="pg-chips" id="pg-chips">
+        <button class="pg-chip" data-topic="Mental Health" onclick="pgSelectChip(this)">Mental Health</button>
+        <button class="pg-chip" data-topic="Depression" onclick="pgSelectChip(this)">Depression</button>
+        <button class="pg-chip" data-topic="Vaping" onclick="pgSelectChip(this)">Vaping</button>
+        <button class="pg-chip" data-topic="Nutrition" onclick="pgSelectChip(this)">Nutrition</button>
+        <button class="pg-chip" data-topic="Physical Activity" onclick="pgSelectChip(this)">Physical Activity</button>
+        <button class="pg-chip" data-topic="Sleep" onclick="pgSelectChip(this)">Sleep</button>
+        <button class="pg-chip" data-topic="Stress" onclick="pgSelectChip(this)">Stress</button>
+        <button class="pg-chip" data-topic="Bullying" onclick="pgSelectChip(this)">Bullying</button>
+        <button class="pg-chip" data-topic="CPR" onclick="pgSelectChip(this)">CPR</button>
+        <button class="pg-chip" data-topic="Body Image" onclick="pgSelectChip(this)">Body Image</button>
+      </div>
+
+      <div class="pg-divider"></div>
+
+      <!-- Topic text input -->
+      <div class="pg-field">
+        <label for="pg-topic">Topic <span style="color:#C4788A;">*</span> <span class="opt">— or type a custom one above</span></label>
+        <input type="text" id="pg-topic" placeholder="e.g. Anxiety, Vaping, Nutrition, CPR…" autocomplete="off" oninput="pgClearChips()" />
+      </div>
+
+      <!-- Grade level -->
+      <div class="pg-field">
         <label for="pg-grade">Grade Level <span style="color:#C4788A;">*</span></label>
-        <select id="pg-grade" class="form-input">
-          <option value="Grades 4-6">Grades 4-6</option>
-          <option value="Grades 7-9">Grades 7-9</option>
-          <option value="Grades 10-12">Grades 10-12</option>
+        <select id="pg-grade">
+          <option value="Grades 4-6">Grades 4–6 (Elementary)</option>
+          <option value="Grades 7-9">Grades 7–9 (Middle School)</option>
+          <option value="Grades 10-12">Grades 10–12 (High School)</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="pg-presenter">Presenter Name <span style="color:#999;font-weight:400;">(optional)</span></label>
-        <input
-          type="text"
-          id="pg-presenter"
-          class="form-input"
-          placeholder="Your name"
-          autocomplete="off"
-        />
+
+      <!-- Presenter + School in a two-column row -->
+      <div class="pg-row">
+        <div class="pg-field">
+          <label for="pg-presenter">Presenter <span class="opt">(optional)</span></label>
+          <input type="text" id="pg-presenter" placeholder="Your name" autocomplete="off" />
+        </div>
+        <div class="pg-field">
+          <label for="pg-school">School <span class="opt">(optional)</span></label>
+          <input type="text" id="pg-school" placeholder="School name" autocomplete="off" />
+        </div>
       </div>
-      <div class="form-group">
-        <label for="pg-school">School Name <span style="color:#999;font-weight:400;">(optional)</span></label>
-        <input
-          type="text"
-          id="pg-school"
-          class="form-input"
-          placeholder="e.g. Westdale Secondary School"
-          autocomplete="off"
-        />
-      </div>
-      <div id="pg-status" style="min-height:24px;margin-top:8px;font-size:13px;color:#555;"></div>
+
+      <!-- Status bar -->
+      <div id="pg-status" class="pg-status-bar"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-pres-gen')">Cancel</button>
-      <button id="pg-submit-btn" class="btn btn-primary" onclick="generatePresentation()">Generate &amp; Download</button>
+
+    <div class="pg-footer">
+      <button class="pg-btn-cancel" onclick="closeModal('modal-pres-gen')">Cancel</button>
+      <button id="pg-submit-btn" class="pg-btn-generate" onclick="generatePresentation()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Generate &amp; Download
+      </button>
     </div>
   </div>
 </div>
@@ -4947,17 +5157,28 @@ var HP = {
   WHT:   'FFFFFF', BLK:   '1F2937', GRY: '6B7280', LGRY: 'F3F4F6'
 };
 
+function pgSelectChip(el) {
+  document.querySelectorAll('#pg-chips .pg-chip').forEach(function(c) { c.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('pg-topic').value = el.dataset.topic;
+}
+
+function pgClearChips() {
+  document.querySelectorAll('#pg-chips .pg-chip').forEach(function(c) { c.classList.remove('active'); });
+}
+
 function openPresGenerator() {
   document.getElementById('pg-topic').value = '';
   document.getElementById('pg-grade').value = 'Grades 4-6';
   document.getElementById('pg-school').value = '';
-  document.getElementById('pg-status').innerHTML = '';
+  pgClearChips();
   var pi = document.getElementById('pg-presenter');
   pi.value = '';
   if (window.currentUser && window.currentUser.name) pi.value = window.currentUser.name;
-  document.getElementById('pg-status').innerHTML = canvaIsConnected()
-    ? '<span style="color:#2e7d32;">&#10003; Canva connected - design will open after download.</span>'
-    : '<span style="color:#888;">PPTX will download to your device.</span>';
+  var statusEl = document.getElementById('pg-status');
+  statusEl.innerHTML = canvaIsConnected()
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg><span style="color:#2e7d32;font-weight:500;">Canva connected — design will open after download.</span>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PPTX will download to your device.</span>';
   openModal('modal-pres-gen');
 }
 
