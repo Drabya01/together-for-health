@@ -6302,23 +6302,24 @@ function hpContentGeneric(g, name) {
 
 // ===== PPTX BUILDER =====
 
-// ---- Topic image keywords (Unsplash) — hero: full-bleed dramatic, content: informational ----
+// ---- Specific Pexels photo IDs per topic — confirmed real photos, cycle per slide ----
 var HP_IMG = {
-  'mental-health':    { hero:'mental+health+peaceful+calm+nature+light', content:'support+teens+community+wellbeing+group', alt:'mindfulness+meditation+person+nature+serene+quiet' },
-  'depression':       { hero:'hope+sunrise+light+recovery+nature+path', content:'counseling+support+friendship+people+healing', alt:'person+window+light+contemplative+indoor+warm' },
-  'vaping':           { hero:'smoke+cigarette+awareness+health+lungs', content:'teen+health+choice+lifestyle+wellness', alt:'youth+decision+street+urban+lifestyle+choice' },
-  'nutrition':        { hero:'colorful+vegetables+healthy+food+fresh+market', content:'cooking+meal+family+healthy+eating+kitchen', alt:'fruits+salad+bowl+bright+colorful+fresh+food' },
-  'physical-activity':{ hero:'running+sunset+fitness+athlete+outdoor+trail', content:'sports+exercise+team+active+youth+field', alt:'gym+training+strength+movement+energy+workout' },
-  'sleep':            { hero:'peaceful+night+bedroom+cozy+rest+dark', content:'morning+energy+refreshed+wellness+awake+sunrise', alt:'moon+stars+night+sky+calm+dark+quiet+dreamy' },
-  'stress':           { hero:'calm+nature+mountains+ocean+serene+relax', content:'yoga+meditation+breathing+mindful+wellness', alt:'zen+balance+peaceful+water+nature+forest+stone' },
-  'bullying':         { hero:'kindness+friendship+diverse+inclusive+together+hands', content:'students+community+support+school+friends+smiling', alt:'diversity+unity+together+people+group+community' },
-  'cpr':              { hero:'first+aid+emergency+heart+medical+hospital', content:'CPR+training+rescue+community+paramedic+hands', alt:'ambulance+emergency+medical+health+safety+care' },
-  'body-image':       { hero:'confidence+diverse+people+wellness+empowerment+active', content:'self+esteem+positive+fitness+youth+healthy', alt:'portrait+diverse+young+people+natural+authentic' }
+  'mental-health':    [5543374, 5201522],
+  'depression':       [14797769, 5699424, 7176305],
+  'vaping':           [5543374, 9615245, 5761062],
+  'nutrition':        [6546429, 6232551, 8844888, 5794767, 8629107, 8841087, 4137772],
+  'physical-activity':[16714131, 10643696, 8927011, 15825071],
+  'sleep':            [9615245, 3465878],
+  'stress':           [5761062, 4624853],
+  'bullying':         [6936167, 8926898, 8457972],
+  'cpr':              [34104787, 34104785, 33862096, 11655091],
+  'body-image':       [7240284, 8433480, 3856033],
+  'generic':          [5543374, 5201522, 9615245, 5761062]
 };
 
-async function hpFetchImg(keywords) {
+async function hpFetchImg(pexelsId) {
   try {
-    var url = 'https://source.unsplash.com/1200x800/?' + keywords;
+    var url = 'https://images.pexels.com/photos/' + pexelsId + '/pexels-photo-' + pexelsId + '.jpeg?auto=compress&cs=tinysrgb&w=1920';
     var resp = await fetch(url, { mode:'cors' });
     if (!resp.ok) return null;
     var blob = await resp.blob();
@@ -6620,25 +6621,25 @@ async function hpBuildPPTX(slides, meta) {
   pptx.title = meta.title;
   pptx.author = meta.presenter || 'Together For Health';
 
-  // Fetch 3 distinct images in parallel: hero (dramatic), content (informational), alt (variety)
-  var heroKW    = (HP_IMG[meta.topicKey] || {}).hero    || 'health+wellness+people+together';
-  var contentKW = (HP_IMG[meta.topicKey] || {}).content || 'health+community+education+students';
-  var altKW     = (HP_IMG[meta.topicKey] || {}).alt     || contentKW;
-  var imgs = await Promise.all([hpFetchImg(heroKW), hpFetchImg(contentKW), hpFetchImg(altKW)]);
-  var imgHero    = imgs[0];
-  var imgContent = imgs[1] || imgHero;
-  var imgAlt     = imgs[2] || imgContent || imgHero;
+  // Fetch all Pexels photos for this topic in parallel, then assign one per slide (cycling)
+  var photoIds = HP_IMG[meta.topicKey] || HP_IMG['generic'] || [5543374];
+  var fetched = await Promise.all(photoIds.map(function(id) { return hpFetchImg(id); }));
+  var pool = fetched.filter(Boolean);
+  if (!pool.length) pool = [null];
+  var idx = 0;
+  function pick() { return pool[(idx++) % pool.length]; }
 
   slides.forEach(function(s) {
     var slide = pptx.addSlide();
+    var img = pick();
     switch (s.type) {
-      case 'title':   hpSlideTitle(pptx, slide, s, meta, imgHero);                break;
-      case 'bullets': hpSlideBullets(pptx, slide, s, imgContent, imgAlt);         break;
-      case 'bignum':  hpSlideBignum(pptx, slide, s, imgAlt);                      break;
-      case 'steps':   hpSlideSteps(pptx, slide, s, imgContent, imgAlt);           break;
-      case 'twocol':  hpSlideTwocol(pptx, slide, s, imgAlt);                      break;
-      case 'callout': hpSlideCallout(pptx, slide, s, imgHero);                    break;
-      case 'closing': hpSlideClosing(pptx, slide, s, meta, imgHero);              break;
+      case 'title':   hpSlideTitle(pptx, slide, s, meta, img);          break;
+      case 'bullets': hpSlideBullets(pptx, slide, s, img, img);         break;
+      case 'bignum':  hpSlideBignum(pptx, slide, s, img);               break;
+      case 'steps':   hpSlideSteps(pptx, slide, s, img, img);           break;
+      case 'twocol':  hpSlideTwocol(pptx, slide, s, img);               break;
+      case 'callout': hpSlideCallout(pptx, slide, s, img);              break;
+      case 'closing': hpSlideClosing(pptx, slide, s, meta, img);        break;
       default: break;
     }
   });
