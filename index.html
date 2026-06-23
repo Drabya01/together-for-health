@@ -6507,39 +6507,48 @@ function hpSlideBullets(pptx, slide, s, imgContent, imgAlt) {
   hpDrawBrand(slide, '9CA3AF');
 }
 
-// ---- BIGNUM — full-bleed photo with oversized stat overlay ----
+// ---- BIGNUM — split layout: giant stat on dark left, photo strip on right ----
 function hpSlideBignum(pptx, slide, s, imgAlt) {
-  var panelColor = s.bg==='teal'?HP.TEAL : s.bg==='org'?HP.ORG : HP.PINK;
-  if (imgAlt) {
-    slide.addImage({ data:imgAlt, x:0,y:0,w:13.33,h:7.5 });
-    // Dark overlay for legibility
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'000000',transparency:36 }, line:{ type:'none' } });
-    // Subtle color tint
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:panelColor,transparency:72 }, line:{ type:'none' } });
-  } else {
-    slide.background = { color:panelColor };
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'000000',transparency:58 }, line:{ type:'none' } });
+  var barColor = s.bg==='teal'?HP.TEAL : s.bg==='org'?HP.ORG : HP.PINK;
+  var hasPh = !!imgAlt;
+  var PW = hasPh ? 4.3 : 0;
+  var CW = 13.33 - PW;
+
+  // Dark base — stat will always sit on dark, never on photo
+  slide.background = { color:'0D090C' };
+  // Subtle brand tint on content side
+  slide.addShape('rect', { x:0, y:0, w:CW, h:7.5, fill:{ color:barColor, transparency:84 }, line:{ type:'none' } });
+  // Top & bottom accent stripes (full width, brand colour)
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:0.14, fill:{ color:barColor }, line:{ type:'none' } });
+  slide.addShape('rect', { x:0, y:7.36, w:13.33, h:0.14, fill:{ color:barColor }, line:{ type:'none' } });
+
+  // RIGHT: photo strip — feathered into dark on left edge
+  if (hasPh) {
+    slide.addImage({ data:imgAlt, x:CW, y:0, w:PW, h:7.5 });
+    slide.addShape('rect', { x:CW-0.55, y:0, w:0.55, h:7.5, fill:{ color:'0D090C', transparency:0 }, line:{ type:'none' } });
+    slide.addShape('rect', { x:CW, y:0, w:0.45, h:7.5, fill:{ color:'0D090C', transparency:42 }, line:{ type:'none' } });
   }
-  // Giant stat — upper-center
+
+  // Giant stat — always on solid dark, perfectly readable
   slide.addText(s.stat||'', {
-    x:0,y:0.6,w:13.33,h:3.8,
-    fontSize:130,bold:true,color:HP.WHT,
-    align:'center',valign:'middle',
-    shadow:{ type:'outer',color:'000000',blur:18,offset:6,angle:45,opacity:0.92 }
+    x:0.3, y:0.5, w:CW-0.5, h:3.7,
+    fontSize:hasPh?110:124, bold:true, color:HP.WHT,
+    align:'center', valign:'middle',
+    shadow:{ type:'outer', color:'000000', blur:16, offset:5, angle:45, opacity:0.85 }
   });
-  // Stat label
+  // Stat label — brand pink
   slide.addText(s.statLabel||'', {
-    x:1.5,y:4.35,w:10.33,h:1.0,
-    fontSize:20,color:'F9B8C4',
-    align:'center',bold:true,wrap:true
+    x:0.7, y:4.3, w:CW-1.2, h:1.05,
+    fontSize:20, color:'F9B8C4', bold:true,
+    align:'center', wrap:true
   });
   // Divider
-  slide.addShape('rect', { x:4.2,y:5.45,w:4.93,h:0.06, fill:{ color:'F9B8C4' }, line:{ type:'none' } });
+  slide.addShape('rect', { x:CW*0.18, y:5.44, w:CW*0.64, h:0.06, fill:{ color:'F9B8C4' }, line:{ type:'none' } });
   // Context
   slide.addText(s.context||'', {
-    x:1.5,y:5.6,w:10.33,h:1.5,
-    fontSize:18,color:'EEEEEE',
-    align:'center',italic:true,wrap:true
+    x:0.7, y:5.58, w:CW-1.2, h:1.58,
+    fontSize:17, color:'D4C0CA',
+    align:'center', italic:true, wrap:true
   });
   hpDrawBrand(slide, 'F9B8C4');
 }
@@ -6622,42 +6631,48 @@ function hpSlideTwocol(pptx, slide, s, imgAlt) {
   hpDrawBrand(slide, 'F9B8C4');
 }
 
-// ---- CALLOUT — full-bleed photo, bold statement floats over gradient band ----
+// ---- CALLOUT — top photo banner + solid dark text area ----
 function hpSlideCallout(pptx, slide, s, imgHero) {
+  var IMG_H = 2.5;  // photo strip takes top 33% of slide
+
+  // Solid dark base — text always on solid background, never on photo
+  slide.background = { color: HP.DARK };
+  slide.addShape('rect', { x:0, y:0, w:13.33, h:7.5, fill:{ color:'050305', transparency:18 }, line:{ type:'none' } });
+
   if (imgHero) {
-    slide.addImage({ data:imgHero, x:0,y:0,w:13.33,h:7.5 });
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'060606',transparency:32 }, line:{ type:'none' } });
-  } else {
-    slide.background = { color:HP.DARK };
-  }
-  // Horizontal gradient band in center for text legibility
-  [{y:1.85,h:0.6,t:92},{y:2.45,h:0.7,t:72},{y:3.15,h:1.5,t:46},{y:4.65,h:0.7,t:72},{y:5.35,h:0.6,t:92}].forEach(function(g) {
-    slide.addShape('rect', { x:0,y:g.y,w:13.33,h:g.h, fill:{ color:'000000',transparency:g.t }, line:{ type:'none' } });
-  });
-  // Pink accent lines above/below fact
-  slide.addShape('rect', { x:2.5,y:2.55,w:8.33,h:0.06, fill:{ color:HP.PINK }, line:{ type:'none' } });
-  slide.addShape('rect', { x:2.5,y:5.2,w:8.33,h:0.06, fill:{ color:HP.PINK }, line:{ type:'none' } });
-  // Title label above fact
-  if (s.title) {
-    slide.addText(s.title, {
-      x:0,y:1.98,w:13.33,h:0.6,
-      fontSize:14,bold:true,color:'F9B8C4',
-      align:'center',valign:'middle'
+    // Top photo strip
+    slide.addImage({ data:imgHero, x:0, y:0, w:13.33, h:IMG_H+0.4 });
+    // Gradient fade at bottom of photo strip into dark background
+    [{y:IMG_H-0.55,h:0.28,t:85},{y:IMG_H-0.27,h:0.27,t:52},{y:IMG_H,h:0.4,t:8}].forEach(function(g) {
+      slide.addShape('rect', { x:0, y:g.y, w:13.33, h:g.h, fill:{ color:'0D0508', transparency:g.t }, line:{ type:'none' } });
     });
   }
-  // Main fact — large, centered
+
+  // Brand pink accent line — the divider between photo and text area
+  slide.addShape('rect', { x:0, y:IMG_H, w:13.33, h:0.07, fill:{ color:HP.PINK }, line:{ type:'none' } });
+
+  // Title label — readable on solid dark
+  if (s.title) {
+    slide.addText(s.title, {
+      x:0.8, y:IMG_H+0.16, w:11.73, h:0.5,
+      fontSize:13, bold:true, color:'F9B8C4',
+      align:'center', valign:'middle'
+    });
+  }
+  // Main fact — large, fully readable on solid dark
   slide.addText(s.fact||'', {
-    x:1.0,y:2.7,w:11.33,h:2.45,
-    fontSize:34,bold:true,color:HP.WHT,
-    align:'center',valign:'middle',wrap:true,
-    shadow:{ type:'outer',color:'000000',blur:8,offset:3,angle:45,opacity:0.72 }
+    x:0.8, y:IMG_H+0.74, w:11.73, h:2.6,
+    fontSize:31, bold:true, color:HP.WHT,
+    align:'center', valign:'middle', wrap:true
   });
-  // Context below
+  // Divider
+  slide.addShape('rect', { x:2.5, y:IMG_H+3.42, w:8.33, h:0.05, fill:{ color:HP.PINK }, line:{ type:'none' } });
+  // Context
   if (s.context) {
     slide.addText(s.context, {
-      x:1.5,y:5.3,w:10.33,h:1.0,
-      fontSize:17,color:'E8D0D8',
-      align:'center',italic:true,wrap:true
+      x:1.2, y:IMG_H+3.55, w:10.93, h:1.25,
+      fontSize:15, color:'D4C0C8',
+      align:'center', italic:true, wrap:true
     });
   }
   hpDrawBrand(slide, 'F9B8C4');
@@ -6711,17 +6726,25 @@ async function hpBuildPPTX(slides, meta) {
   pptx.title = meta.title;
   pptx.author = meta.presenter || 'Together For Health';
 
-  // Fetch all Pexels photos for this topic in parallel, then assign one per slide (cycling)
+  // Fetch all Pexels photos for this topic in parallel
   var photoIds = HP_IMG[meta.topicKey] || HP_IMG['generic'] || [5543374];
   var fetched = await Promise.all(photoIds.map(function(id) { return hpFetchImg(id); }));
   var pool = fetched.filter(Boolean);
-  if (!pool.length) pool = [null];
-  var idx = 0;
-  function pick() { return pool[(idx++) % pool.length]; }
 
-  slides.forEach(function(s) {
+  // Assign each photo to at most ONE slide — no repeats ever.
+  // Prioritise slide types that benefit most from a photo:
+  // title/closing (cinematic) → bignum/callout/twocol (visual accent) → steps/bullets (right panel)
+  var TYPE_PRI = { title:0, closing:1, bignum:2, callout:3, twocol:4, steps:5, bullets:6 };
+  var ordered = slides.map(function(s, i){ return i; })
+    .sort(function(a,b){ return (TYPE_PRI[slides[a].type]||5)-(TYPE_PRI[slides[b].type]||5); });
+  var photoMap = {};
+  ordered.forEach(function(slideIdx, pi){
+    photoMap[slideIdx] = pi < pool.length ? pool[pi] : null;
+  });
+
+  slides.forEach(function(s, slideIndex) {
     var slide = pptx.addSlide();
-    var img = pick();
+    var img = photoMap[slideIndex];
     switch (s.type) {
       case 'title':   hpSlideTitle(pptx, slide, s, meta, img);          break;
       case 'bullets': hpSlideBullets(pptx, slide, s, img, img);         break;
