@@ -1018,7 +1018,7 @@
   .pres-topic-emoji { width:34px; height:34px; border-radius:8px; background:var(--accent-light); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
   .pres-topic-name { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; }
   .pres-grade-btns { display:flex; gap:5px; }
-  .pres-grade-btn { flex:1; padding:6px 2px; border:1px solid var(--border); border-radius:6px; background:var(--bg); font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; text-align:center; transition:background 0.12s,color 0.12s,border-color 0.12s; white-space:nowrap; }
+  .pres-grade-btn { flex:1; padding:6px 2px; border:1px solid var(--border); border-radius:6px; background:var(--bg); font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; text-align:center; transition:background 0.12s,color 0.12s,border-color 0.12s; white-space:nowrap; text-decoration:none; display:flex; align-items:center; justify-content:center; }
   .pres-grade-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
   .pres-grade-btn:disabled { opacity:0.55; cursor:not-allowed; }
 
@@ -5247,10 +5247,11 @@ function canvaGenerateSlides(d) {
 // ====== HEALTH PRESENTATION ENGINE v2 ======
 
 var HP = {
-  PINK:  'C4788A', DARK: '9A5068', LIGHT: 'FCEEF2',
-  TEAL:  '0E7490', TEALX: 'CFFAFE',
-  ORG:   'C2410C', ORGX:  'FFF7ED',
-  WHT:   'FFFFFF', BLK:   '1F2937', GRY: '6B7280', LGRY: 'F3F4F6'
+  PINK:  'DB2777', DARK: '7C3AED', LIGHT: 'FCE7F3',
+  TEAL:  '0D9488', TEALX: 'CCFBF1',
+  ORG:   'EA580C', ORGX:  'FFEDD5',
+  WHT:   'FFFFFF', BLK:   '111827', GRY: '6B7280', LGRY: 'F9FAFB',
+  BLUE:  '1D4ED8', BLUEX: 'DBEAFE'
 };
 
 function pgSelectChip(el) {
@@ -5301,19 +5302,39 @@ var PRES_LIBRARY_TOPICS = [
   { key:'body-image',        emoji:'💪', label:'Body Image' }
 ];
 
+var PRES_FILES = {
+  'mental-health':     { elem:'Your Feelings Are Normal - Grades 4–6.pptx',                    mid:'Mental Health Matters - Grades 7–9.pptx',                       high:'Taking Care of Your Mental Health - Grades 10–12.pptx' },
+  'depression':        { elem:'Understanding Sadness - Grades 4–6.pptx',                        mid:'Depression What to Know - Grades 7–9.pptx',                     high:'Depression The Facts - Grades 10–12.pptx' },
+  'vaping':            { elem:'Vaping Know the Truth - Grades 4–6.pptx',                        mid:'Vaping The Truth - Grades 7–9.pptx',                            high:'Vaping, Nicotine, and Your Future - Grades 10–12.pptx' },
+  'nutrition':         { elem:'Food Is Fuel - Grades 4–6.pptx',                                 mid:'Eat Well, Feel Well - Grades 7–9.pptx',                         high:'Nutrition Fuel Your Best Self - Grades 10–12.pptx' },
+  'physical-activity': { elem:'Get Moving! - Grades 4–6.pptx',                                 mid:'Move More, Feel Better - Grades 7–9.pptx',                      high:'Exercise and Your Health - Grades 10–12.pptx' },
+  'sleep':             { elem:'Sleep Is Your Superpower - Grades 4–6.pptx',                    mid:'Why You Are Always Tired - Grades 7–9.pptx',                    high:'Sleep Science Why It Matters - Grades 10–12.pptx' },
+  'stress':            { elem:'Handling Big Feelings - Grades 4–6.pptx',                       mid:'Stress Use It, Control It - Grades 7–9.pptx',                   high:'Managing Stress in Real Life - Grades 10–12.pptx' },
+  'bullying':          { elem:'Stand Up. Speak Up. - Grades 4–6.pptx',                         mid:'Bullying Stops Here - Grades 7–9.pptx',                         high:'Bullying, Power, and Bystanders - Grades 10–12.pptx' },
+  'cpr':               { elem:'Be a Helper! - Grades 4–6.pptx',                                mid:'CPR You Could Save a Life - Grades 7–9.pptx',                   high:'CPR and Emergency Response - Grades 10–12.pptx' },
+  'body-image':        { elem:'Every Body Is Amazing - Grades 4–6.pptx',                       mid:'Your Body Is Not the Problem - Grades 7–9.pptx',                high:'Body Image in the Social Media Age - Grades 10–12.pptx' }
+};
+
 function renderPresLibrary() {
   var grid = document.getElementById('pres-library-grid');
   if (!grid) return;
   grid.innerHTML = PRES_LIBRARY_TOPICS.map(function(t) {
+    var files = PRES_FILES[t.key] || {};
+    function btn(grade, label, file) {
+      if (file) {
+        return '<a class="pres-grade-btn" href="presentations/' + encodeURIComponent(file) + '" download="' + file + '" title="Download ' + label + '">' + label + '</a>';
+      }
+      return '<button class="pres-grade-btn" onclick="generateQuick(\'' + t.key + '\',\'' + grade + '\',this)">' + label + '</button>';
+    }
     return '<div class="pres-topic-card">' +
       '<div class="pres-topic-header">' +
         '<div class="pres-topic-emoji">' + t.emoji + '</div>' +
         '<div class="pres-topic-name">' + t.label + '</div>' +
       '</div>' +
       '<div class="pres-grade-btns">' +
-        '<button class="pres-grade-btn" onclick="generateQuick(\'' + t.key + '\',\'elem\',this)">Gr 4–6</button>' +
-        '<button class="pres-grade-btn" onclick="generateQuick(\'' + t.key + '\',\'mid\',this)">Gr 7–9</button>' +
-        '<button class="pres-grade-btn" onclick="generateQuick(\'' + t.key + '\',\'high\',this)">Gr 10–12</button>' +
+        btn('elem', 'Gr 4–6', files.elem) +
+        btn('mid',  'Gr 7–9', files.mid)  +
+        btn('high', 'Gr 10–12', files.high) +
       '</div>' +
     '</div>';
   }).join('');
@@ -6423,8 +6444,8 @@ async function hpFetchImg(pexelsId) {
 }
 
 function hpBgColor(key) {
-  var map = { pink:'C4788A', dark:'9A5068', light:'FCEEF2', teal:'0E7490', tealx:'CFFAFE', org:'C2410C', orgx:'FFF7ED', white:'FFFFFF' };
-  return map[key] || map.white;
+  var map = { pink:'DB2777', dark:'7C3AED', light:'FCE7F3', teal:'0D9488', tealx:'CCFBF1', org:'EA580C', orgx:'FFEDD5', white:'FFFFFF' };
+  return map[key] || map.pink;
 }
 function hpFgColor(bg) {
   var light = ['FCEEF2','CFFAFE','FFF7ED','FFFFFF','F3F4F6'];
@@ -6442,8 +6463,9 @@ function hpSlideTitle(pptx, slide, s, meta, imgHero) {
   } else {
     slide.background = { color:'1A0830' };
     // No-photo: decorative circles give depth instead of flat dark
-    slide.addShape('ellipse', { x:-2.5,y:-3.0,w:9.0,h:9.0, fill:{ color:HP.PINK,transparency:84 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:8.5,y:2.0,w:7.0,h:7.0, fill:{ color:HP.TEAL,transparency:88 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:-2.5,y:-3.0,w:9.0,h:9.0, fill:{ color:HP.PINK,transparency:74 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:8.5,y:2.0,w:7.0,h:7.0, fill:{ color:HP.TEAL,transparency:78 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:4.5,y:4.8,w:5.0,h:5.0, fill:{ color:HP.DARK,transparency:82 }, line:{ type:'none' } });
   }
   // Bottom-up gradient: stack rects of increasing opacity
   [{y:3.2,h:0.8,t:94},{y:4.0,h:0.9,t:82},{y:4.9,h:0.9,t:62},{y:5.8,h:0.8,t:38},{y:6.6,h:0.9,t:12}].forEach(function(g) {
@@ -6473,49 +6495,44 @@ function hpSlideTitle(pptx, slide, s, meta, imgHero) {
   }
 }
 
-// ---- BULLETS — white background, accent header, decorative circles ----
+// ---- BULLETS — vivid colored header zone + white content panel ----
 function hpSlideBullets(pptx, slide, s, imgContent, imgAlt) {
   var barColor = s.bg==='teal'?HP.TEAL : s.bg==='org'?HP.ORG : s.bg==='dark'?HP.DARK : HP.PINK;
   var img = imgContent || imgAlt;
+  var HH = 2.2;
 
-  slide.background = { color: HP.WHT };
-  // Decorative faint circles (brand colour, very transparent)
-  slide.addShape('ellipse', { x:9.5,y:-1.8,w:5.8,h:5.8, fill:{ color:barColor,transparency:93 }, line:{ type:'none' } });
-  slide.addShape('ellipse', { x:11.2,y:4.8,w:3.2,h:3.2, fill:{ color:barColor,transparency:88 }, line:{ type:'none' } });
-  // Left accent bar (full height)
-  slide.addShape('rect', { x:0,y:0,w:0.22,h:7.5, fill:{ color:barColor }, line:{ type:'none' } });
-  // Header block (full width)
-  var BH = 1.85;
-  slide.addShape('rect', { x:0.22,y:0,w:13.11,h:BH, fill:{ color:barColor }, line:{ type:'none' } });
-  slide.addShape('rect', { x:0.22,y:0,w:13.11,h:BH, fill:{ color:'000000',transparency:78 }, line:{ type:'none' } });
+  // Vivid colored background (full slide, white panel will cover bottom)
+  slide.background = { color: barColor };
+  // Decorative circles on the colored header area
+  slide.addShape('ellipse', { x:10.5,y:-1.8,w:5.8,h:5.8, fill:{ color:'FFFFFF',transparency:86 }, line:{ type:'none' } });
+  slide.addShape('ellipse', { x:-0.8,y:5.0,w:3.5,h:3.5, fill:{ color:'000000',transparency:86 }, line:{ type:'none' } });
   // Photo inset in right side of header (if available)
   if (img) {
-    slide.addImage({ data:img, x:10.2,y:0,w:3.13,h:BH });
-    slide.addShape('rect', { x:10.2,y:0,w:0.45,h:BH, fill:{ color:barColor,transparency:0 }, line:{ type:'none' } });
-    slide.addShape('rect', { x:10.65,y:0,w:0.3,h:BH, fill:{ color:barColor,transparency:45 }, line:{ type:'none' } });
+    slide.addImage({ data:img, x:10.0,y:0,w:3.33,h:HH });
+    slide.addShape('rect', { x:10.0,y:0,w:0.55,h:HH, fill:{ color:barColor,transparency:0 }, line:{ type:'none' } });
+    slide.addShape('rect', { x:10.55,y:0,w:0.35,h:HH, fill:{ color:barColor,transparency:50 }, line:{ type:'none' } });
   }
-  // Emoji icon + title
-  var titleX = 0.5;
+  // Emoji icon + title in the colored header
+  var titleX = 0.45;
   if (s.emoji) {
-    slide.addText(s.emoji, { x:0.4,y:0.1,w:0.85,h:BH-0.2, fontSize:32,valign:'middle' });
-    titleX = 1.38;
+    slide.addText(s.emoji, { x:0.35,y:0.2,w:1.2,h:HH-0.28, fontSize:46,valign:'middle' });
+    titleX = 1.68;
   }
-  var titleW = img ? (10.2 - titleX - 0.15) : (13.0 - titleX);
+  var titleMaxW = img ? (9.8 - titleX) : (13.0 - titleX);
   slide.addText(s.title, {
-    x:titleX,y:0,w:titleW,h:BH,
-    fontSize:25,bold:true,color:HP.WHT,valign:'middle',wrap:true
+    x:titleX, y:0, w:titleMaxW, h:HH,
+    fontSize:27, bold:true, color:HP.WHT, valign:'middle', wrap:true
   });
-  // Bullet items — alternating row tint, coloured dot bullets
+  // White content panel fills the rest of the slide
+  slide.addShape('rect', { x:0,y:HH,w:13.33,h:7.5-HH, fill:{ color:HP.WHT }, line:{ type:'none' } });
+  // Bullet items with vivid colored dots on white background
   var pts = s.points || [];
-  var availH = 7.5 - BH - 0.3;
+  var availH = 7.5 - HH - 0.22;
   var spacing = Math.min(1.06, availH / Math.max(pts.length, 1));
   pts.forEach(function(pt, i) {
-    var yy = BH + 0.18 + (i * spacing);
-    if (i % 2 === 0) {
-      slide.addShape('rect', { x:0.22,y:yy+0.03,w:13.0,h:spacing-0.1, fill:{ color:'F8FAFC' }, line:{ type:'none' } });
-    }
-    slide.addShape('ellipse', { x:0.52,y:yy+spacing/2-0.14,w:0.27,h:0.27, fill:{ color:barColor }, line:{ type:'none' } });
-    slide.addText(pt, { x:0.93,y:yy,w:12.18,h:spacing-0.06, fontSize:17,color:HP.BLK,valign:'middle',wrap:true });
+    var yy = HH + 0.2 + (i * spacing);
+    slide.addShape('ellipse', { x:0.42,y:yy+spacing/2-0.18,w:0.36,h:0.36, fill:{ color:barColor }, line:{ type:'none' } });
+    slide.addText(pt, { x:0.95,y:yy,w:12.1,h:spacing-0.06, fontSize:17,color:HP.BLK,valign:'middle',wrap:true });
   });
   hpDrawBrand(slide, HP.GRY);
 }
@@ -6525,35 +6542,33 @@ function hpSlideBignum(pptx, slide, s, imgAlt) {
   var barColor = s.bg==='teal'?HP.TEAL : s.bg==='org'?HP.ORG : HP.PINK;
 
   if (!imgAlt) {
-    // ── No photo: white background, giant COLOURED stat, decorative circles ──
-    slide.background = { color: HP.WHT };
-    // Large decorative circles (brand colour, very faint)
-    slide.addShape('ellipse', { x:2.2,y:-1.5,w:8.0,h:8.0, fill:{ color:barColor,transparency:93 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:3.5,y:-0.5,w:5.5,h:5.5, fill:{ color:barColor,transparency:88 }, line:{ type:'none' } });
-    // Top & bottom brand stripes
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:0.18, fill:{ color:barColor }, line:{ type:'none' } });
-    slide.addShape('rect', { x:0,y:7.32,w:13.33,h:0.18, fill:{ color:barColor }, line:{ type:'none' } });
-    // Giant stat in brand colour (not white — pops against white bg)
+    // ── No photo: vivid full-colour background, giant WHITE stat ──
+    slide.background = { color: barColor };
+    // Decorative circles (white + dark) for depth
+    slide.addShape('ellipse', { x:-2.0,y:-2.0,w:7.5,h:7.5, fill:{ color:'FFFFFF',transparency:89 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:9.5,y:4.0,w:6.0,h:6.0, fill:{ color:'000000',transparency:87 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:5.5,y:-3.0,w:5.5,h:5.5, fill:{ color:'FFFFFF',transparency:92 }, line:{ type:'none' } });
+    // Giant WHITE stat number
     slide.addText(s.stat||'', {
       x:0.5,y:0.5,w:12.33,h:3.8,
-      fontSize:140,bold:true,color:barColor,
+      fontSize:140,bold:true,color:HP.WHT,
       align:'center',valign:'middle'
     });
-    // Stat label (dark text — readable on white)
+    // Thin white divider
+    slide.addShape('rect', { x:3.5,y:4.62,w:6.33,h:0.07, fill:{ color:'FFFFFF',transparency:45 }, line:{ type:'none' } });
+    // Stat label (white)
     slide.addText(s.statLabel||'', {
-      x:1.5,y:4.35,w:10.33,h:1.05,
-      fontSize:21,color:HP.BLK,bold:true,
+      x:1.0,y:4.75,w:11.33,h:1.15,
+      fontSize:22,color:HP.WHT,bold:true,
       align:'center',wrap:true
     });
-    // Divider
-    slide.addShape('rect', { x:4.2,y:5.48,w:4.93,h:0.07, fill:{ color:barColor }, line:{ type:'none' } });
-    // Context (muted on white)
+    // Context (white italic)
     slide.addText(s.context||'', {
-      x:1.5,y:5.62,w:10.33,h:1.55,
-      fontSize:17,color:HP.GRY,
+      x:1.5,y:6.0,w:10.33,h:1.12,
+      fontSize:17,color:HP.WHT,
       align:'center',italic:true,wrap:true
     });
-    hpDrawBrand(slide, HP.GRY);
+    hpDrawBrand(slide, HP.WHT);
     return;
   }
 
@@ -6619,17 +6634,19 @@ function hpSlideSteps(pptx, slide, s, imgContent, imgAlt) {
     x:titleX,y:0,w:titleW,h:BH,
     fontSize:23,bold:true,color:HP.WHT,valign:'middle',wrap:true
   });
-  // Numbered step cards
+  // Numbered step cards — each step cycles through vivid colors
+  var STEP_COLORS = [HP.PINK, HP.TEAL, HP.ORG, HP.DARK];
   var pts = s.points || [];
   var availH = 7.5 - BH - 0.2;
   var spacing = Math.min(1.05, availH / Math.max(pts.length, 1));
   pts.forEach(function(step, i) {
     var yy = BH + 0.12 + (i * spacing);
+    var stepColor = STEP_COLORS[i % STEP_COLORS.length];
     var isEven = i % 2 === 0;
     slide.addShape('rect', { x:0.28,y:yy+0.03,w:12.86,h:spacing-0.08, fill:{ color:isEven?'F8FAFC':HP.WHT }, line:{ type:'none' } });
-    slide.addShape('rect', { x:0.28,y:yy+0.03,w:0.2,h:spacing-0.08, fill:{ color:barColor }, line:{ type:'none' } });
+    slide.addShape('rect', { x:0.28,y:yy+0.03,w:0.2,h:spacing-0.08, fill:{ color:stepColor }, line:{ type:'none' } });
     var cY = yy + (spacing-0.08-0.52)/2 + 0.03;
-    slide.addShape('ellipse', { x:0.6,y:cY,w:0.52,h:0.52, fill:{ color:barColor }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:0.6,y:cY,w:0.52,h:0.52, fill:{ color:stepColor }, line:{ type:'none' } });
     slide.addText(String(i+1), { x:0.6,y:cY,w:0.52,h:0.52, fontSize:15,bold:true,color:HP.WHT,align:'center',valign:'middle' });
     slide.addText(step, { x:1.26,y:yy+0.03,w:11.7,h:spacing-0.08, fontSize:15,color:HP.BLK,valign:'middle',wrap:true });
   });
@@ -6643,33 +6660,43 @@ function hpSlideTwocol(pptx, slide, s, imgAlt) {
   var rColor = R.color==='TEAL'?HP.TEAL : R.color==='ORG'?HP.ORG : R.color==='DARK'?HP.DARK : HP.TEAL;
 
   if (!imgAlt) {
-    // ── No photo: white background, solid colour cards, decorative circles ──
-    slide.background = { color: HP.WHT };
-    slide.addShape('ellipse', { x:-1.2,y:-2.0,w:5.0,h:5.0, fill:{ color:lColor,transparency:92 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:10.3,y:4.0,w:4.5,h:4.5, fill:{ color:rColor,transparency:92 }, line:{ type:'none' } });
-    // Dark header bar
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:1.12, fill:{ color:HP.BLK }, line:{ type:'none' } });
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:0.1, fill:{ color:HP.PINK }, line:{ type:'none' } });
-    slide.addText(s.title||'', { x:0.45,y:0,w:12.4,h:1.12, fontSize:27,bold:true,color:HP.WHT,valign:'middle',wrap:true });
-    // LEFT card — solid on white
-    slide.addShape('rect', { x:0.35,y:1.28,w:5.98,h:5.98, fill:{ color:HP.WHT }, line:{ color:lColor,w:1.5,transparency:0 } });
-    slide.addShape('rect', { x:0.35,y:1.28,w:5.98,h:0.72, fill:{ color:lColor }, line:{ type:'none' } });
-    slide.addText(L.title||'', { x:0.35,y:1.28,w:5.98,h:0.72, fontSize:17,bold:true,color:HP.WHT,align:'center',valign:'middle' });
+    // ── No photo: vivid full-split background — left half lColor, right half rColor ──
+    var MID = 6.67;
+    slide.background = { color: HP.BLK };
+    slide.addShape('rect', { x:0,y:0,w:MID,h:7.5, fill:{ color:lColor }, line:{ type:'none' } });
+    slide.addShape('rect', { x:MID,y:0,w:13.33-MID,h:7.5, fill:{ color:rColor }, line:{ type:'none' } });
+    // Decorative circles for depth
+    slide.addShape('ellipse', { x:-1.2,y:-1.5,w:5.0,h:5.0, fill:{ color:'FFFFFF',transparency:87 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:10.5,y:4.5,w:4.5,h:4.5, fill:{ color:'000000',transparency:84 }, line:{ type:'none' } });
+    // Full-width semi-transparent title band
+    var TH = 1.12;
+    slide.addShape('rect', { x:0,y:0,w:13.33,h:TH, fill:{ color:'000000',transparency:38 }, line:{ type:'none' } });
+    slide.addText(s.title||'', { x:0.45,y:0,w:12.4,h:TH, fontSize:27,bold:true,color:HP.WHT,valign:'middle',wrap:true });
+    // Soft divider at center
+    slide.addShape('rect', { x:MID-0.04,y:TH,w:0.08,h:7.5-TH, fill:{ color:'FFFFFF',transparency:72 }, line:{ type:'none' } });
+    // LEFT column header
+    if (L.title) {
+      slide.addShape('rect', { x:0.3,y:TH+0.18,w:MID-0.5,h:0.68, fill:{ color:'FFFFFF',transparency:76 }, line:{ type:'none' } });
+      slide.addText(L.title, { x:0.3,y:TH+0.18,w:MID-0.5,h:0.68, fontSize:16,bold:true,color:HP.WHT,align:'center',valign:'middle' });
+    }
+    var lStartY = TH + 0.2 + (L.title ? 0.74 : 0);
     (L.points||[]).forEach(function(pt, i) {
-      var yy = 2.16 + (i * 0.86);
-      slide.addShape('ellipse', { x:0.58,y:yy+0.3,w:0.2,h:0.2, fill:{ color:lColor }, line:{ type:'none' } });
-      slide.addText(pt, { x:0.9,y:yy,w:5.1,h:0.82, fontSize:15,color:HP.BLK,valign:'middle',wrap:true });
+      var yy = lStartY + 0.05 + (i * 0.9);
+      slide.addShape('ellipse', { x:0.42,y:yy+0.3,w:0.26,h:0.26, fill:{ color:'FFFFFF',transparency:54 }, line:{ type:'none' } });
+      slide.addText(pt, { x:0.82,y:yy,w:MID-1.0,h:0.86, fontSize:15,color:HP.WHT,valign:'middle',wrap:true });
     });
-    // RIGHT card — solid on white
-    slide.addShape('rect', { x:7.0,y:1.28,w:5.98,h:5.98, fill:{ color:HP.WHT }, line:{ color:rColor,w:1.5,transparency:0 } });
-    slide.addShape('rect', { x:7.0,y:1.28,w:5.98,h:0.72, fill:{ color:rColor }, line:{ type:'none' } });
-    slide.addText(R.title||'', { x:7.0,y:1.28,w:5.98,h:0.72, fontSize:17,bold:true,color:HP.WHT,align:'center',valign:'middle' });
+    // RIGHT column header
+    if (R.title) {
+      slide.addShape('rect', { x:MID+0.2,y:TH+0.18,w:13.33-MID-0.5,h:0.68, fill:{ color:'FFFFFF',transparency:76 }, line:{ type:'none' } });
+      slide.addText(R.title, { x:MID+0.2,y:TH+0.18,w:13.33-MID-0.5,h:0.68, fontSize:16,bold:true,color:HP.WHT,align:'center',valign:'middle' });
+    }
+    var rStartY = TH + 0.2 + (R.title ? 0.74 : 0);
     (R.points||[]).forEach(function(pt, i) {
-      var yy = 2.16 + (i * 0.86);
-      slide.addShape('ellipse', { x:7.22,y:yy+0.3,w:0.2,h:0.2, fill:{ color:rColor }, line:{ type:'none' } });
-      slide.addText(pt, { x:7.54,y:yy,w:5.1,h:0.82, fontSize:15,color:HP.BLK,valign:'middle',wrap:true });
+      var yy = rStartY + 0.05 + (i * 0.9);
+      slide.addShape('ellipse', { x:MID+0.3,y:yy+0.3,w:0.26,h:0.26, fill:{ color:'FFFFFF',transparency:54 }, line:{ type:'none' } });
+      slide.addText(pt, { x:MID+0.7,y:yy,w:13.33-MID-1.0,h:0.86, fontSize:15,color:HP.WHT,valign:'middle',wrap:true });
     });
-    hpDrawBrand(slide, HP.GRY);
+    hpDrawBrand(slide, HP.WHT);
     return;
   }
 
@@ -6701,11 +6728,12 @@ function hpSlideTwocol(pptx, slide, s, imgAlt) {
 // ---- CALLOUT — top photo + dark text area (photo) OR gradient+circles (no photo) ----
 function hpSlideCallout(pptx, slide, s, imgHero) {
   if (!imgHero) {
-    // ── No photo: rich dark background with two large decorative circles ──
+    // ── No photo: vivid dark background with bold decorative circles ──
     slide.background = { color: HP.DARK };
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'000000',transparency:55 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:-2.0,y:-2.0,w:7.0,h:7.0, fill:{ color:HP.PINK,transparency:85 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:9.0,y:3.0,w:6.0,h:6.0, fill:{ color:HP.TEAL,transparency:87 }, line:{ type:'none' } });
+    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'000000',transparency:75 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:-2.0,y:-2.0,w:7.0,h:7.0, fill:{ color:HP.PINK,transparency:72 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:9.0,y:3.0,w:6.0,h:6.0, fill:{ color:HP.TEAL,transparency:74 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:5.5,y:-2.5,w:4.0,h:4.0, fill:{ color:HP.ORG,transparency:82 }, line:{ type:'none' } });
     slide.addShape('rect', { x:0,y:0,w:13.33,h:0.16, fill:{ color:HP.PINK }, line:{ type:'none' } });
     slide.addShape('rect', { x:0,y:7.34,w:13.33,h:0.16, fill:{ color:HP.PINK }, line:{ type:'none' } });
     if (s.title) {
@@ -6768,10 +6796,10 @@ function hpSlideClosing(pptx, slide, s, meta, imgHero) {
   } else {
     slide.background = { color:'1A0830' };
     // Decorative circles — makes no-photo closing feel celebratory
-    slide.addShape('ellipse', { x:-2.0,y:-2.0,w:7.5,h:7.5, fill:{ color:HP.PINK,transparency:84 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:9.5,y:3.2,w:6.0,h:6.0, fill:{ color:HP.TEAL,transparency:87 }, line:{ type:'none' } });
-    slide.addShape('ellipse', { x:5.0,y:-1.5,w:4.5,h:4.5, fill:{ color:HP.ORG,transparency:90 }, line:{ type:'none' } });
-    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'000000',transparency:52 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:-2.0,y:-2.0,w:7.5,h:7.5, fill:{ color:HP.PINK,transparency:74 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:9.5,y:3.2,w:6.0,h:6.0, fill:{ color:HP.TEAL,transparency:76 }, line:{ type:'none' } });
+    slide.addShape('ellipse', { x:5.0,y:-1.5,w:4.5,h:4.5, fill:{ color:HP.DARK,transparency:80 }, line:{ type:'none' } });
+    slide.addShape('rect', { x:0,y:0,w:13.33,h:7.5, fill:{ color:'000000',transparency:55 }, line:{ type:'none' } });
   }
   slide.addShape('rect', { x:0,y:0,w:13.33,h:0.1, fill:{ color:HP.PINK }, line:{ type:'none' } });
   slide.addText('KEY TAKEAWAYS', {
@@ -6780,10 +6808,12 @@ function hpSlideClosing(pptx, slide, s, meta, imgHero) {
     align:'center',letterSpacing:3
   });
   slide.addShape('rect', { x:1.5,y:0.86,w:10.33,h:0.07, fill:{ color:'F9B8C4' }, line:{ type:'none' } });
+  var CL_COLORS = [HP.PINK, HP.TEAL, HP.ORG];
   var pts = s.points||[];
   pts.forEach(function(pt, i) {
     var yy = 1.06 + (i * 0.82);
-    slide.addShape('ellipse', { x:1.5,y:yy+0.18,w:0.48,h:0.48, fill:{ color:HP.PINK }, line:{ type:'none' } });
+    var clColor = CL_COLORS[i % CL_COLORS.length];
+    slide.addShape('ellipse', { x:1.5,y:yy+0.18,w:0.48,h:0.48, fill:{ color:clColor }, line:{ type:'none' } });
     slide.addText('✓', { x:1.5,y:yy+0.18,w:0.48,h:0.48, fontSize:14,color:HP.WHT,align:'center',valign:'middle',bold:true });
     slide.addText(pt, {
       x:2.14,y:yy,w:10.7,h:0.76,
