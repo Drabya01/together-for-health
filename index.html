@@ -2508,15 +2508,12 @@
     <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; gap:12px; flex-wrap:wrap;">
       <div>
         <p class="page-title">Presentations</p>
-        <p class="page-sub">Click a grade to download a ready-made PPTX — real photos, no setup needed</p>
+        <p class="page-sub">Every deck the club has shared, all in one place</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-secondary" onclick="openPresGenerator()">Custom topic</button>
         <button class="btn btn-primary" onclick="openAddPres()">+ Add link</button>
       </div>
     </div>
-    <div class="section-label" style="margin-bottom:12px">Health Presentation Library</div>
-    <div class="pres-library-grid" id="pres-library-grid"></div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
       <div>
         <div class="section-label" style="margin-bottom:2px">Team link board</div>
@@ -4295,7 +4292,7 @@ function switchTab(name) {
   if (name === 'calendar') renderCal();
   if (name === 'plans') renderPlans();
   if (name === 'ideas') renderIdeas();
-  if (name === 'presentations') { renderPresLibrary(); renderPres(); }
+  if (name === 'presentations') { renderPres(); }
   if (name === 'dashboard') renderDash();
   if (name === 'meetings') renderMeetings();
   if (name === 'members') renderMembers();
@@ -5486,85 +5483,6 @@ function openInCanva() {
   var url = 'https://www.canva.com/templates/presentations/?query=' + query;
   window.open(url, '_blank');
   closeModal('modal-pres-gen');
-}
-
-var PRES_LIBRARY_TOPICS = [
-  { key:'mental-health',     emoji:'🧠', label:'Mental Health' },
-  { key:'depression',        emoji:'💙', label:'Depression' },
-  { key:'vaping',            emoji:'🫁', label:'Vaping' },
-  { key:'nutrition',         emoji:'🥗', label:'Nutrition' },
-  { key:'physical-activity', emoji:'🏃', label:'Physical Activity' },
-  { key:'sleep',             emoji:'😴', label:'Sleep' },
-  { key:'stress',            emoji:'🌊', label:'Stress' },
-  { key:'bullying',          emoji:'🛡️', label:'Bullying' },
-  { key:'cpr',               emoji:'🫀', label:'CPR & First Aid' },
-  { key:'body-image',        emoji:'💪', label:'Body Image' }
-];
-
-var PRES_FILES = {
-  'mental-health':     { elem:'Your Feelings Are Normal - Grades 4–6.pptx',                    mid:'Mental Health Matters - Grades 7–9.pptx',                       high:'Taking Care of Your Mental Health - Grades 10–12.pptx' },
-  'depression':        { elem:'Understanding Sadness - Grades 4–6.pptx',                        mid:'Depression What to Know - Grades 7–9.pptx',                     high:'Depression The Facts - Grades 10–12.pptx' },
-  'vaping':            { elem:'Vaping Know the Truth - Grades 4–6.pptx',                        mid:'Vaping The Truth - Grades 7–9.pptx',                            high:'Vaping, Nicotine, and Your Future - Grades 10–12.pptx' },
-  'nutrition':         { elem:'Food Is Fuel - Grades 4–6.pptx',                                 mid:'Eat Well, Feel Well - Grades 7–9.pptx',                         high:'Nutrition Fuel Your Best Self - Grades 10–12.pptx' },
-  'physical-activity': { elem:'Get Moving! - Grades 4–6.pptx',                                 mid:'Move More, Feel Better - Grades 7–9.pptx',                      high:'Exercise and Your Health - Grades 10–12.pptx' },
-  'sleep':             { elem:'Sleep Is Your Superpower - Grades 4–6.pptx',                    mid:'Why You Are Always Tired - Grades 7–9.pptx',                    high:'Sleep Science Why It Matters - Grades 10–12.pptx' },
-  'stress':            { elem:'Handling Big Feelings - Grades 4–6.pptx',                       mid:'Stress Use It, Control It - Grades 7–9.pptx',                   high:'Managing Stress in Real Life - Grades 10–12.pptx' },
-  'bullying':          { elem:'Stand Up. Speak Up. - Grades 4–6.pptx',                         mid:'Bullying Stops Here - Grades 7–9.pptx',                         high:'Bullying, Power, and Bystanders - Grades 10–12.pptx' },
-  'cpr':               { elem:'Be a Helper! - Grades 4–6.pptx',                                mid:'CPR You Could Save a Life - Grades 7–9.pptx',                   high:'CPR and Emergency Response - Grades 10–12.pptx' },
-  'body-image':        { elem:'Every Body Is Amazing - Grades 4–6.pptx',                       mid:'Your Body Is Not the Problem - Grades 7–9.pptx',                high:'Body Image in the Social Media Age - Grades 10–12.pptx' }
-};
-
-function renderPresLibrary() {
-  var grid = document.getElementById('pres-library-grid');
-  if (!grid) return;
-  grid.innerHTML = PRES_LIBRARY_TOPICS.map(function(t) {
-    var files = PRES_FILES[t.key] || {};
-    function btn(grade, label, file) {
-      if (file) {
-        return '<a class="pres-grade-btn" href="presentations/' + encodeURIComponent(file) + '" download="' + file + '" title="Download ' + label + '">' + label + '</a>';
-      }
-      return '<button class="pres-grade-btn" onclick="generateQuick(\'' + t.key + '\',\'' + grade + '\',this)">' + label + '</button>';
-    }
-    return '<div class="pres-topic-card">' +
-      '<div class="pres-topic-header">' +
-        '<div class="pres-topic-emoji">' + t.emoji + '</div>' +
-        '<div class="pres-topic-name">' + t.label + '</div>' +
-      '</div>' +
-      '<div class="pres-grade-btns">' +
-        btn('elem', 'Gr 4–6', files.elem) +
-        btn('mid',  'Gr 7–9', files.mid)  +
-        btn('high', 'Gr 10–12', files.high) +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-async function generateQuick(topicKey, gradeCode, btn) {
-  var gradeLabels = { elem:'Grades 4-6', mid:'Grades 7-9', high:'Grades 10-12' };
-  var gradeVal = gradeLabels[gradeCode];
-  var title = hpGetTitle(topicKey, '', gradeCode);
-  var slides = hpGetSlides(topicKey, gradeCode, '');
-  var meta = { title:title, grade:gradeVal, presenter:'', school:'', topicKey:topicKey };
-
-  var origText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '⏳';
-
-  try {
-    await hpBuildPPTX(slides, meta);
-    if (window.state && Array.isArray(state.presentations)) {
-      state.presentations.push({ id:uid(), title:title, topic:topicKey, grade:gradeVal, presenter:'', school:'', createdAt:new Date().toISOString() });
-      if (typeof saveState === 'function') saveState();
-      if (typeof renderPres === 'function') renderPres();
-    }
-    if (typeof showToast === 'function') showToast('Downloaded: ' + title, 'success');
-  } catch(e) {
-    if (typeof showToast === 'function') showToast('Generation failed — try again', 'error');
-    console.error(e);
-  }
-
-  btn.disabled = false;
-  btn.textContent = origText;
 }
 
 function openPresGenerator() {
