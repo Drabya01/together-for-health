@@ -4111,6 +4111,44 @@ function saveState() {
   }, 1500);
 }
 
+// Seed the 10 Grade 10–12 lesson decks into the link board. Idempotent (by URL) and
+// guarded by a flag so member deletions stick. Writes localStorage directly (no push) —
+// the caller decides whether to push to the gist (only after a successful sync).
+var CLUB_DECKS = [
+  { key:'mental-health',     title:'Mental Health',     topic:'Mental Health',     file:'mental-health-gr10-12.html' },
+  { key:'depression',        title:'Depression',        topic:'Depression',        file:'depression-gr10-12.html' },
+  { key:'vaping',            title:'Vaping',            topic:'Vaping',            file:'vaping-gr10-12.html' },
+  { key:'nutrition',         title:'Nutrition',         topic:'Nutrition',         file:'nutrition-gr10-12.html' },
+  { key:'physical-activity', title:'Physical Activity', topic:'Physical Activity', file:'physical-activity-gr10-12.html' },
+  { key:'sleep',             title:'Sleep',             topic:'Sleep',             file:'sleep-gr10-12.html' },
+  { key:'stress',            title:'Stress',            topic:'Stress',            file:'stress-gr10-12.html' },
+  { key:'bullying',          title:'Bullying',          topic:'Bullying',          file:'bullying-gr10-12.html' },
+  { key:'cpr',               title:'CPR & First Aid',   topic:'CPR',               file:'cpr-first-aid-gr10-12.html' },
+  { key:'body-image',        title:'Body Image',        topic:'Body Image',        file:'body-image-gr10-12.html' }
+];
+function seedClubDecksIfNeeded() {
+  if (typeof state === 'undefined' || !state) return false;
+  if (state.seededDecksV1) return false;
+  if (!Array.isArray(state.presentations)) state.presentations = [];
+  var now = Date.now();
+  var added = false;
+  CLUB_DECKS.forEach(function(d, i) {
+    var url = 'decks/' + d.file;
+    if (!state.presentations.some(function(p){ return p.url === url; })) {
+      state.presentations.push({
+        id: 'deck-' + d.key, title: d.title, url: url, topic: d.topic,
+        desc: 'Grade 10–12 lesson deck', author: '',
+        addedBy: 'Together for Health', addedById: '', addedByPhoto: '',
+        addedAt: now - i * 60000, pinned: false, openCount: 0
+      });
+      added = true;
+    }
+  });
+  state.seededDecksV1 = true;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+  return added;
+}
+
 let state = loadState();
 // Auto-recover: if sync previously wiped data, restore from pre-sync backup
 (function() {
@@ -4134,6 +4172,8 @@ if (state.emailTemplates) state.emailTemplates = state.emailTemplates.map(functi
 ['meetings','members','feedback','posts','announcements','goals','contacts','resources','transactions','activities','emailTemplates'].forEach(k => { if (!state[k]) state[k] = []; });
 // New feature migration
 ['teachers','consents','partnerships','fundraisers','grants','eventBudgets'].forEach(k => { if (!state[k]) state[k] = []; });
+// Seed the Grade 10–12 lesson decks into the Team link board (also re-checked after cloud sync)
+seedClubDecksIfNeeded();
 // Ensure each meeting has attendance tracking and actionItems
 state.meetings.forEach(m => {
   if (!m.attendance) m.attendance = {};
@@ -5069,6 +5109,7 @@ function deleteIdea(id) {
 // ====== PRESENTATIONS ======
 // ---- Link provider detection & previews ----
 var PRES_PROVIDERS = [
+  { test:/(^|\/)decks\/[^?#]*\.html/i,           name:'Lesson Deck',   color:'#DB2777', grad:'linear-gradient(135deg,#F472B6,#DB2777)', glyph:'📊' },
   { test:/docs\.google\.com\/presentation/i,    name:'Google Slides', color:'#F4B400', grad:'linear-gradient(135deg,#FBC02D,#F4B400)' },
   { test:/docs\.google\.com\/document/i,         name:'Google Docs',   color:'#4285F4', grad:'linear-gradient(135deg,#5C9CFF,#4285F4)' },
   { test:/docs\.google\.com\/spreadsheets/i,     name:'Google Sheets', color:'#0F9D58', grad:'linear-gradient(135deg,#2ECC71,#0F9D58)' },
@@ -5162,7 +5203,7 @@ function renderPres() {
     } else if (fav) {
       thumbInner = '<img class="lt-fav" src="' + escHtml(fav) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;lt-glyph&quot;>🔗</span>\'">';
     } else {
-      thumbInner = '<span class="lt-glyph">🔗</span>';
+      thumbInner = '<span class="lt-glyph">' + (prov.glyph || '🔗') + '</span>';
     }
     var addedName = p.addedBy || p.author || '';
     var byline = addedName
@@ -10911,6 +10952,14 @@ function startCloudSync() {
         var activeTab = activeBtn ? activeBtn.dataset.tab : 'dashboard';
         switchTab(activeTab || 'dashboard');
         showToast('Updated from cloud sync', 'success');
+      }
+    }
+    // After a successful sync, make sure the club lesson decks exist; push only if we added them
+    if (result === 'updated' || result === 'current') {
+      if (seedClubDecksIfNeeded()) {
+        pushToGist().catch(function(){});
+        var ab = document.querySelector('.nav-item--active');
+        if (ab && ab.dataset.tab === 'presentations') renderPres();
       }
     }
   }).catch(function() {});
