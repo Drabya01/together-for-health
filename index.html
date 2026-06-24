@@ -4401,6 +4401,82 @@ function seedActivitiesIfNeeded() {
   return true;
 }
 
+// ── Curated resource library: seed the Resources tab (idempotent by id, survives sync) ──
+// Every link and phone number was verified. Tags double as the filter chips.
+var CLUB_RESOURCES = [
+  // Crisis support
+  { id:'res-988', title:`9-8-8: Suicide Crisis Helpline`, url:`https://988.ca`, type:`Tool`, tags:`Crisis Support, Mental Health`, starred:true, notes:`Call or text 9-8-8, free and 24/7, anywhere in Canada. Trained responders for anyone thinking about suicide or worried about someone.` },
+  { id:'res-khp', title:`Kids Help Phone`, url:`https://kidshelpphone.ca`, type:`Tool`, tags:`Crisis Support, Mental Health`, starred:true, notes:`Free 24/7 support for young people: call 1-800-668-6868 or text CONNECT to 686868. Any issue, big or small.` },
+  { id:'res-hopewell', title:`Hope for Wellness Help Line`, url:`https://www.hopeforwellness.ca`, type:`Tool`, tags:`Crisis Support`, starred:true, notes:`24/7 phone and chat support for Indigenous peoples across Canada: 1-855-242-3310. Available in English, French, Cree, Ojibway, and Inuktitut.` },
+  { id:'res-nedic', title:`NEDIC — Eating Disorder Helpline`, url:`https://nedic.ca`, type:`Tool`, tags:`Crisis Support, Body Image`, starred:true, notes:`Canada's eating-disorder helpline and live chat: 1-866-633-4220. Information, referrals, and support.` },
+  { id:'res-translifeline', title:`Trans Lifeline`, url:`https://translifeline.org`, type:`Tool`, tags:`Crisis Support`, starred:false, notes:`Peer support run by and for trans people. Canada line: 1-877-330-6366.` },
+  { id:'res-csp', title:`Centre for Suicide Prevention`, url:`https://www.suicideinfo.ca`, type:`Article`, tags:`Crisis Support, For Educators`, starred:false, notes:`Education on recognizing and responding to suicide risk — useful for training members and staff.` },
+
+  // Mental health
+  { id:'res-jack', title:`Jack.org`, url:`https://www.jack.org`, type:`Article`, tags:`Mental Health`, starred:true, notes:`Canada's network of young people supporting young people — youth-led resources, talks, and chapters you can start at your school.` },
+  { id:'res-bethere', title:`Be There Certificate`, url:`https://www.jack.org/be-there`, type:`Tool`, tags:`Mental Health, For Educators`, starred:true, notes:`Free course on how to safely support a friend who's struggling, built on 5 Golden Rules. Ideal training for club members.` },
+  { id:'res-camh', title:`CAMH`, url:`https://www.camh.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Canada's largest mental health hospital — plain-language info on conditions, treatment, and getting help.` },
+  { id:'res-cmha', title:`Canadian Mental Health Association`, url:`https://cmha.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Find your local CMHA branch and programs, plus clear articles on mental health and where to get support.` },
+  { id:'res-mym', title:`mindyourmind`, url:`https://mindyourmind.ca`, type:`Tool`, tags:`Mental Health`, starred:false, notes:`Youth-focused tools and articles co-created with young people for stress, anxiety, and tough times.` },
+  { id:'res-anxietyca', title:`Anxiety Canada`, url:`https://www.anxietycanada.com`, type:`Article`, tags:`Mental Health, Stress`, starred:false, notes:`Free, evidence-based anxiety self-help and step-by-step CBT strategies.` },
+  { id:'res-mindshift', title:`MindShift CBT (app)`, url:`https://www.mindshiftcbt.com`, type:`Tool`, tags:`Mental Health, Stress`, starred:true, notes:`Free anxiety-relief app from Anxiety Canada: thought journals, coping cards, and CBT exercises. iOS and Android.` },
+  { id:'res-mhlit', title:`Mental Health Literacy`, url:`https://mentalhealthliteracy.org`, type:`Article`, tags:`Mental Health, For Educators`, starred:false, notes:`Curriculum-ready mental health teaching resources from Canadian experts.` },
+  { id:'res-egale', title:`Egale Canada`, url:`https://egale.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Resources and support for 2SLGBTQI youth — identity, safety, and finding community.` },
+  { id:'res-who-amh', title:`WHO — Adolescent Mental Health`, url:`https://www.who.int/news-room/fact-sheets/detail/adolescent-mental-health`, type:`Statistic`, tags:`Mental Health`, starred:false, notes:`Global facts: about 1 in 7 youth aged 10–19 lives with a mental disorder. Handy for slides.` },
+
+  // Vaping & substances
+  { id:'res-quash', title:`Quash (quit-vaping app)`, url:`https://www.quashapp.com`, type:`Tool`, tags:`Vaping`, starred:true, notes:`Free, judgement-free quit-vaping app built with and for Canadian teens, by the Lung Health Foundation.` },
+  { id:'res-smokershl', title:`Smokers' Helpline`, url:`https://smokershelpline.ca`, type:`Tool`, tags:`Vaping`, starred:false, notes:`Free quit support for vaping and smoking: call 1-866-366-3667 or text iQuit to 123456. From the Canadian Cancer Society.` },
+  { id:'res-hc-vaping', title:`Vaping — Health Canada`, url:`https://www.canada.ca/en/health-canada/services/smoking-tobacco/vaping.html`, type:`Article`, tags:`Vaping`, starred:false, notes:`Government of Canada facts on vaping risks, ingredients, and how to quit.` },
+  { id:'res-lunghealth', title:`Lung Health Foundation`, url:`https://lunghealth.ca`, type:`Article`, tags:`Vaping`, starred:false, notes:`Canadian lung-health charity behind Quash — vaping and lung-health resources.` },
+  { id:'res-dfk', title:`Drug Free Kids Canada`, url:`https://www.drugfreekidscanada.org`, type:`Article`, tags:`Vaping, For Educators`, starred:false, notes:`Plain-talk guidance for talking with teens about vaping, cannabis, and other substances.` },
+
+  // Nutrition
+  { id:'res-foodguide', title:`Canada's Food Guide`, url:`https://food-guide.canada.ca`, type:`Tool`, tags:`Nutrition`, starred:true, notes:`The official plate-based guide — half veggies and fruit, whole grains, protein — with recipes and tips.` },
+  { id:'res-unlockfood', title:`UnlockFood (Dietitians of Canada)`, url:`https://www.unlockfood.ca`, type:`Article`, tags:`Nutrition`, starred:false, notes:`Dietitian-reviewed recipes and articles, plus a Find a Dietitian tool. Nutrition without the diet noise.` },
+
+  // Physical activity
+  { id:'res-participaction', title:`ParticipACTION`, url:`https://www.participaction.com`, type:`Tool`, tags:`Physical Activity`, starred:false, notes:`Canada's movement organization — the app, challenges, and ideas to hit your daily active minutes.` },
+  { id:'res-csep', title:`Canadian 24-Hour Movement Guidelines`, url:`https://csepguidelines.ca`, type:`Statistic`, tags:`Physical Activity`, starred:false, notes:`Official daily targets for movement, sleep, and screen time by age, from CSEP.` },
+  { id:'res-phecanada', title:`PHE Canada`, url:`https://phecanada.ca`, type:`Article`, tags:`Physical Activity, For Educators`, starred:false, notes:`Physical and health education lesson plans and activity resources.` },
+
+  // Sleep
+  { id:'res-sleepfdn', title:`Sleep Foundation — Teens & Sleep`, url:`https://www.sleepfoundation.org/teens-and-sleep`, type:`Article`, tags:`Sleep`, starred:false, notes:`Evidence-based guides on how much sleep teens need, schedules, and screens before bed.` },
+
+  // Bullying & online safety
+  { id:'res-prevnet', title:`PREVNet`, url:`https://www.prevnet.ca`, type:`Article`, tags:`Bullying, For Educators`, starred:false, notes:`Canada's bullying-prevention research network — fact sheets and tools for students and educators.` },
+  { id:'res-cybertip', title:`Cybertip.ca`, url:`https://www.cybertip.ca`, type:`Tool`, tags:`Bullying`, starred:false, notes:`Canada's tip line for reporting online child sexual exploitation, plus online-safety guidance.` },
+  { id:'res-needhelpnow', title:`NeedHelpNow.ca`, url:`https://needhelpnow.ca`, type:`Tool`, tags:`Bullying`, starred:false, notes:`Help for youth when a sexual image is being shared — steps to get it removed. From the Canadian Centre for Child Protection.` },
+
+  // CPR & first aid
+  { id:'res-heartstroke', title:`Heart & Stroke Foundation`, url:`https://www.heartandstroke.ca`, type:`Article`, tags:`CPR & First Aid`, starred:false, notes:`CPR basics, the chain of survival, and how to find a course; plus heart-health info.` },
+  { id:'res-sja', title:`St. John Ambulance`, url:`https://www.sja.ca`, type:`Tool`, tags:`CPR & First Aid`, starred:false, notes:`First-aid and CPR courses across Canada, free first-aid tips, and a reference app.` },
+  { id:'res-redcross', title:`Canadian Red Cross — First Aid & CPR`, url:`https://www.redcross.ca/training-and-certification`, type:`Tool`, tags:`CPR & First Aid`, starred:false, notes:`Find first-aid and CPR courses, and download the free First Aid app with step-by-step emergency help.` },
+
+  // Body image
+  { id:'res-bodybrave', title:`Body Brave`, url:`https://www.bodybrave.ca`, type:`Tool`, tags:`Body Image`, starred:false, notes:`Canadian charity offering accessible eating-disorder support, treatment, and education.` },
+
+  // For educators / planning
+  { id:'res-smho', title:`School Mental Health Ontario`, url:`https://smho-smso.ca`, type:`Article`, tags:`For Educators, Mental Health`, starred:false, notes:`Free, classroom-ready mental health resources and lesson ideas (useful beyond Ontario).` },
+  { id:'res-ccsa', title:`Canadian Centre on Substance Use and Addiction`, url:`https://www.ccsa.ca`, type:`Statistic`, tags:`For Educators, Vaping`, starred:false, notes:`Evidence and reports on cannabis, vaping, alcohol, and other substances among youth.` },
+  { id:'res-statcan', title:`Statistics Canada — Youth Health`, url:`https://www.statcan.gc.ca`, type:`Statistic`, tags:`For Educators, Mental Health`, starred:false, notes:`Canadian data on youth mental health, substance use, and activity for your slides and reports.` }
+];
+function seedResourcesIfNeeded() {
+  if (typeof state === 'undefined' || !state) return false;
+  if (!Array.isArray(state.resources)) state.resources = [];
+  if (state.seededResourcesV1) return false;
+  var added = false;
+  CLUB_RESOURCES.forEach(function(r){
+    if (!state.resources.some(function(x){ return x.id === r.id; })) {
+      state.resources.push({ id:r.id, title:r.title, url:r.url, type:r.type, tags:r.tags, notes:r.notes, starred: !!r.starred });
+      added = true;
+    }
+  });
+  state.seededResourcesV1 = true;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+  return added;
+}
+
 let state = loadState();
 // Auto-recover: if sync previously wiped data, restore from pre-sync backup
 (function() {
@@ -4428,6 +4504,8 @@ if (state.emailTemplates) state.emailTemplates = state.emailTemplates.map(functi
 seedClubDecksIfNeeded();
 // Seed the club activity library into the Activities tab (also re-checked after cloud sync)
 seedActivitiesIfNeeded();
+// Seed the curated resource library into the Resources tab (also re-checked after cloud sync)
+seedResourcesIfNeeded();
 // Ensure each meeting has attendance tracking and actionItems
 state.meetings.forEach(m => {
   if (!m.attendance) m.attendance = {};
@@ -11247,12 +11325,14 @@ function startCloudSync() {
       var _seeded = false;
       if (seedClubDecksIfNeeded()) _seeded = true;
       if (seedActivitiesIfNeeded()) _seeded = true;
+      if (seedResourcesIfNeeded()) _seeded = true;
       if (_seeded) {
         pushToGist().catch(function(){});
         var ab = document.querySelector('.nav-item--active');
         var _tab = ab ? ab.dataset.tab : '';
         if (_tab === 'presentations') renderPres();
         if (_tab === 'activities') renderActivities();
+        if (_tab === 'resources') renderResources();
       }
     }
   }).catch(function() {});
