@@ -3635,7 +3635,7 @@
     <div class="form-row form-3col">
       <div><label>Age group</label>
         <select id="act-age">
-          <option>All Ages</option><option>Grade 3-5</option><option>Grade 6-8</option><option>Grade 9-12</option>
+          <option>All Ages</option><option>Grade 4-6</option><option>Grade 7-9</option><option>Grade 10-12</option>
         </select>
       </div>
       <div><label>Duration</label><input type="text" id="act-duration" placeholder="e.g. 10 min"></div>
@@ -4149,6 +4149,75 @@ function seedClubDecksIfNeeded() {
   return added;
 }
 
+// ── Club activity library: seed the Activities tab (idempotent by id, survives sync) ──
+var CLUB_ACTIVITIES = [
+  { id:'act-mh-46',  title:`Feelings Thermometer`, topic:`Mental Health`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Hands-on, SEL`, materials:`Printed thermometer templates, crayons/markers, feeling-word list, 6 scenario cards`, desc:`Goal: Build emotional vocabulary and learn feelings come in different sizes — and that's normal.\nSteps: 1) Introduce the thermometer (calm/green at the bottom up to big/red at the top). 2) Read a scenario card; each student colors how high the feeling goes and names it. 3) Share a few — the same event feels different to different people. 4) Practice one calm-down breath to lower the thermometer.\nDebrief: "All feelings are okay — and big feelings shrink when we use a tool or talk to someone."` },
+  { id:'act-mh-79',  title:`Map Your Support`, topic:`Mental Health`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Reflection, Individual + pairs`, materials:`Blank paper, colored pens, a sample map, resource list (Kids Help Phone 1-800-668-6868)`, desc:`Goal: Identify personal coping tools and a support network before a hard day.\nSteps: 1) Center circle = Me. 2) Branch 1 = people I trust; Branch 2 = activities that reset me; Branch 3 = professional/anonymous resources. 3) Add one resource no one already knew. 4) Pair-share one branch.\nDebrief: "Knowing your map ahead of time means you don't have to figure it out in the moment."` },
+  { id:'act-mh-1012', title:`Stigma Lab: Myth vs. Fact`, topic:`Mental Health`, ageGroup:`Grade 10-12`, duration:`30–40 min`, tags:`Discussion, Small groups`, materials:`12–15 myth/fact statement cards, two labeled areas, a sourced fact sheet`, desc:`Goal: Dismantle stigma with evidence and practice challenging misinformation.\nSteps: 1) Groups sort all cards into Myth/Fact. 2) Reveal each with the science. 3) For every myth, write a one-line response to use in real life. 4) Share aloud.\nDebrief: "Stigma is the #1 reason people don't get help — knowing the facts makes you someone a friend can come to."` },
+
+  { id:'act-dep-46', title:`The Cloudy Day`, topic:`Depression`, ageGroup:`Grade 4-6`, duration:`25 min`, tags:`Story, Craft`, materials:`A short illustrated "cloud" story or felt board, paper sunshine cutouts, markers`, desc:`Goal: Tell a passing sad day from sadness that sticks — and know helpers exist.\nSteps: 1) Read the story. 2) Ask: a one-day cloud or a stuck cloud? 3) Brainstorm who helps and what brings sunshine. 4) Each child adds a helper to a Sunshine Wall.\nDebrief: "If a cloudy feeling won't go away, telling a trusted grown-up is the bravest move."` },
+  { id:'act-dep-79', title:`Spot the Signs`, topic:`Depression`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Scenario sort, Small groups`, materials:`6–8 vignette cards, a warning-signs reference sheet, three labels`, desc:`Goal: Recognize warning signs and know the next step.\nSteps: 1) Place each vignette under Ordinary bad week / Worth checking on / Get an adult now. 2) Justify the choice. 3) Reveal the guidance. 4) Draft one caring opener.\nDebrief: "You don't diagnose — you notice, you ask, and you connect them to help."` },
+  { id:'act-dep-1012', title:`Reach-Out Role-Play + Resource Map`, topic:`Depression`, ageGroup:`Grade 10-12`, duration:`35 min`, tags:`Role-play, Pairs`, materials:`Conversation scaffold cards, a "what not to say" list, local resource handout, 9-8-8 info`, desc:`Goal: Build confidence to start a hard conversation and route a friend to help.\nSteps: 1) Model a poor vs. a good check-in. 2) Pairs practice both roles. 3) Debrief how each role felt. 4) Complete a wallet resource card.\nDebrief: "Listening without trying to fix it, plus connecting them to a pro, is exactly enough."` },
+
+  { id:'act-vap-46', title:`Healthy Lungs, Healthy Me`, topic:`Vaping`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Demo, Game`, materials:`2 clear jars, cotton balls, picture cards (good/not good for lungs), a pinwheel or candle prop`, desc:`Goal: Lungs are precious, some things harm them, and it's okay to say no.\nSteps: 1) Sort picture cards into good/not-good for lungs. 2) Breathing game: smell the flower (in), blow the candle (out). 3) Practice a confident "No thanks!" 4) Clean cotton "lungs" stay white with clean air.\nDebrief: "Our lungs help us run, sing, and play — we take care of them."` },
+  { id:'act-vap-79', title:`Marketing Detective`, topic:`Vaping`, ageGroup:`Grade 7-9`, duration:`30 min`, tags:`Media analysis, Small groups`, materials:`Printed vape-ad examples, highlighters, a persuasion-tactics checklist`, desc:`Goal: See vaping as a product engineered to hook teens — and build resistance.\nSteps: 1) Annotate ads, circling every tactic (kid-friendly flavors, bright colors, influencers, "safer" claims). 2) Share findings. 3) Rewrite one ad to tell the truth.\nDebrief: "When you can see the manipulation, it loses its power over you."` },
+  { id:'act-vap-1012', title:`The Real Cost (Rotating Stations)`, topic:`Vaping`, ageGroup:`Grade 10-12`, duration:`40 min`, tags:`Stations, Groups rotate`, materials:`4 station sheets (aerosol ingredients, cost calculator, nicotine + the brain, refusal role-play), calculators, ingredient cards`, desc:`Goal: Integrate the health, financial, and social angles and rehearse real refusals.\nSteps: 1) ~8 min per station, completing a takeaway at each. 2) Finish on the refusal station against realistic pressure. 3) Write one line you'll actually use.\nDebrief: "Knowing the facts and having your words ready means you're prepared before the moment comes."` },
+
+  { id:'act-nut-46', title:`Build a Rainbow Plate`, topic:`Nutrition`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Hands-on sort, Pairs`, materials:`Paper-plate templates, laminated food cards or play food, a plate guide`, desc:`Goal: See what a balanced plate looks like and "eat the rainbow."\nSteps: 1) Sort food cards by color and food group. 2) Build a balanced plate (half fruit/veg). 3) Check it against the guide. 4) Name one new colorful food to try.\nDebrief: "More colors on your plate means more ways food helps you grow."` },
+  { id:'act-nut-79', title:`Sugar Shock`, topic:`Nutrition`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Demo, Whole class`, materials:`Empty drink containers (pop, juice, energy drink, "vitamin" water), sugar cubes, teaspoons, label cards`, desc:`Goal: Spot hidden sugar, read labels, and rethink everyday drinks.\nSteps: 1) Line up the drinks. 2) Teams guess teaspoons of sugar in each. 3) Reveal by stacking real sugar cubes. 4) Read the labels; find a lower-sugar swap.\nDebrief: "Liquid sugar adds up fast — water and milk are the everyday winners."` },
+  { id:'act-nut-1012', title:`Decode the Label + Health Halo`, topic:`Nutrition`, ageGroup:`Grade 10-12`, duration:`35 min`, tags:`Analysis, Small groups`, materials:`Real packages (incl. a "natural/low-fat" product and a plain one), a serving-size worksheet, a claims glossary`, desc:`Goal: Read nutrition panels critically and separate marketing from nutrition.\nSteps: 1) Calculate the real per-serving sugar/sodium (watch serving sizes). 2) Compare front-of-box claims to the panel. 3) Rank the products. 4) Design an honest label for the worst offender.\nDebrief: "The front of the box is an ad — the truth is always on the back."` },
+
+  { id:'act-pa-46', title:`Animal Movement Safari`, topic:`Physical Activity`, ageGroup:`Grade 4-6`, duration:`15 min`, tags:`Movement, Whole class`, materials:`Animal cards (bear, frog, flamingo, cheetah), open space, music optional`, desc:`Goal: Movement is fun, gets your heart pumping, and comes in many forms.\nSteps: 1) Draw an animal card; everyone moves like it for 30s. 2) Alternate fast (cheetah) and balance (flamingo). 3) Feel your heartbeat after a fast round.\nDebrief: "Moving your body makes your heart strong and your mood happy."` },
+  { id:'act-pa-79', title:`Heart-Rate Lab`, topic:`Physical Activity`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Experiment, Pairs`, materials:`Stopwatch/phones, a heart-rate chart handout, open space`, desc:`Goal: Understand how activity affects the heart and introduce target zones.\nSteps: 1) Count resting heart rate (15s ×4). 2) Do 60s of jumping jacks. 3) Recount immediately. 4) Plot resting vs. active and time the recovery.\nDebrief: "A stronger heart recovers faster — that's fitness you can actually measure."` },
+  { id:'act-pa-1012', title:`Design a Workout Week`, topic:`Physical Activity`, ageGroup:`Grade 10-12`, duration:`30 min`, tags:`Planning, Individual`, materials:`A weekly planner template, exercise "menu" cards, a guidelines sheet (150 min/week + strength 2×)`, desc:`Goal: Apply real guidelines to build a sustainable personal plan.\nSteps: 1) Audit your current week honestly. 2) Slot in movement "snacks" you'd actually do. 3) Balance cardio + strength + flexibility. 4) Set one measurable two-week goal.\nDebrief: "Consistency beats intensity — short blocks you'll actually keep doing win every time."` },
+
+  { id:'act-slp-46', title:`Bedtime Routine Sequencing`, topic:`Sleep`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Sorting, Whole class`, materials:`Routine picture cards (bath, brush teeth, screens off, story, dim lights), a pocket chart`, desc:`Goal: Learn a calming wind-down order and that screens come off early.\nSteps: 1) Scramble the cards. 2) Students order them into a good routine. 3) Place the "screens" card off early. 4) Act out the routine with yawns.\nDebrief: "A calm routine is how we tell our brain it's time to sleep."` },
+  { id:'act-slp-79', title:`Sleep Myth Auction`, topic:`Sleep`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Game, Teams`, materials:`Play money, statement cards, a fact sheet`, desc:`Goal: Correct common sleep myths (catch-up sleep, screens, caffeine).\nSteps: 1) Read each statement. 2) Teams "bid" on the ones they think are TRUE. 3) Reveal myth/fact after each. 4) Tally winnings.\nDebrief: "Your phone and weekend sleep-ins are quietly wrecking your school week."` },
+  { id:'act-slp-1012', title:`Sleep Debt & Schedule Redesign`, topic:`Sleep`, ageGroup:`Grade 10-12`, duration:`30 min`, tags:`Calculation, Individual`, materials:`A sleep-log worksheet, calculator, a blue-light/caffeine fact card, a sample teen schedule`, desc:`Goal: Quantify sleep debt and apply sleep hygiene to real constraints.\nSteps: 1) Estimate last week's sleep each night. 2) Compute the debt vs. the 8–10h target. 3) Identify three fixable culprits. 4) Rebuild an evening routine with a fixed wake time.\nDebrief: "Same wake time every day + screens off early are the two biggest wins."` },
+
+  { id:'act-str-46', title:`Glitter Calm Jar + Balloon Breathing`, topic:`Stress`, ageGroup:`Grade 4-6`, duration:`25 min`, tags:`Craft, Individual`, materials:`Clear jars/bottles, water, glitter or glitter glue, strong glue for the lids`, desc:`Goal: A concrete calm-down tool and practice with slow breathing.\nSteps: 1) Make the jars. 2) Shake = a busy, upset mind. 3) Breathe slowly (belly like a balloon) while the glitter settles. 4) As the glitter settles, your mind settles too.\nDebrief: "When feelings get big, breathe slow and let your mind settle like the glitter."` },
+  { id:'act-str-79', title:`Worry vs. Control + Box Breathing`, topic:`Stress`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Sort, Technique`, materials:`Sticky notes, a two-column poster (Can / Can't control), a box-breathing visual`, desc:`Goal: Focus energy on what's controllable and learn a portable calming tool.\nSteps: 1) Write current worries on stickies. 2) Sort into Can / Can't control. 3) For one you can control, name a tiny next action. 4) Practice 4-4-4-4 box breathing together.\nDebrief: "Spend your energy on your circle of control — and breathe through the rest."` },
+  { id:'act-str-1012', title:`Stress Toolkit Stations`, topic:`Stress`, ageGroup:`Grade 10-12`, duration:`35 min`, tags:`Stations, Groups rotate`, materials:`Station cards (box breathing, progressive muscle relaxation, 5-4-3-2-1 grounding, reframing, 2-min movement), a timer, a toolkit template`, desc:`Goal: Experience several evidence-based techniques and commit to a personal plan.\nSteps: 1) ~5 min per station, actually doing each technique. 2) Rate each 1–5 for "would I use this." 3) Put your top three on an exam-season wallet card.\nDebrief: "Pre-loading your toolkit means you reach for it automatically when pressure hits."` },
+
+  { id:'act-bul-46', title:`Crumpled Heart`, topic:`Bullying`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Demo, Whole class`, materials:`Paper hearts (one each), markers`, desc:`Goal: Understand that unkind words leave lasting marks, and practice kindness.\nSteps: 1) Each student says an unkind phrase and crumples their heart. 2) Try to smooth it flat again. 3) Notice it never fully recovers. 4) Decorate a fresh heart with kind words.\nDebrief: "Saying sorry helps — but kind words from the start keep hearts smooth."` },
+  { id:'act-bul-79', title:`Upstander Theater`, topic:`Bullying`, ageGroup:`Grade 7-9`, duration:`30 min`, tags:`Role-play, Small groups`, materials:`Scenario cards (hallway, group chat, lunchroom), an upstander-strategies handout`, desc:`Goal: Practice concrete, safe ways to intervene.\nSteps: 1) Read a scenario. 2) Act the bystander version. 3) Replay as an upstander using one strategy (distract, support the target, report). 4) Discuss what felt doable.\nDebrief: "You don't have to be a hero — small moves shift the whole room."` },
+  { id:'act-bul-1012', title:`Cyberbullying Case File`, topic:`Bullying`, ageGroup:`Grade 10-12`, duration:`35 min`, tags:`Analysis, Small groups`, materials:`A realistic online-scenario handout, a school code-of-conduct excerpt, a reporting-options sheet`, desc:`Goal: Navigate digital harm and know your rights and reporting paths.\nSteps: 1) Read the case and map who's involved. 2) Decide the response — document (screenshots), don't engage. 3) Choose the reporting channel. 4) Identify where it becomes harassment.\nDebrief: "Save evidence, don't engage, report through the right channel — and support the target."` },
+
+  { id:'act-cpr-46', title:`Emergency Helpers: Call for Help`, topic:`CPR & First Aid`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Role-play, Pairs`, materials:`Toy phones, "my address" cards, scenario pictures (emergency vs. not)`, desc:`Goal: Recognize an emergency, call 911, and give key information calmly.\nSteps: 1) Sort pictures: emergency or not? 2) Practice "911 — what's your emergency?" and stating name + location. 3) Practice a calm breath and getting a grown-up.\nDebrief: "You can be a helper: call, say where you are, and get a trusted grown-up."` },
+  { id:'act-cpr-79', title:`Hands-Only CPR to the Beat`, topic:`CPR & First Aid`, ageGroup:`Grade 7-9`, duration:`30 min`, tags:`Hands-on, Rotate`, materials:`CPR manikins or firm cushions, a 100–120 bpm song ("Stayin' Alive"), a step poster`, desc:`Goal: Confident hands-only CPR and knowing when to use it.\nSteps: 1) Check responsiveness. 2) Call 911 (or point to someone to call). 3) Hands on the chest center. 4) Compress to the beat for 60s; rotate so everyone goes.\nDebrief: "Push hard, push fast, don't stop — you can keep someone alive until help arrives."` },
+  { id:'act-cpr-1012', title:`Emergency Scenario Stations + AED`, topic:`CPR & First Aid`, ageGroup:`Grade 10-12`, duration:`40 min`, tags:`Stations, Hands-on`, materials:`Manikins, an AED trainer unit, triangular bandages, scenario cards, floor space`, desc:`Goal: Integrated, hands-on emergency response across common situations.\nSteps: 1) Rotate ~8 min per station: CPR + AED, choking, severe bleeding, recovery position. 2) Perform each skill. 3) A peer checks you against a checklist.\nDebrief: "In a real emergency, trained hands act — get certified, a few hours can save a life."` },
+
+  { id:'act-bi-46', title:`My Amazing Body`, topic:`Body Image`, ageGroup:`Grade 4-6`, duration:`25 min`, tags:`Craft, Reflection`, materials:`Large paper (or a body-outline worksheet), markers`, desc:`Goal: Appreciate the body for what it does, not how it looks.\nSteps: 1) Trace or decorate a body outline. 2) Label parts with what they let you do ("legs let me run"). 3) Share one amazing thing your body did today.\nDebrief: "Bodies are for doing amazing things — and every body is a good body."` },
+  { id:'act-bi-79', title:`Spot the Edit`, topic:`Body Image`, ageGroup:`Grade 7-9`, duration:`25 min`, tags:`Media literacy, Whole class`, materials:`Before/after edited photos, editing-app screenshots, discussion prompts`, desc:`Goal: Recognize that online images are curated and unrealistic.\nSteps: 1) Guess which images are edited. 2) Reveal the edits. 3) Discuss how endless scrolling fuels comparison. 4) List 3 accounts that make you feel good vs. bad.\nDebrief: "Most of what you scroll is edited — comparing yourself to a filter isn't fair to you."` },
+  { id:'act-bi-1012', title:`Diet-Culture & Algorithm Audit`, topic:`Body Image`, ageGroup:`Grade 10-12`, duration:`35 min`, tags:`Critical analysis, Small groups`, materials:`Stat cards (diet-industry revenue, how feeds rank "ideal" bodies), example posts, a reflection sheet`, desc:`Goal: Analyze how platforms and the diet industry profit from insecurity, and build a counter-script.\nSteps: 1) Examine how algorithms push an "ideal." 2) Look at the diet industry's financial incentive. 3) Draft body-neutral self-talk. 4) Make a concrete feed clean-up plan.\nDebrief: "Health isn't a size — curating your feed and your self-talk is real self-care."` },
+
+  { id:'act-gen-checkin', title:`Wellness Check-In Circle (Rose / Thorn / Bud)`, topic:`General`, ageGroup:`All Ages`, duration:`10 min`, tags:`Discussion, Circle`, materials:`None (optional talking object)`, desc:`Goal: Normalize sharing and read the room's mood.\nSteps: 1) Each person shares a Rose (high), Thorn (low), and Bud (something they're looking forward to). 2) Younger groups: happy / hard / hopeful. 3) No fixing — just listening.\nDebrief: "Naming how we feel is the first health skill — and you're not the only one feeling it."` },
+  { id:'act-gen-mythfact', title:`Health Myth or Fact Game Show`, topic:`General`, ageGroup:`All Ages`, duration:`20 min`, tags:`Game, Teams`, materials:`Topic question cards (scale difficulty by age), buzzers or hands, a scoreboard`, desc:`Goal: Surface misconceptions on any topic in a fun, low-pressure way.\nSteps: 1) Read a statement. 2) Teams call Myth or Fact. 3) Reveal with a one-line explanation. 4) Keep score; quick prize.\nDebrief: "A lot of 'common knowledge' about health is wrong — now you've got the facts."` },
+  { id:'act-gen-gratwall', title:`Gratitude / Kindness Graffiti Wall`, topic:`General`, ageGroup:`All Ages`, duration:`5 min/person`, tags:`Creative, Booth`, materials:`Butcher paper or sticky notes, markers, a wall or board`, desc:`Goal: Boost mood and belonging; pairs with mental health, stress, bullying, or body image.\nSteps: 1) Set a prompt ("one thing you're grateful for" / "a kind note to a stranger"). 2) Everyone adds one. 3) Leave it up for the day or event.\nDebrief: "Small positives, made visible, shift the whole space."` },
+  { id:'act-gen-affirm', title:`Affirmation Station`, topic:`General`, ageGroup:`All Ages`, duration:`5 min/person`, tags:`Make-and-take, Booth`, materials:`Pre-printed + blank affirmation cards, pens, stickers`, desc:`Goal: A take-home reminder that pairs with any topic.\nSteps: 1) Pick or write an affirmation. 2) Decorate it. 3) Take it for a mirror, locker, or binder.\nDebrief: "What you tell yourself matters — keep a good line where you'll see it."` },
+  { id:'act-gen-2truths', title:`Two Truths & a Wellness Goal`, topic:`General`, ageGroup:`All Ages`, duration:`10 min`, tags:`Icebreaker, Any group`, materials:`None`, desc:`Goal: Warm up a group and surface real health goals.\nSteps: 1) Each shares two true facts + one wellness goal (disguised among them). 2) The group guesses which is the goal. 3) Quick cheer for each goal.\nDebrief: "Saying a goal out loud makes it real — and gives people a way to cheer you on."` },
+  { id:'act-gen-healthfair', title:`Health Fair Stations (event template)`, topic:`General`, ageGroup:`All Ages`, duration:`45–90 min`, tags:`Event, School-wide`, materials:`One table per topic, a 5-min activity each, resource cards, a "passport" sheet`, desc:`Goal: Expose a whole school to every topic in one engaging loop.\nSteps: 1) Set up one station per topic. 2) Visitors get a passport stamped at each. 3) Completed passports enter a prize draw. 4) Each station ends with a takeaway/resource.\nDebrief: "A little hands-on time at every topic beats one long lecture."` },
+  { id:'act-gen-exitticket', title:`Exit Ticket Reflection`, topic:`General`, ageGroup:`All Ages`, duration:`5 min`, tags:`Reflection, Individual`, materials:`Small slips or sticky notes`, desc:`Goal: Lock in learning and gather feedback after any session.\nSteps: 1) Each writes "one thing I learned" + "one thing I'll try." 2) Drop it in a bin on the way out. 3) The club reads them to improve next time.\nDebrief: "Naming one takeaway makes you far more likely to actually use it."` }
+];
+function seedActivitiesIfNeeded() {
+  if (typeof state === 'undefined' || !state) return false;
+  if (!Array.isArray(state.activities)) state.activities = [];
+  // Align any older age-band labels with the rest of the site
+  var bandMap = { 'Grade 3-5':'Grade 4-6', 'Grade 6-8':'Grade 7-9', 'Grade 9-12':'Grade 10-12' };
+  state.activities.forEach(function(a){ if (a && bandMap[a.ageGroup]) a.ageGroup = bandMap[a.ageGroup]; });
+  if (state.seededActivitiesV1) return false;
+  var added = false;
+  CLUB_ACTIVITIES.forEach(function(c){
+    if (!state.activities.some(function(a){ return a.id === c.id; })) {
+      state.activities.push({ id:c.id, title:c.title, topic:c.topic, ageGroup:c.ageGroup, duration:c.duration, materials:c.materials, desc:c.desc, tags:c.tags });
+      added = true;
+    }
+  });
+  state.seededActivitiesV1 = true;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+  return added;
+}
+
 let state = loadState();
 // Auto-recover: if sync previously wiped data, restore from pre-sync backup
 (function() {
@@ -4174,6 +4243,8 @@ if (state.emailTemplates) state.emailTemplates = state.emailTemplates.map(functi
 ['teachers','consents','partnerships','fundraisers','grants','eventBudgets'].forEach(k => { if (!state[k]) state[k] = []; });
 // Seed the Grade 10–12 lesson decks into the Team link board (also re-checked after cloud sync)
 seedClubDecksIfNeeded();
+// Seed the club activity library into the Activities tab (also re-checked after cloud sync)
+seedActivitiesIfNeeded();
 // Ensure each meeting has attendance tracking and actionItems
 state.meetings.forEach(m => {
   if (!m.attendance) m.attendance = {};
@@ -7849,7 +7920,7 @@ function renderActivities() {
   const filterBar = document.getElementById('activities-filters');
   if (!grid) return;
 
-  const ageGroups = ['All Ages', 'Grade 3-5', 'Grade 6-8', 'Grade 9-12'];
+  const ageGroups = ['All Ages', 'Grade 4-6', 'Grade 7-9', 'Grade 10-12'];
   const allTopics = ['all', ...new Set((state.activities || []).map(a => a.topic).filter(Boolean))];
 
   filterBar.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-weight:600;margin-right:4px;">Age:</span>';
@@ -7903,7 +7974,7 @@ function renderActivities() {
       </div>
       <div class="activity-title">${escHtml(a.title)}</div>
       ${a.topic ? `<div class="activity-topic">${escHtml(a.topic)}</div>` : ''}
-      ${a.desc ? `<div class="activity-desc">${escHtml(a.desc)}</div>` : ''}
+      ${a.desc ? `<div class="activity-desc">${escHtml(a.desc).replace(/\n/g, '<br>')}</div>` : ''}
       ${a.materials ? `<div class="activity-materials">Materials: ${escHtml(a.materials)}</div>` : ''}
       ${tags.length ? `<div class="activity-tags">${tags.map(t => `<span class="activity-tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
       <div class="activity-actions editor-only">
@@ -10956,10 +11027,15 @@ function startCloudSync() {
     }
     // After a successful sync, make sure the club lesson decks exist; push only if we added them
     if (result === 'updated' || result === 'current') {
-      if (seedClubDecksIfNeeded()) {
+      var _seeded = false;
+      if (seedClubDecksIfNeeded()) _seeded = true;
+      if (seedActivitiesIfNeeded()) _seeded = true;
+      if (_seeded) {
         pushToGist().catch(function(){});
         var ab = document.querySelector('.nav-item--active');
-        if (ab && ab.dataset.tab === 'presentations') renderPres();
+        var _tab = ab ? ab.dataset.tab : '';
+        if (_tab === 'presentations') renderPres();
+        if (_tab === 'activities') renderActivities();
       }
     }
   }).catch(function() {});
