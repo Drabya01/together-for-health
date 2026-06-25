@@ -1681,6 +1681,42 @@
   .resource-notes { font-size:12px; color:var(--text-muted); line-height:1.5; }
   .resource-actions { display:flex; gap:6px; margin-top:10px; justify-content:flex-end; }
   .resource-filters { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  /* ===== RESOURCES DIRECTORY ===== */
+  .res-search { position:relative; max-width:440px; }
+  .res-search > svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-hint); pointer-events:none; }
+  .res-search input { width:100%; padding:9px 12px 9px 34px; border:1px solid var(--border); border-radius:10px; background:var(--surface); font-size:13px; color:var(--text); }
+  .res-search input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+  .res-directory { display:flex; flex-direction:column; gap:20px; }
+  .res-section { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .res-section-head { display:flex; align-items:center; gap:10px; padding:13px 16px; }
+  .res-section-emoji { width:30px; height:30px; border-radius:8px; background:var(--accent-light); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .res-section-head h3 { font-size:15px; font-weight:700; margin:0; color:var(--text); }
+  .res-count { margin-left:auto; font-size:12px; color:var(--text-hint); background:var(--bg); padding:2px 9px; border-radius:999px; }
+  .res-rows { display:flex; flex-direction:column; }
+  .res-row { display:flex; align-items:flex-start; gap:10px; padding:11px 16px; border-top:1px solid var(--border); }
+  .res-row:hover { background:var(--bg); }
+  .res-row-body { flex:1; min-width:0; }
+  .res-row-title { display:flex; align-items:center; gap:8px; flex-wrap:wrap; line-height:1.3; }
+  .res-row-title a, .res-row-title .res-name { font-size:14px; font-weight:600; color:var(--text); text-decoration:none; }
+  .res-row-title a:hover { color:var(--accent); text-decoration:underline; }
+  .res-type-tag { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:2px 7px; border-radius:999px; background:var(--bg); color:var(--text-hint); border:1px solid var(--border); flex-shrink:0; }
+  .res-row-note { font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-top:3px; }
+  .res-tel { font-weight:700; color:var(--accent); text-decoration:none; white-space:nowrap; border-bottom:1px dashed var(--accent); }
+  .res-tel:hover { background:var(--accent-light); }
+  .res-row-actions { display:flex; align-items:center; gap:1px; flex-shrink:0; opacity:0; transition:opacity .12s; }
+  .res-row:hover .res-row-actions { opacity:1; }
+  .res-mini { background:none; border:none; cursor:pointer; padding:5px; border-radius:7px; color:var(--text-hint); display:flex; align-items:center; justify-content:center; line-height:1; }
+  .res-mini:hover { background:var(--accent-light); color:var(--accent); }
+  .res-star { font-size:16px; flex-shrink:0; padding:3px 4px; opacity:0.35; transition:opacity .12s, transform .12s; }
+  .res-row:hover .res-star { opacity:1; }
+  .res-star:hover { transform:scale(1.15); }
+  .res-star.starred { opacity:1; color:#f59e0b; }
+  .res-section--crisis { border:1.5px solid var(--accent); box-shadow:0 4px 20px var(--accent-light); }
+  .res-section--crisis .res-section-head { background:var(--accent-light); }
+  .res-section--crisis .res-section-head h3 { color:var(--accent); }
+  .res-section--crisis .res-sub { font-size:12px; color:var(--text-muted); padding:10px 16px 2px; }
+  .res-section--crisis .res-row-title a, .res-section--crisis .res-row-title .res-name { font-size:14.5px; }
+  .res-section--crisis .res-tel { display:inline-block; border:1px solid var(--accent); border-radius:7px; padding:1px 8px; margin-top:2px; }
 
   /* ── Budget ────────────────────────────────── */
   .budget-total-card { border-radius:var(--radius); padding:24px 28px; margin-bottom:20px; text-align:center; }
@@ -1771,6 +1807,7 @@
   @media(max-width:700px) {
     .dash-quick-row { grid-template-columns:1fr 1fr; }
     .goals-grid, .contacts-grid, .resource-grid, .activities-grid { grid-template-columns:1fr; }
+    .res-row-actions { opacity:1; }
     .budget-breakdown { grid-template-columns:1fr 1fr; }
   }
 
@@ -7948,62 +7985,104 @@ function deleteContact(id) {
 // ====== RESOURCES ======
 let _resourceFilter = 'All';
 
+var _resourceSearch = '';
+var RES_SECTIONS = [
+  { tag:'Crisis Support',    label:'Need help now?',           emoji:'🆘', crisis:true },
+  { tag:'Mental Health',     label:'Mental Health',            emoji:'🧠' },
+  { tag:'Stress',            label:'Stress',                   emoji:'🌊' },
+  { tag:'Vaping',            label:'Vaping & Substances',      emoji:'🫁' },
+  { tag:'Nutrition',         label:'Nutrition',                emoji:'🥗' },
+  { tag:'Physical Activity', label:'Physical Activity',        emoji:'🏃' },
+  { tag:'Sleep',             label:'Sleep',                    emoji:'😴' },
+  { tag:'Bullying',          label:'Bullying & Online Safety', emoji:'🛡️' },
+  { tag:'CPR & First Aid',   label:'CPR & First Aid',          emoji:'🫀' },
+  { tag:'Body Image',        label:'Body Image',               emoji:'💪' },
+  { tag:'For Educators',     label:'For Educators & Planning', emoji:'📋' }
+];
+
+function resPrimaryTag(r) {
+  return (r.tags || '').split(',').map(function(t){ return t.trim(); }).filter(Boolean)[0] || 'Other';
+}
+
+// Turn phone numbers in notes into tap-to-call links (leaves SMS shortcodes alone)
+function linkifyPhones(text) {
+  var s = escHtml(text || '');
+  s = s.replace(/\b9-8-8\b/g, '<a href="tel:988" class="res-tel">9-8-8</a>');
+  s = s.replace(/\b(1[-\s])?\d{3}[-\s]\d{3}[-\s]\d{4}\b/g, function(m){
+    return '<a href="tel:' + m.replace(/[^\d]/g, '') + '" class="res-tel">' + m + '</a>';
+  });
+  return s;
+}
+
 function renderResources() {
-  const grid = document.getElementById('resource-grid');
-  const filterBar = document.getElementById('resource-filters');
+  var filterBar = document.getElementById('resource-filters');
+  if (filterBar && !document.getElementById('res-search-input')) {
+    filterBar.innerHTML = '<div class="res-search">'
+      + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+      + '<input id="res-search-input" type="text" placeholder="Search resources…" value="' + escHtml(_resourceSearch) + '" oninput="_resourceSearch=this.value; renderResourceDirectory();">'
+      + '</div>';
+  }
+  renderResourceDirectory();
+}
+
+function renderResourceDirectory() {
+  var grid = document.getElementById('resource-grid');
   if (!grid) return;
+  grid.style.display = 'block';
+  var all = state.resources || [];
 
-  // Build tag list
-  const allTags = new Set(['All']);
-  (state.resources || []).forEach(r => {
-    (r.tags || '').split(',').map(t => t.trim()).filter(Boolean).forEach(t => allTags.add(t));
-  });
-  filterBar.innerHTML = '';
-  [...allTags].forEach(tag => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (_resourceFilter === tag ? ' active' : '');
-    btn.textContent = tag;
-    btn.onclick = () => { _resourceFilter = tag; renderResources(); };
-    filterBar.appendChild(btn);
-  });
-
-  let filtered = state.resources || [];
-  if (_resourceFilter !== 'All') {
-    filtered = filtered.filter(r => (r.tags || '').split(',').map(t => t.trim()).includes(_resourceFilter));
-  }
-  // Starred resources first
-  filtered = [...filtered].sort((a,b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
-
-  if (!state.resources.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="empty-state-text">No resources yet. Add articles, videos, or tools your team finds useful.</div></div>`;
-    return;
-  }
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-text">No resources with this tag.</div></div>`;
+  if (!all.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="empty-state-text">No resources yet. Add articles, videos, or tools your team finds useful.</div></div>';
     return;
   }
 
-  grid.innerHTML = '';
-  filtered.forEach(r => {
-    const tags = (r.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-    const card = document.createElement('div');
-    card.className = 'resource-card';
-    card.innerHTML = `
-      <div class="resource-card-header">
-        <span class="resource-type-badge rtype-${r.type}">${escHtml(r.type)}</span>
-        <div class="resource-title" style="flex:1">${r.url ? `<a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.title)}</a>` : escHtml(r.title)}</div>
-        <button class="star-btn ${r.starred ? 'starred' : 'unstarred'}" title="${r.starred ? 'Unstar' : 'Star'}" onclick="toggleResourceStar('${r.id}')">${r.starred ? '★' : '☆'}</button>
-      </div>
-      ${tags.length ? `<div class="resource-tags">${tags.map(t => `<span class="resource-tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
-      ${r.notes ? `<div class="resource-notes">${escHtml(r.notes)}</div>` : ''}
-      <div class="resource-actions" style="display:flex;gap:6px;margin-top:10px;justify-content:flex-end;flex-wrap:wrap;">
-        ${r.url ? `<button class="copy-link-btn" onclick="copyResourceLink('${r.id}')">Copy link</button>` : ''}
-        <button class="btn btn-ghost editor-only" style="font-size:12px;padding:4px 8px;" onclick="editResource('${r.id}')">Edit</button>
-        <button class="btn btn-ghost btn-danger editor-only" style="font-size:12px;padding:4px 8px;" onclick="deleteResource('${r.id}')">Delete</button>
-      </div>
-    `;
-    grid.appendChild(card);
+  var q = (_resourceSearch || '').trim().toLowerCase();
+  var match = function(r){ return !q || (r.title + ' ' + (r.notes||'') + ' ' + (r.tags||'')).toLowerCase().indexOf(q) !== -1; };
+
+  var groups = {};
+  all.forEach(function(r){ if (!match(r)) return; var k = resPrimaryTag(r); (groups[k] = groups[k] || []).push(r); });
+
+  var order = RES_SECTIONS.slice();
+  var known = {}; order.forEach(function(s){ known[s.tag] = true; });
+  Object.keys(groups).forEach(function(k){ if (!known[k]) order.push({ tag:k, label:k, emoji:'🔗' }); });
+
+  var anyShown = false;
+  var html = '<div class="res-directory">';
+  order.forEach(function(sec){
+    var items = groups[sec.tag];
+    if (!items || !items.length) return;
+    anyShown = true;
+    items = items.slice().sort(function(a,b){ return (b.starred?1:0) - (a.starred?1:0); });
+    html += '<section class="res-section' + (sec.crisis ? ' res-section--crisis' : '') + '">';
+    html += '<div class="res-section-head"><span class="res-section-emoji">' + sec.emoji + '</span><h3>' + escHtml(sec.label) + '</h3><span class="res-count">' + items.length + '</span></div>';
+    if (sec.crisis) html += '<div class="res-sub">Free, confidential, and there when you need it — you don\'t have to be in crisis to reach out.</div>';
+    html += '<div class="res-rows">';
+    items.forEach(function(r){
+      var titleHtml = r.url
+        ? '<a href="' + escHtml(r.url) + '" target="_blank" rel="noopener">' + escHtml(r.title) + '</a>'
+        : '<span class="res-name">' + escHtml(r.title) + '</span>';
+      html += '<div class="res-row">'
+        + '<button class="res-mini res-star ' + (r.starred ? 'starred' : '') + '" title="' + (r.starred?'Unstar':'Star') + '" onclick="toggleResourceStar(\'' + r.id + '\')">' + (r.starred ? '★' : '☆') + '</button>'
+        + '<div class="res-row-body">'
+          + '<div class="res-row-title">' + titleHtml + '<span class="res-type-tag">' + escHtml(r.type || '') + '</span></div>'
+          + (r.notes ? '<div class="res-row-note">' + linkifyPhones(r.notes) + '</div>' : '')
+        + '</div>'
+        + '<div class="res-row-actions">'
+          + (r.url ? '<button class="res-mini" title="Copy link" onclick="copyResourceLink(\'' + r.id + '\')">' + ICON_COPY + '</button>' : '')
+          + '<button class="res-mini editor-only" title="Edit" onclick="editResource(\'' + r.id + '\')">' + ICON_EDIT + '</button>'
+          + '<button class="res-mini editor-only" title="Delete" onclick="deleteResource(\'' + r.id + '\')">' + ICON_TRASH + '</button>'
+        + '</div>'
+      + '</div>';
+    });
+    html += '</div></section>';
   });
+  html += '</div>';
+
+  if (!anyShown) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No resources match “' + escHtml(_resourceSearch) + '”.</div></div>';
+    return;
+  }
+  grid.innerHTML = html;
 }
 
 function openAddResource() {
