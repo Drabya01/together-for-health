@@ -1719,6 +1719,23 @@
   .res-section--crisis .res-sub { font-size:12px; color:var(--text-muted); padding:10px 16px 2px; }
   .res-section--crisis .res-row-title a, .res-section--crisis .res-row-title .res-name { font-size:14.5px; }
   .res-section--crisis .res-tel { display:inline-block; border:1px solid var(--accent); border-radius:7px; padding:1px 8px; margin-top:2px; }
+  /* Resources — clean two-column reference */
+  .res-crisis-box { border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:22px; }
+  .res-crisis-label { font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:8px; }
+  .res-crisis-line { font-size:14px; line-height:1.95; }
+  .res-crisis-line a { color:var(--text); font-weight:600; text-decoration:none; }
+  .res-crisis-line a:hover { color:var(--accent); }
+  .res-cols { column-width:280px; column-gap:30px; }
+  .res-cat { break-inside:avoid; -webkit-column-break-inside:avoid; margin:0 0 20px; }
+  .res-cat-h { font-size:13px; font-weight:600; color:var(--text); margin:0 0 7px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+  .res-line { font-size:13.5px; line-height:1.5; padding:3px 0; }
+  .res-line a, .res-line .res-name { color:var(--accent); text-decoration:none; font-weight:500; }
+  .res-line a:hover { text-decoration:underline; }
+  .res-blurb { color:var(--text-muted); font-weight:400; font-size:12.5px; }
+  .res-rowedit { opacity:0; font-size:11px; margin-left:4px; white-space:nowrap; }
+  .res-line:hover .res-rowedit, .res-crisis-line:hover .res-rowedit { opacity:0.85; }
+  .res-rowedit a { color:var(--text-hint); font-weight:400; }
+  .res-rowedit a:hover { color:var(--accent); }
 
   /* ── Budget ────────────────────────────────── */
   .budget-total-card { border-radius:var(--radius); padding:24px 28px; margin-bottom:20px; text-align:center; }
@@ -4444,76 +4461,74 @@ function seedActivitiesIfNeeded() {
 // Every link and phone number was verified. Tags double as the filter chips.
 var CLUB_RESOURCES = [
   // Crisis support
-  { id:'res-988', title:`9-8-8: Suicide Crisis Helpline`, url:`https://988.ca`, type:`Tool`, tags:`Crisis Support, Mental Health`, starred:true, notes:`Call or text 9-8-8, free and 24/7, anywhere in Canada. Trained responders for anyone thinking about suicide or worried about someone.` },
-  { id:'res-khp', title:`Kids Help Phone`, url:`https://kidshelpphone.ca`, type:`Tool`, tags:`Crisis Support, Mental Health`, starred:true, notes:`Free 24/7 support for young people: call 1-800-668-6868 or text CONNECT to 686868. Any issue, big or small.` },
-  { id:'res-hopewell', title:`Hope for Wellness Help Line`, url:`https://www.hopeforwellness.ca`, type:`Tool`, tags:`Crisis Support`, starred:true, notes:`24/7 phone and chat support for Indigenous peoples across Canada: 1-855-242-3310. Available in English, French, Cree, Ojibway, and Inuktitut.` },
-  { id:'res-nedic', title:`NEDIC — Eating Disorder Helpline`, url:`https://nedic.ca`, type:`Tool`, tags:`Crisis Support, Body Image`, starred:true, notes:`Canada's eating-disorder helpline and live chat: 1-866-633-4220. Information, referrals, and support.` },
-  { id:'res-translifeline', title:`Trans Lifeline`, url:`https://translifeline.org`, type:`Tool`, tags:`Crisis Support`, starred:false, notes:`Peer support run by and for trans people. Canada line: 1-877-330-6366.` },
-  { id:'res-csp', title:`Centre for Suicide Prevention`, url:`https://www.suicideinfo.ca`, type:`Article`, tags:`Crisis Support, For Educators`, starred:false, notes:`Education on recognizing and responding to suicide risk — useful for training members and staff.` },
+  { id:'res-988', title:`9-8-8: Suicide Crisis Helpline`, url:`https://988.ca`, type:`Tool`, tags:`Crisis Support, Mental Health`, starred:true, notes:`Call or text 9-8-8 · free, 24/7` },
+  { id:'res-khp', title:`Kids Help Phone`, url:`https://kidshelpphone.ca`, type:`Tool`, tags:`Crisis Support, Mental Health`, starred:true, notes:`1-800-668-6868 · text CONNECT to 686868` },
+  { id:'res-hopewell', title:`Hope for Wellness`, url:`https://www.hopeforwellness.ca`, type:`Tool`, tags:`Crisis Support`, starred:true, notes:`Indigenous support · 1-855-242-3310` },
+  { id:'res-nedic', title:`NEDIC Helpline`, url:`https://nedic.ca`, type:`Tool`, tags:`Crisis Support, Body Image`, starred:true, notes:`Eating disorders · 1-866-633-4220` },
+  { id:'res-translifeline', title:`Trans Lifeline`, url:`https://translifeline.org`, type:`Tool`, tags:`Crisis Support`, starred:false, notes:`Trans peer support · 1-877-330-6366` },
+  { id:'res-csp', title:`Centre for Suicide Prevention`, url:`https://www.suicideinfo.ca`, type:`Article`, tags:`Crisis Support, For Educators`, starred:false, notes:`Training & info` },
 
   // Mental health
-  { id:'res-jack', title:`Jack.org`, url:`https://www.jack.org`, type:`Article`, tags:`Mental Health`, starred:true, notes:`Canada's network of young people supporting young people — youth-led resources, talks, and chapters you can start at your school.` },
-  { id:'res-bethere', title:`Be There Certificate`, url:`https://www.jack.org/be-there`, type:`Tool`, tags:`Mental Health, For Educators`, starred:true, notes:`Free course on how to safely support a friend who's struggling, built on 5 Golden Rules. Ideal training for club members.` },
-  { id:'res-camh', title:`CAMH`, url:`https://www.camh.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Canada's largest mental health hospital — plain-language info on conditions, treatment, and getting help.` },
-  { id:'res-cmha', title:`Canadian Mental Health Association`, url:`https://cmha.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Find your local CMHA branch and programs, plus clear articles on mental health and where to get support.` },
-  { id:'res-mym', title:`mindyourmind`, url:`https://mindyourmind.ca`, type:`Tool`, tags:`Mental Health`, starred:false, notes:`Youth-focused tools and articles co-created with young people for stress, anxiety, and tough times.` },
-  { id:'res-anxietyca', title:`Anxiety Canada`, url:`https://www.anxietycanada.com`, type:`Article`, tags:`Mental Health, Stress`, starred:false, notes:`Free, evidence-based anxiety self-help and step-by-step CBT strategies.` },
-  { id:'res-mindshift', title:`MindShift CBT (app)`, url:`https://www.mindshiftcbt.com`, type:`Tool`, tags:`Mental Health, Stress`, starred:true, notes:`Free anxiety-relief app from Anxiety Canada: thought journals, coping cards, and CBT exercises. iOS and Android.` },
-  { id:'res-mhlit', title:`Mental Health Literacy`, url:`https://mentalhealthliteracy.org`, type:`Article`, tags:`Mental Health, For Educators`, starred:false, notes:`Curriculum-ready mental health teaching resources from Canadian experts.` },
-  { id:'res-egale', title:`Egale Canada`, url:`https://egale.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Resources and support for 2SLGBTQI youth — identity, safety, and finding community.` },
-  { id:'res-who-amh', title:`WHO — Adolescent Mental Health`, url:`https://www.who.int/news-room/fact-sheets/detail/adolescent-mental-health`, type:`Statistic`, tags:`Mental Health`, starred:false, notes:`Global facts: about 1 in 7 youth aged 10–19 lives with a mental disorder. Handy for slides.` },
+  { id:'res-jack', title:`Jack.org`, url:`https://www.jack.org`, type:`Article`, tags:`Mental Health`, starred:true, notes:`Youth-led mental health` },
+  { id:'res-bethere', title:`Be There Certificate`, url:`https://www.jack.org/be-there`, type:`Tool`, tags:`Mental Health, For Educators`, starred:true, notes:`How to help a friend` },
+  { id:'res-camh', title:`CAMH`, url:`https://www.camh.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Conditions & getting help` },
+  { id:'res-cmha', title:`Canadian Mental Health Association`, url:`https://cmha.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`Find local support` },
+  { id:'res-mym', title:`mindyourmind`, url:`https://mindyourmind.ca`, type:`Tool`, tags:`Mental Health`, starred:false, notes:`Tools for teens` },
+  { id:'res-anxietyca', title:`Anxiety Canada`, url:`https://www.anxietycanada.com`, type:`Article`, tags:`Mental Health, Stress`, starred:false, notes:`Anxiety self-help` },
+  { id:'res-mindshift', title:`MindShift CBT`, url:`https://www.mindshiftcbt.com`, type:`Tool`, tags:`Mental Health, Stress`, starred:true, notes:`Free anxiety app` },
+  { id:'res-mhlit', title:`Mental Health Literacy`, url:`https://mentalhealthliteracy.org`, type:`Article`, tags:`Mental Health, For Educators`, starred:false, notes:`For teachers` },
+  { id:'res-egale', title:`Egale Canada`, url:`https://egale.ca`, type:`Article`, tags:`Mental Health`, starred:false, notes:`2SLGBTQI support` },
+  { id:'res-who-amh', title:`WHO: Adolescent Mental Health`, url:`https://www.who.int/news-room/fact-sheets/detail/adolescent-mental-health`, type:`Statistic`, tags:`Mental Health`, starred:false, notes:`Global stats` },
 
   // Vaping & substances
-  { id:'res-quash', title:`Quash (quit-vaping app)`, url:`https://www.quashapp.com`, type:`Tool`, tags:`Vaping`, starred:true, notes:`Free, judgement-free quit-vaping app built with and for Canadian teens, by the Lung Health Foundation.` },
-  { id:'res-smokershl', title:`Smokers' Helpline`, url:`https://smokershelpline.ca`, type:`Tool`, tags:`Vaping`, starred:false, notes:`Free quit support for vaping and smoking: call 1-866-366-3667 or text iQuit to 123456. From the Canadian Cancer Society.` },
-  { id:'res-hc-vaping', title:`Vaping — Health Canada`, url:`https://www.canada.ca/en/health-canada/services/smoking-tobacco/vaping.html`, type:`Article`, tags:`Vaping`, starred:false, notes:`Government of Canada facts on vaping risks, ingredients, and how to quit.` },
-  { id:'res-lunghealth', title:`Lung Health Foundation`, url:`https://lunghealth.ca`, type:`Article`, tags:`Vaping`, starred:false, notes:`Canadian lung-health charity behind Quash — vaping and lung-health resources.` },
-  { id:'res-dfk', title:`Drug Free Kids Canada`, url:`https://www.drugfreekidscanada.org`, type:`Article`, tags:`Vaping, For Educators`, starred:false, notes:`Plain-talk guidance for talking with teens about vaping, cannabis, and other substances.` },
+  { id:'res-quash', title:`Quash`, url:`https://www.quashapp.com`, type:`Tool`, tags:`Vaping`, starred:true, notes:`Quit-vaping app` },
+  { id:'res-smokershl', title:`Smokers' Helpline`, url:`https://smokershelpline.ca`, type:`Tool`, tags:`Vaping`, starred:false, notes:`Quit support · 1-866-366-3667` },
+  { id:'res-hc-vaping', title:`Vaping: Health Canada`, url:`https://www.canada.ca/en/health-canada/services/smoking-tobacco/vaping.html`, type:`Article`, tags:`Vaping`, starred:false, notes:`The facts` },
+  { id:'res-lunghealth', title:`Lung Health Foundation`, url:`https://lunghealth.ca`, type:`Article`, tags:`Vaping`, starred:false, notes:`Lung health` },
+  { id:'res-dfk', title:`Drug Free Kids Canada`, url:`https://www.drugfreekidscanada.org`, type:`Article`, tags:`Vaping, For Educators`, starred:false, notes:`Talking to teens` },
 
   // Nutrition
-  { id:'res-foodguide', title:`Canada's Food Guide`, url:`https://food-guide.canada.ca`, type:`Tool`, tags:`Nutrition`, starred:true, notes:`The official plate-based guide — half veggies and fruit, whole grains, protein — with recipes and tips.` },
-  { id:'res-unlockfood', title:`UnlockFood (Dietitians of Canada)`, url:`https://www.unlockfood.ca`, type:`Article`, tags:`Nutrition`, starred:false, notes:`Dietitian-reviewed recipes and articles, plus a Find a Dietitian tool. Nutrition without the diet noise.` },
+  { id:'res-foodguide', title:`Canada's Food Guide`, url:`https://food-guide.canada.ca`, type:`Tool`, tags:`Nutrition`, starred:true, notes:`Balanced eating` },
+  { id:'res-unlockfood', title:`UnlockFood`, url:`https://www.unlockfood.ca`, type:`Article`, tags:`Nutrition`, starred:false, notes:`Dietitian recipes` },
 
   // Physical activity
-  { id:'res-participaction', title:`ParticipACTION`, url:`https://www.participaction.com`, type:`Tool`, tags:`Physical Activity`, starred:false, notes:`Canada's movement organization — the app, challenges, and ideas to hit your daily active minutes.` },
-  { id:'res-csep', title:`Canadian 24-Hour Movement Guidelines`, url:`https://csepguidelines.ca`, type:`Statistic`, tags:`Physical Activity`, starred:false, notes:`Official daily targets for movement, sleep, and screen time by age, from CSEP.` },
-  { id:'res-phecanada', title:`PHE Canada`, url:`https://phecanada.ca`, type:`Article`, tags:`Physical Activity, For Educators`, starred:false, notes:`Physical and health education lesson plans and activity resources.` },
+  { id:'res-participaction', title:`ParticipACTION`, url:`https://www.participaction.com`, type:`Tool`, tags:`Physical Activity`, starred:false, notes:`Get moving` },
+  { id:'res-csep', title:`24-Hour Movement Guidelines`, url:`https://csepguidelines.ca`, type:`Statistic`, tags:`Physical Activity`, starred:false, notes:`Daily targets` },
+  { id:'res-phecanada', title:`PHE Canada`, url:`https://phecanada.ca`, type:`Article`, tags:`Physical Activity, For Educators`, starred:false, notes:`For teachers` },
 
   // Sleep
-  { id:'res-sleepfdn', title:`Sleep Foundation — Teens & Sleep`, url:`https://www.sleepfoundation.org/teens-and-sleep`, type:`Article`, tags:`Sleep`, starred:false, notes:`Evidence-based guides on how much sleep teens need, schedules, and screens before bed.` },
+  { id:'res-sleepfdn', title:`Sleep Foundation: Teens & Sleep`, url:`https://www.sleepfoundation.org/teens-and-sleep`, type:`Article`, tags:`Sleep`, starred:false, notes:`Teen sleep guides` },
 
   // Bullying & online safety
-  { id:'res-prevnet', title:`PREVNet`, url:`https://www.prevnet.ca`, type:`Article`, tags:`Bullying, For Educators`, starred:false, notes:`Canada's bullying-prevention research network — fact sheets and tools for students and educators.` },
-  { id:'res-cybertip', title:`Cybertip.ca`, url:`https://www.cybertip.ca`, type:`Tool`, tags:`Bullying`, starred:false, notes:`Canada's tip line for reporting online child sexual exploitation, plus online-safety guidance.` },
-  { id:'res-needhelpnow', title:`NeedHelpNow.ca`, url:`https://needhelpnow.ca`, type:`Tool`, tags:`Bullying`, starred:false, notes:`Help for youth when a sexual image is being shared — steps to get it removed. From the Canadian Centre for Child Protection.` },
+  { id:'res-prevnet', title:`PREVNet`, url:`https://www.prevnet.ca`, type:`Article`, tags:`Bullying, For Educators`, starred:false, notes:`Bullying research` },
+  { id:'res-cybertip', title:`Cybertip.ca`, url:`https://www.cybertip.ca`, type:`Tool`, tags:`Bullying`, starred:false, notes:`Report abuse online` },
+  { id:'res-needhelpnow', title:`NeedHelpNow.ca`, url:`https://needhelpnow.ca`, type:`Tool`, tags:`Bullying`, starred:false, notes:`Get an image removed` },
 
   // CPR & first aid
-  { id:'res-heartstroke', title:`Heart & Stroke Foundation`, url:`https://www.heartandstroke.ca`, type:`Article`, tags:`CPR & First Aid`, starred:false, notes:`CPR basics, the chain of survival, and how to find a course; plus heart-health info.` },
-  { id:'res-sja', title:`St. John Ambulance`, url:`https://www.sja.ca`, type:`Tool`, tags:`CPR & First Aid`, starred:false, notes:`First-aid and CPR courses across Canada, free first-aid tips, and a reference app.` },
-  { id:'res-redcross', title:`Canadian Red Cross — First Aid & CPR`, url:`https://www.redcross.ca/training-and-certification`, type:`Tool`, tags:`CPR & First Aid`, starred:false, notes:`Find first-aid and CPR courses, and download the free First Aid app with step-by-step emergency help.` },
+  { id:'res-heartstroke', title:`Heart & Stroke`, url:`https://www.heartandstroke.ca`, type:`Article`, tags:`CPR & First Aid`, starred:false, notes:`CPR basics` },
+  { id:'res-sja', title:`St. John Ambulance`, url:`https://www.sja.ca`, type:`Tool`, tags:`CPR & First Aid`, starred:false, notes:`First-aid courses` },
+  { id:'res-redcross', title:`Canadian Red Cross`, url:`https://www.redcross.ca/training-and-certification`, type:`Tool`, tags:`CPR & First Aid`, starred:false, notes:`First-aid courses` },
 
   // Body image
-  { id:'res-bodybrave', title:`Body Brave`, url:`https://www.bodybrave.ca`, type:`Tool`, tags:`Body Image`, starred:false, notes:`Canadian charity offering accessible eating-disorder support, treatment, and education.` },
+  { id:'res-bodybrave', title:`Body Brave`, url:`https://www.bodybrave.ca`, type:`Tool`, tags:`Body Image`, starred:false, notes:`Eating-disorder support` },
 
   // For educators / planning
-  { id:'res-smho', title:`School Mental Health Ontario`, url:`https://smho-smso.ca`, type:`Article`, tags:`For Educators, Mental Health`, starred:false, notes:`Free, classroom-ready mental health resources and lesson ideas (useful beyond Ontario).` },
-  { id:'res-ccsa', title:`Canadian Centre on Substance Use and Addiction`, url:`https://www.ccsa.ca`, type:`Statistic`, tags:`For Educators, Vaping`, starred:false, notes:`Evidence and reports on cannabis, vaping, alcohol, and other substances among youth.` },
-  { id:'res-statcan', title:`Statistics Canada — Youth Health`, url:`https://www.statcan.gc.ca`, type:`Statistic`, tags:`For Educators, Mental Health`, starred:false, notes:`Canadian data on youth mental health, substance use, and activity for your slides and reports.` }
+  { id:'res-smho', title:`School Mental Health Ontario`, url:`https://smho-smso.ca`, type:`Article`, tags:`For Educators, Mental Health`, starred:false, notes:`Lesson resources` },
+  { id:'res-ccsa', title:`Centre on Substance Use`, url:`https://www.ccsa.ca`, type:`Statistic`, tags:`For Educators, Vaping`, starred:false, notes:`Substance research` },
+  { id:'res-statcan', title:`Statistics Canada`, url:`https://www.statcan.gc.ca`, type:`Statistic`, tags:`For Educators, Mental Health`, starred:false, notes:`Youth health data` }
 ];
 function seedResourcesIfNeeded() {
   if (typeof state === 'undefined' || !state) return false;
   if (!Array.isArray(state.resources)) state.resources = [];
-  if (state.seededResourcesV1) return false;
-  var added = false;
+  if (state.seededResourcesV2) return false;
+  // Replace the earlier seed (res-*) with the short-description versions
+  state.resources = state.resources.filter(function(x){ return !/^res-/.test(x.id); });
   CLUB_RESOURCES.forEach(function(r){
-    if (!state.resources.some(function(x){ return x.id === r.id; })) {
-      state.resources.push({ id:r.id, title:r.title, url:r.url, type:r.type, tags:r.tags, notes:r.notes, starred: !!r.starred });
-      added = true;
-    }
+    state.resources.push({ id:r.id, title:r.title, url:r.url, type:r.type, tags:r.tags, notes:r.notes, starred: !!r.starred });
   });
-  state.seededResourcesV1 = true;
+  state.seededResourcesV2 = true;
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
-  return added;
+  return true;
 }
 
 let state = loadState();
@@ -8018,12 +8033,7 @@ function linkifyPhones(text) {
 
 function renderResources() {
   var filterBar = document.getElementById('resource-filters');
-  if (filterBar && !document.getElementById('res-search-input')) {
-    filterBar.innerHTML = '<div class="res-search">'
-      + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
-      + '<input id="res-search-input" type="text" placeholder="Search resources…" value="' + escHtml(_resourceSearch) + '" oninput="_resourceSearch=this.value; renderResourceDirectory();">'
-      + '</div>';
-  }
+  if (filterBar) filterBar.innerHTML = '';
   renderResourceDirectory();
 }
 
@@ -8032,61 +8042,46 @@ function renderResourceDirectory() {
   if (!grid) return;
   grid.style.display = 'block';
   var all = state.resources || [];
-
   if (!all.length) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="empty-state-text">No resources yet. Add articles, videos, or tools your team finds useful.</div></div>';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No resources yet. Add articles, videos, or tools your team finds useful.</div></div>';
     return;
   }
-
-  var q = (_resourceSearch || '').trim().toLowerCase();
-  var match = function(r){ return !q || (r.title + ' ' + (r.notes||'') + ' ' + (r.tags||'')).toLowerCase().indexOf(q) !== -1; };
+  var canEdit = (typeof hasPermission === 'function') && hasPermission('MANAGE_RESOURCES');
 
   var groups = {};
-  all.forEach(function(r){ if (!match(r)) return; var k = resPrimaryTag(r); (groups[k] = groups[k] || []).push(r); });
+  all.forEach(function(r){ var k = resPrimaryTag(r); (groups[k] = groups[k] || []).push(r); });
 
   var order = RES_SECTIONS.slice();
   var known = {}; order.forEach(function(s){ known[s.tag] = true; });
-  Object.keys(groups).forEach(function(k){ if (!known[k]) order.push({ tag:k, label:k, emoji:'🔗' }); });
+  Object.keys(groups).forEach(function(k){ if (!known[k]) order.push({ tag:k, label:k }); });
 
-  var anyShown = false;
+  function line(r, crisis) {
+    var titleHtml = r.url
+      ? '<a href="' + escHtml(r.url) + '" target="_blank" rel="noopener">' + escHtml(r.title) + '</a>'
+      : '<span class="res-name">' + escHtml(r.title) + '</span>';
+    var blurb = r.notes ? ' <span class="res-blurb">— ' + linkifyPhones(r.notes) + '</span>' : '';
+    var edit = canEdit
+      ? ' <span class="res-rowedit"><a href="#" onclick="editResource(\'' + r.id + '\');return false;">edit</a> · <a href="#" onclick="deleteResource(\'' + r.id + '\');return false;">delete</a></span>'
+      : '';
+    return '<div class="' + (crisis ? 'res-crisis-line' : 'res-line') + '">' + titleHtml + blurb + edit + '</div>';
+  }
+
   var crisisHtml = '';
-  var gridHtml = '';
+  var colsHtml = '';
   order.forEach(function(sec){
     var items = groups[sec.tag];
     if (!items || !items.length) return;
-    anyShown = true;
     items = items.slice().sort(function(a,b){ return (b.starred?1:0) - (a.starred?1:0); });
-    var s = '<section class="res-section' + (sec.crisis ? ' res-section--crisis' : '') + '">';
-    s += '<div class="res-section-head"><span class="res-section-emoji">' + sec.emoji + '</span><h3>' + escHtml(sec.label) + '</h3><span class="res-count">' + items.length + '</span></div>';
-    if (sec.crisis) s += '<div class="res-sub">Free, confidential, and there when you need it — you don\'t have to be in crisis to reach out.</div>';
-    s += '<div class="res-rows">';
-    items.forEach(function(r){
-      var titleHtml = r.url
-        ? '<a href="' + escHtml(r.url) + '" target="_blank" rel="noopener">' + escHtml(r.title) + '</a>'
-        : '<span class="res-name">' + escHtml(r.title) + '</span>';
-      s += '<div class="res-row">'
-        + '<button class="res-mini res-star ' + (r.starred ? 'starred' : '') + '" title="' + (r.starred?'Unstar':'Star') + '" onclick="toggleResourceStar(\'' + r.id + '\')">' + (r.starred ? '★' : '☆') + '</button>'
-        + '<div class="res-row-body">'
-          + '<div class="res-row-title">' + titleHtml + '<span class="res-type-tag">' + escHtml(r.type || '') + '</span></div>'
-          + (r.notes ? '<div class="res-row-note">' + linkifyPhones(r.notes) + '</div>' : '')
-        + '</div>'
-        + '<div class="res-row-actions">'
-          + (r.url ? '<button class="res-mini" title="Copy link" onclick="copyResourceLink(\'' + r.id + '\')">' + ICON_COPY + '</button>' : '')
-          + '<button class="res-mini editor-only" title="Edit" onclick="editResource(\'' + r.id + '\')">' + ICON_EDIT + '</button>'
-          + '<button class="res-mini editor-only" title="Delete" onclick="deleteResource(\'' + r.id + '\')">' + ICON_TRASH + '</button>'
-        + '</div>'
-      + '</div>';
-    });
-    s += '</div></section>';
-    if (sec.crisis) crisisHtml += s; else gridHtml += s;
+    if (sec.crisis) {
+      crisisHtml = '<div class="res-crisis-box"><div class="res-crisis-label">If you or a friend needs help now</div>'
+        + items.map(function(r){ return line(r, true); }).join('') + '</div>';
+    } else {
+      colsHtml += '<div class="res-cat"><div class="res-cat-h">' + escHtml(sec.label) + '</div>'
+        + items.map(function(r){ return line(r, false); }).join('') + '</div>';
+    }
   });
-  var html = '<div class="res-directory">' + crisisHtml + (gridHtml ? '<div class="res-sections-grid">' + gridHtml + '</div>' : '') + '</div>';
 
-  if (!anyShown) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No resources match “' + escHtml(_resourceSearch) + '”.</div></div>';
-    return;
-  }
-  grid.innerHTML = html;
+  grid.innerHTML = crisisHtml + (colsHtml ? '<div class="res-cols">' + colsHtml + '</div>' : '');
 }
 
 function openAddResource() {
