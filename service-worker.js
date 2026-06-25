@@ -1,4 +1,4 @@
-const CACHE = 'tfh-v10';
+const CACHE = 'tfh-v11';
 const ASSETS = ['./index.html', './admin-editor.js', './admin-editor.css', './manifest.json', './icon.svg', './icon-maskable.svg'];
 
 self.addEventListener('install', e => {

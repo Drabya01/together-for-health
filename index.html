@@ -1686,7 +1686,9 @@
   .res-search > svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-hint); pointer-events:none; }
   .res-search input { width:100%; padding:9px 12px 9px 34px; border:1px solid var(--border); border-radius:10px; background:var(--surface); font-size:13px; color:var(--text); }
   .res-search input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
-  .res-directory { display:flex; flex-direction:column; gap:20px; }
+  .res-directory { display:flex; flex-direction:column; gap:18px; }
+  .res-sections-grid { column-width:300px; column-gap:18px; }
+  .res-sections-grid > .res-section { break-inside:avoid; -webkit-column-break-inside:avoid; width:100%; margin:0 0 18px; }
   .res-section { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
   .res-section-head { display:flex; align-items:center; gap:10px; padding:13px 16px; }
   .res-section-emoji { width:30px; height:30px; border-radius:8px; background:var(--accent-light); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
@@ -8047,21 +8049,22 @@ function renderResourceDirectory() {
   Object.keys(groups).forEach(function(k){ if (!known[k]) order.push({ tag:k, label:k, emoji:'🔗' }); });
 
   var anyShown = false;
-  var html = '<div class="res-directory">';
+  var crisisHtml = '';
+  var gridHtml = '';
   order.forEach(function(sec){
     var items = groups[sec.tag];
     if (!items || !items.length) return;
     anyShown = true;
     items = items.slice().sort(function(a,b){ return (b.starred?1:0) - (a.starred?1:0); });
-    html += '<section class="res-section' + (sec.crisis ? ' res-section--crisis' : '') + '">';
-    html += '<div class="res-section-head"><span class="res-section-emoji">' + sec.emoji + '</span><h3>' + escHtml(sec.label) + '</h3><span class="res-count">' + items.length + '</span></div>';
-    if (sec.crisis) html += '<div class="res-sub">Free, confidential, and there when you need it — you don\'t have to be in crisis to reach out.</div>';
-    html += '<div class="res-rows">';
+    var s = '<section class="res-section' + (sec.crisis ? ' res-section--crisis' : '') + '">';
+    s += '<div class="res-section-head"><span class="res-section-emoji">' + sec.emoji + '</span><h3>' + escHtml(sec.label) + '</h3><span class="res-count">' + items.length + '</span></div>';
+    if (sec.crisis) s += '<div class="res-sub">Free, confidential, and there when you need it — you don\'t have to be in crisis to reach out.</div>';
+    s += '<div class="res-rows">';
     items.forEach(function(r){
       var titleHtml = r.url
         ? '<a href="' + escHtml(r.url) + '" target="_blank" rel="noopener">' + escHtml(r.title) + '</a>'
         : '<span class="res-name">' + escHtml(r.title) + '</span>';
-      html += '<div class="res-row">'
+      s += '<div class="res-row">'
         + '<button class="res-mini res-star ' + (r.starred ? 'starred' : '') + '" title="' + (r.starred?'Unstar':'Star') + '" onclick="toggleResourceStar(\'' + r.id + '\')">' + (r.starred ? '★' : '☆') + '</button>'
         + '<div class="res-row-body">'
           + '<div class="res-row-title">' + titleHtml + '<span class="res-type-tag">' + escHtml(r.type || '') + '</span></div>'
@@ -8074,9 +8077,10 @@ function renderResourceDirectory() {
         + '</div>'
       + '</div>';
     });
-    html += '</div></section>';
+    s += '</div></section>';
+    if (sec.crisis) crisisHtml += s; else gridHtml += s;
   });
-  html += '</div>';
+  var html = '<div class="res-directory">' + crisisHtml + (gridHtml ? '<div class="res-sections-grid">' + gridHtml + '</div>' : '') + '</div>';
 
   if (!anyShown) {
     grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No resources match “' + escHtml(_resourceSearch) + '”.</div></div>';
