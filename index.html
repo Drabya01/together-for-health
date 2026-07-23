@@ -11454,7 +11454,21 @@ function startCloudSync() {
 
 function _checkApprovalFromSync() {
   if (!window.currentUser) return;
-  var updated = (state.users || []).find(function(u) { return u.googleId === window.currentUser.googleId; });
+  var cu = window.currentUser;
+  var lc = (cu.email || '').toLowerCase();
+  var updated = (state.users || []).find(function(u) { return u.googleId === cu.googleId; });
+  if ((!updated || updated.status !== 'approved') && lc) {
+    // Also recognize an admin-approved record matched by email (it may have been created without
+    // a Google ID). Adopt this device's verified Google ID and drop any stale pending duplicate.
+    var byEmail = (state.users || []).find(function(u) { return u.status === 'approved' && (u.email || '').toLowerCase() === lc; });
+    if (byEmail) {
+      byEmail.googleId = cu.googleId || byEmail.googleId;
+      if (cu.photo && !byEmail.photo) byEmail.photo = cu.photo;
+      if (updated && updated !== byEmail) { state.users = state.users.filter(function(u) { return u !== updated; }); }
+      updated = byEmail;
+      saveState();
+    }
+  }
   if (updated && updated.status === 'approved') {
     window.currentUser = updated;
     showApp();
