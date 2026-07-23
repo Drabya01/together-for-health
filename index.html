@@ -10708,15 +10708,20 @@ function decodeJwt(token) {
 function processSignIn(googleId, email, name, photo) {
   if (!state.users) state.users = [];
   var user = state.users.find(function(u) { return u.googleId === googleId; });
-  if (!user && email) {
-    // Fall back to a record pre-created by email (e.g. an admin approved someone before their
-    // first sign-in). Adopt this verified Google ID onto it so later sign-ins match directly.
-    var byEmail = state.users.find(function(u) { return u.email && u.email.toLowerCase() === email.toLowerCase() && (!u.googleId || u.googleId === googleId); });
-    if (byEmail) {
-      byEmail.googleId = googleId;
-      if (photo && !byEmail.photo) byEmail.photo = photo;
-      user = byEmail;
+  if (email) {
+    var _lc = email.toLowerCase();
+    var approvedByEmail = state.users.find(function(u) { return u.status === 'approved' && (u.email || '').toLowerCase() === _lc; });
+    if (approvedByEmail && (!user || user.status !== 'approved')) {
+      // An admin pre-approved this email. Adopt the verified Google ID onto that record and
+      // drop any stale duplicate (e.g. an old pending record left on this device).
+      approvedByEmail.googleId = googleId;
+      if (photo && !approvedByEmail.photo) approvedByEmail.photo = photo;
+      if (user && user !== approvedByEmail) { state.users = state.users.filter(function(u) { return u !== user; }); }
+      user = approvedByEmail;
       saveState();
+    } else if (!user) {
+      var byEmail = state.users.find(function(u) { return (u.email || '').toLowerCase() === _lc && (!u.googleId || u.googleId === googleId); });
+      if (byEmail) { byEmail.googleId = googleId; if (photo && !byEmail.photo) byEmail.photo = photo; user = byEmail; saveState(); }
     }
   }
   if (!user) {
