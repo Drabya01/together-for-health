@@ -10708,6 +10708,17 @@ function decodeJwt(token) {
 function processSignIn(googleId, email, name, photo) {
   if (!state.users) state.users = [];
   var user = state.users.find(function(u) { return u.googleId === googleId; });
+  if (!user && email) {
+    // Fall back to a record pre-created by email (e.g. an admin approved someone before their
+    // first sign-in). Adopt this verified Google ID onto it so later sign-ins match directly.
+    var byEmail = state.users.find(function(u) { return u.email && u.email.toLowerCase() === email.toLowerCase() && (!u.googleId || u.googleId === googleId); });
+    if (byEmail) {
+      byEmail.googleId = googleId;
+      if (photo && !byEmail.photo) byEmail.photo = photo;
+      user = byEmail;
+      saveState();
+    }
+  }
   if (!user) {
     if (email === 'golussaud@gmail.com') {
       // Owner always gets bootstrapped as President on first sign-in
