@@ -94,6 +94,22 @@
     --r-md: 12px;       /* cards, panels */
     --r-pill: 999px;
 
+    /* ── Motion ───────────────────────────────────────────────────────────────────
+       Three durations, two easings. There were 18 distinct durations and 6 easing
+       functions written six different ways — the same inconsistency as the type scale,
+       and it is why moving around the app felt uneven rather than sluggish: each
+       element responded on its own schedule.
+
+       Everything is deliberately short. UI feedback over ~200ms reads as lag, not
+       polish; the perception of speed comes from responding IMMEDIATELY with a brief
+       motion, not from a long graceful one. --ease-out is a decelerate curve, which
+       feels like the element arrives rather than drifts. */
+    --dur-fast: 120ms;   /* hovers, presses, colour changes */
+    --dur-base: 180ms;   /* page transitions, panels, modals */
+    --dur-slow: 260ms;   /* the rare larger movement */
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);      /* entrances — snappy arrival */
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* things that move both ways */
+
     /* Shadows: 26 distinct -> 2. Elevation is either "slightly raised" or "floating". */
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
@@ -210,7 +226,7 @@
     font-weight: 500;
     cursor: pointer;
     text-align: left;
-    transition: background 0.12s, color 0.12s;
+    transition: background var(--dur-fast), color 0.12s;
     font-family: inherit;
     line-height: 1.3;
   }
@@ -258,7 +274,7 @@
     cursor: pointer;
     font-family: inherit;
     text-align: left;
-    transition: background 0.12s, color 0.12s;
+    transition: background var(--dur-fast), color 0.12s;
   }
   .sidebar-footer-btn:hover {
     background: var(--accent-light);
@@ -325,7 +341,7 @@
     font-weight: 500;
     cursor: pointer;
     font-family: inherit;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    transition: background var(--dur-fast), color 0.12s, border-color 0.12s;
     white-space: nowrap;
   }
   .header-action-btn:hover {
@@ -366,7 +382,7 @@
     width: 100%;
     font-family: inherit;
     font-weight: 500;
-    transition: background 0.1s, color 0.1s;
+    transition: background var(--dur-fast), color 0.1s;
   }
   .header-more-item:hover { background: var(--accent-light); color: var(--accent-mid); }
   .header-more-item svg { flex-shrink: 0; }
@@ -463,7 +479,7 @@
     font-size: 14px;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.12s, border-color 0.12s;
+    transition: background var(--dur-fast), border-color 0.12s;
     font-weight: 500;
     border: 1px solid var(--border-strong);
     background: var(--surface);
@@ -506,7 +522,7 @@
     background: var(--surface);
     color: var(--text);
     outline: none;
-    transition: border-color 0.12s, box-shadow 0.12s;
+    transition: border-color var(--dur-fast), box-shadow 0.12s;
     line-height: 1.5;
   }
 
@@ -605,7 +621,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-md);
-    animation: pgModalIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+    animation: pgModalIn 0.25s var(--ease-out) both;
   }
 
   @keyframes pgModalIn {
@@ -642,7 +658,7 @@
     width: 32px; height: 32px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: #fff; font-size: 20px; line-height: 1;
-    flex-shrink: 0; transition: background 0.15s;
+    flex-shrink: 0; transition: background var(--dur-base);
   }
   .pg-close:hover { background: rgba(255,255,255,0.3); }
 
@@ -677,7 +693,7 @@
     background: var(--bg);
     color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.13s;
+    transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-fast);
     line-height: 1.5;
     letter-spacing: -0.005em;
     white-space: nowrap;
@@ -703,7 +719,7 @@
     font-size: 14px;
     color: var(--text);
     width: 100%;
-    transition: border-color 0.14s, box-shadow 0.14s;
+    transition: border-color var(--dur-fast), box-shadow 0.14s;
     outline: none;
     font-family: inherit;
     -webkit-appearance: none;
@@ -756,7 +772,7 @@
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.13s;
+    transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-fast);
     font-family: inherit;
   }
   .pg-btn-cancel:hover { color: var(--text); border-color: var(--text-muted); }
@@ -770,7 +786,7 @@
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.13s, transform 0.1s, box-shadow 0.13s;
+    transition: opacity var(--dur-fast), transform 0.1s, box-shadow 0.13s;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -791,7 +807,7 @@
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.13s, transform 0.1s, box-shadow 0.13s;
+    transition: opacity var(--dur-fast), transform 0.1s, box-shadow 0.13s;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -810,7 +826,7 @@
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.13s;
+    transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-fast);
     font-family: inherit;
   }
   .pg-pptx-link:hover { color: var(--text); border-color: var(--text-muted); }
@@ -904,7 +920,7 @@
     min-height: 80px;
     padding: 6px;
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--dur-fast);
     position: relative;
   }
 
@@ -1084,7 +1100,7 @@
   /* Toolbar above the saved-links board */
   .pres-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
   .pres-search { position:relative; flex:1; min-width:180px; }
-  .pres-search input { width:100%; padding:9px 12px 9px 34px; border:1px solid var(--border); border-radius:12px; background:var(--surface); font-size:13px; color:var(--text); transition:border-color .12s, box-shadow .12s; }
+  .pres-search input { width:100%; padding:9px 12px 9px 34px; border:1px solid var(--border); border-radius:12px; background:var(--surface); font-size:13px; color:var(--text); transition:border-color .var(--dur-slow), box-shadow .12s; }
   .pres-search input:focus { outline:none; border-color: var(--accent-aa); box-shadow: var(--shadow-sm); }
   .pres-search svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-hint); pointer-events:none; }
   .pres-sort { padding:9px 30px 9px 12px; border:1px solid var(--border); border-radius:12px; background:var(--surface); font-size:13px; color:var(--text-muted); cursor:pointer; }
@@ -1093,7 +1109,7 @@
   .pres-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:16px; }
 
   /* Rich link-preview card */
-  .link-card { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; box-shadow: var(--shadow-sm); transition:transform .15s ease, box-shadow .15s ease; }
+  .link-card { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; box-shadow: var(--shadow-sm); transition:transform .var(--dur-slow) var(--ease-out), box-shadow .15s ease; }
   .link-card:hover { transform:translateY(-3px); box-shadow: var(--shadow-md); }
   .link-card:active { transform:translateY(-1px); }
 
@@ -1104,14 +1120,14 @@
   .link-provider { position:absolute; left:11px; bottom:11px; z-index:2; display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; background:rgba(255,255,255,.94); font-size:11px; font-weight:700; color:#1f2937; box-shadow: var(--shadow-sm); }
   .lp-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 
-  .link-pin { position:absolute; left:11px; top:11px; z-index:3; width:27px; height:27px; border-radius:50%; background:rgba(255,255,255,.92); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; line-height:1; box-shadow: var(--shadow-sm); opacity:0; transition:opacity .14s, transform .1s; }
+  .link-pin { position:absolute; left:11px; top:11px; z-index:3; width:27px; height:27px; border-radius:50%; background:rgba(255,255,255,.92); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; line-height:1; box-shadow: var(--shadow-sm); opacity:0; transition:opacity .var(--dur-slow), transform .1s; }
   .link-pin:hover { transform:scale(1.12); }
   .link-card:hover .link-pin { opacity:1; }
   .link-card.is-pinned .link-pin { opacity:1; background:#FEF3C7; }
 
-  .link-actions { position:absolute; right:11px; top:11px; z-index:3; display:flex; gap:6px; opacity:0; transition:opacity .14s; }
+  .link-actions { position:absolute; right:11px; top:11px; z-index:3; display:flex; gap:6px; opacity:0; transition:opacity .var(--dur-slow); }
   .link-card:hover .link-actions { opacity:1; }
-  .link-act { width:27px; height:27px; border-radius:50%; background:rgba(255,255,255,.94); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#374151; box-shadow: var(--shadow-sm); transition:background .12s, color .12s, transform .1s; }
+  .link-act { width:27px; height:27px; border-radius:50%; background:rgba(255,255,255,.94); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#374151; box-shadow: var(--shadow-sm); transition:background .var(--dur-slow), color .12s, transform .1s; }
   .link-act:hover { background:#fff; transform:scale(1.1); }
   .link-act.danger:hover { background:#FEE2E2; color:#DC2626; }
 
@@ -1143,7 +1159,7 @@
   .pres-topic-emoji { width:34px; height:34px; border-radius:8px; background:var(--accent-light); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
   .pres-topic-name { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; }
   .pres-grade-btns { display:flex; gap:5px; }
-  .pres-grade-btn { flex:1; padding:6px 2px; border:1px solid var(--border); border-radius:8px; background:var(--bg); font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; text-align:center; transition:background 0.12s,color 0.12s,border-color 0.12s; white-space:nowrap; text-decoration:none; display:flex; align-items:center; justify-content:center; }
+  .pres-grade-btn { flex:1; padding:6px 2px; border:1px solid var(--border); border-radius:8px; background:var(--bg); font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; text-align:center; transition:background var(--dur-fast),color 0.12s,border-color 0.12s; white-space:nowrap; text-decoration:none; display:flex; align-items:center; justify-content:center; }
   .pres-grade-btn:hover { background:var(--accent-btn);color:var(--on-accent); border-color: var(--accent-aa); }
   .pres-grade-btn:disabled { opacity:0.55; cursor:not-allowed; }
 
@@ -1364,7 +1380,7 @@
     background: var(--surface);
     color: var(--text-muted);
     font-family: inherit;
-    transition: all 0.1s;
+    transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-fast);
   }
 
   .filter-btn.active {
@@ -1377,7 +1393,7 @@
   .chevron {
     font-size: 12px;
     color: var(--text-hint);
-    transition: transform 0.2s;
+    transition: transform var(--dur-base);
     display: inline-block;
     line-height: 1;
   }
@@ -1400,7 +1416,7 @@
 
   /* ── Toast notifications ── */
   #tfh-toast-container { position:fixed; bottom:24px; right:24px; z-index:99999; display:flex; flex-direction:column-reverse; gap:8px; pointer-events:none; }
-  .tfh-toast { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 16px; font-size:14px; font-weight:500; box-shadow: var(--shadow-md); opacity:0; transform:translateY(8px); transition:opacity 0.2s,transform 0.2s; pointer-events:none; max-width:300px; }
+  .tfh-toast { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 16px; font-size:14px; font-weight:500; box-shadow: var(--shadow-md); opacity:0; transform:translateY(8px); transition:opacity var(--dur-base),transform 0.2s; pointer-events:none; max-width:300px; }
   .tfh-toast.show { opacity:1; transform:translateY(0); }
   .tfh-toast.success { border-left:3px solid #22c55e; color:var(--ok-text); }
   .tfh-toast.info { border-left:3px solid var(--accent); color:var(--accent-mid); }
@@ -1420,7 +1436,7 @@
   .idea-status-considering { background:var(--tint-info); color:var(--info-text); }
   .idea-status-implementing { background:var(--tint-warn); color:var(--warn-text); }
   .idea-status-done { background:var(--tint-ok); color: var(--ok-text); }
-  .vote-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:3px 8px; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:var(--text-muted); transition:all 0.12s; font-family:inherit; }
+  .vote-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:3px 8px; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:var(--text-muted); transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-fast); font-family:inherit; }
   .vote-btn:hover { border-color: var(--accent-aa); color: var(--accent-aa); background:var(--accent-light); }
 
   /* ── Member enhancements ── */
@@ -1463,7 +1479,7 @@
   .pin-icon { font-size:13px; color: var(--warn-text); }
 
   /* ── Resource starring ── */
-  .star-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:0 2px; line-height:1; transition:transform 0.15s; }
+  .star-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:0 2px; line-height:1; transition:transform var(--dur-base); }
   .star-btn:hover { transform:scale(1.2); }
   .star-btn.starred { color: var(--warn-text); }
   .star-btn.unstarred { color:#d1d5db; }
@@ -1518,7 +1534,7 @@
 
   /* ── Meeting Notes ─────────────────────────── */
   .meeting-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden; }
-  .meeting-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; transition:background 0.12s; }
+  .meeting-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; transition:background var(--dur-fast); }
   .meeting-header:hover { background:var(--accent-light); }
   .meeting-date { font-weight:600; font-size:14px; }
   .meeting-attendees { font-size:12px; color:var(--text-muted); margin-top:2px; }
@@ -1553,7 +1569,7 @@
 
   /* ── Social Media Planner ──────────────────── */
   .social-filters { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
-  .social-filter-btn { padding:5px 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); font-size:13px; cursor:pointer; transition:all 0.15s; font-family:inherit; color:var(--text-muted); }
+  .social-filter-btn { padding:5px 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); font-size:13px; cursor:pointer; transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-base); font-family:inherit; color:var(--text-muted); }
   .social-filter-btn:hover,.social-filter-btn.active { background:var(--accent-btn);color:var(--on-accent); border-color: var(--accent-aa); }
   .social-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
   .social-card-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
@@ -1655,7 +1671,7 @@
     gap: 10px;
     padding: 8px 20px;
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--dur-fast);
   }
   .gs-result-row:hover { background: var(--accent-light); }
   .gs-result-section-badge {
@@ -1693,7 +1709,7 @@
     font-weight: 500;
     font-family: inherit;
     flex-shrink: 0;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    transition: background var(--dur-fast), color 0.12s, border-color 0.12s;
     white-space: nowrap;
   }
   #globalSearchBtn:hover {
@@ -1707,7 +1723,7 @@
 
   /* ── Announcements feed ────────────────────── */
   .announcements-strip { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
-  .ann-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:box-shadow 0.15s; }
+  .ann-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:box-shadow var(--dur-base); }
   .ann-card:hover { box-shadow: var(--shadow-md); }
   .ann-card--pinned { border-left:3px solid #f59e0b; }
   .ann-card--new { border-color: var(--accent-aa); }
@@ -1729,7 +1745,7 @@
   .ann-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; line-height:1.3; }
   .ann-body-text { font-size:13px; color:var(--text-secondary,var(--text-muted)); line-height:1.55; }
   .ann-card-footer { display:flex; align-items:center; gap:8px; padding:8px 14px 10px; border-top:1px solid var(--border); flex-wrap:wrap; }
-  .ann-react-btn { display:inline-flex; align-items:center; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px 10px; font-size:12px; cursor:pointer; transition:all 0.15s; font-family:inherit; color:var(--text-muted); }
+  .ann-react-btn { display:inline-flex; align-items:center; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px 10px; font-size:12px; cursor:pointer; transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-base); font-family:inherit; color:var(--text-muted); }
   .ann-react-btn:hover { border-color: var(--accent-aa); color: var(--accent-aa); }
   .ann-react-btn--active { background:#fdf2f4; border-color: var(--accent-aa); color: var(--accent-aa); font-weight:600; }
   .ann-seen { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:3px; }
@@ -1757,7 +1773,10 @@
   .goal-title { font-size:16px; font-weight:600; flex:1; }
   .goal-cat-badge { font-size:11px; padding:2px 9px; border-radius:999px; font-weight:600; background:var(--accent-light); color:var(--accent-mid); flex-shrink:0; }
   .goal-progress-bar { height:8px; border-radius:4px; background:var(--bg); border:1px solid var(--border); overflow:hidden; margin-bottom:8px; }
-  .goal-progress-fill { height:100%; background:var(--accent); border-radius:4px; transition:width 0.3s; }
+  .goal-progress-fill { height:100%; background:var(--accent); border-radius:4px;
+    /* width, not transform: the fill is sized by an inline width from JS. Reflow is
+       confined to this one element inside a fixed track, so it is cheap. */
+    transition: width var(--dur-slow) var(--ease-out); }
   .goal-progress-fill.complete { background:#22c55e; }
   .goal-stats { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text-muted); }
   .goal-pct { font-size:16px; font-weight:700; color: var(--text); }
@@ -1819,11 +1838,11 @@
   .res-row-note { font-size:13px; color:var(--text-muted); line-height:1.5; margin-top:3px; }
   .res-tel { font-weight:700; color: var(--text); text-decoration:none; white-space:nowrap; border-bottom:1px dashed var(--accent); }
   .res-tel:hover { background:var(--accent-light); }
-  .res-row-actions { display:flex; align-items:center; gap:1px; flex-shrink:0; opacity:0; transition:opacity .12s; }
+  .res-row-actions { display:flex; align-items:center; gap:1px; flex-shrink:0; opacity:0; transition:opacity .var(--dur-slow); }
   .res-row:hover .res-row-actions { opacity:1; }
   .res-mini { background:none; border:none; cursor:pointer; padding:5px; border-radius:8px; color:var(--text-hint); display:flex; align-items:center; justify-content:center; line-height:1; }
   .res-mini:hover { background:var(--accent-light); color: var(--accent-aa); }
-  .res-star { font-size:16px; flex-shrink:0; padding:3px 4px; opacity:0.35; transition:opacity .12s, transform .12s; }
+  .res-star { font-size:16px; flex-shrink:0; padding:3px 4px; opacity:0.35; transition:opacity .var(--dur-slow), transform .12s; }
   .res-row:hover .res-star { opacity:1; }
   .res-star:hover { transform:scale(1.15); }
   .res-star.starred { opacity:1; color: var(--warn-text); }
@@ -1887,7 +1906,7 @@
   .activity-materials { font-size:12px; color:var(--text-hint); }
   .activity-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
   .activity-tag { font-size:11px; padding:2px 8px; border-radius:12px; background:var(--accent-light); color:var(--accent-mid); }
-  .activity-card { cursor:pointer; display:flex; flex-direction:column; transition:transform .14s ease, box-shadow .14s ease; }
+  .activity-card { cursor:pointer; display:flex; flex-direction:column; transition:transform .var(--dur-slow) var(--ease-out), box-shadow .14s ease; }
   .activity-card:hover { transform:translateY(-3px); box-shadow: var(--shadow-md); }
   .activity-summary { font-size:13px; color:var(--text-muted); line-height:1.55; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
   .activity-card-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:12px; border-top:1px solid var(--border); }
@@ -1951,12 +1970,12 @@
   #ob-overlay { position:fixed;inset:0;z-index:10000;display:none;pointer-events:all; }
   #ob-svg { position:absolute;inset:0;width:100%;height:100%;pointer-events:none; }
   #ob-hole {
-    transition: x 480ms cubic-bezier(0.16,1,0.3,1), y 480ms cubic-bezier(0.16,1,0.3,1),
-                width 480ms cubic-bezier(0.16,1,0.3,1), height 480ms cubic-bezier(0.16,1,0.3,1);
+    transition: x var(--dur-slow) var(--ease-out), y 480ms var(--ease-out),
+                width 480ms var(--ease-out), height 480ms var(--ease-out);
   }
   #ob-glow-ring {
-    transition: x 480ms cubic-bezier(0.16,1,0.3,1), y 480ms cubic-bezier(0.16,1,0.3,1),
-                width 480ms cubic-bezier(0.16,1,0.3,1), height 480ms cubic-bezier(0.16,1,0.3,1);
+    transition: x var(--dur-slow) var(--ease-out), y 480ms var(--ease-out),
+                width 480ms var(--ease-out), height 480ms var(--ease-out);
     pointer-events:none; animation: ob-glow-pulse 2s ease-in-out infinite;
   }
   #ob-card {
@@ -1964,11 +1983,11 @@
     background:var(--surface); border-radius:999px;
     box-shadow: var(--shadow-md);
     padding:28px 28px 24px; max-width:460px; width:calc(100vw - 32px);
-    z-index:10001; transition: bottom 500ms cubic-bezier(0.16,1,0.3,1);
+    z-index:10001; transition: bottom var(--dur-slow) var(--ease-out);
   }
   #ob-card.ob-card--centered {
     top:50%; bottom:auto; transform:translate(-50%,-50%);
-    animation: ob-card-pop 450ms cubic-bezier(0.34,1.56,0.64,1) forwards;
+    animation: ob-card-pop 450ms var(--ease-out) forwards;
   }
   @keyframes ob-card-pop {
     from { opacity:0; transform:translate(-50%,-50%) scale(0.92); }
@@ -2011,26 +2030,26 @@
   .ob-icon-wrap {
     width:60px;height:60px;border-radius:999px;background:var(--accent-light);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    animation:ob-icon-pop 480ms cubic-bezier(0.34,1.56,0.64,1) forwards;
+    animation:ob-icon-pop 480ms var(--ease-out) forwards;
   }
   .ob-dots { display:flex;gap:5px;align-items:center;margin-bottom:18px; }
   .ob-dot {
     width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;
-    transition:all 360ms cubic-bezier(0.16,1,0.3,1);
+    transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-slow) var(--ease-out);
   }
   .ob-dot.ob-dot--active { width:22px;border-radius:4px;background:var(--accent); }
   .ob-dot.ob-dot--done   { background:var(--accent);opacity:.35; }
   .ob-btn-primary {
     background:var(--accent-btn);color:var(--on-accent);border:none;border-radius:12px;
     padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;
-    transition:transform 120ms,box-shadow 120ms,opacity 120ms;white-space:nowrap;
+    transition:transform var(--dur-fast),box-shadow 120ms,opacity 120ms;white-space:nowrap;
   }
   .ob-btn-primary:hover { transform:translateY(-1px);box-shadow: var(--shadow-md); }
   .ob-btn-primary:active { transform:scale(0.97);opacity:.92; }
   .ob-btn-ghost {
     background:none;color:var(--text-muted);border:1.5px solid var(--border);
     border-radius:12px;padding:10px 16px;font-size:13px;cursor:pointer;font-family:inherit;
-    transition:color 120ms,border-color 120ms;
+    transition:color var(--dur-fast),border-color 120ms;
   }
   .ob-btn-ghost:hover { color:var(--text);border-color:var(--text-muted); }
   #ob-skip-btn {
@@ -2039,7 +2058,7 @@
     border:1px solid rgba(255,255,255,0.18);border-radius:999px;
     padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    transition:background 150ms,color 150ms;
+    transition:background var(--dur-base),color 150ms;
   }
   #ob-skip-btn:hover { background:rgba(0,0,0,0.62);color:white; }
   .ob-confetti-p {
@@ -2158,7 +2177,7 @@
   .mob-form-input, .mob-form-select, .mob-form-textarea {
     width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
     border-radius: 8px; font-size: 14px; font-family: inherit;
-    background: var(--bg); color: var(--text); transition: border-color 0.15s;
+    background: var(--bg); color: var(--text); transition: border-color var(--dur-base);
     box-sizing: border-box;
   }
   .mob-form-input:focus, .mob-form-select:focus, .mob-form-textarea:focus {
@@ -2168,7 +2187,7 @@
   #mob-submit-btn {
     width: 100%; padding: 13px; background:var(--accent-btn);color:var(--on-accent);
     border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
-    cursor: pointer; font-family: inherit; margin-top: 6px; transition: background 0.12s;
+    cursor: pointer; font-family: inherit; margin-top: 6px; transition: background var(--dur-fast);
   }
   #mob-submit-btn:hover { background: var(--accent-mid); }
   /* Pending screen */
@@ -2178,7 +2197,7 @@
     border: 1.5px solid var(--border); border-radius: 12px;
     font-size: 14px; font-weight: 500; color: var(--text-muted);
     cursor: pointer; font-family: inherit; margin-top: 20px;
-    transition: border-color 0.15s;
+    transition: border-color var(--dur-base);
   }
   .pending-sign-out:hover { border-color: var(--accent-aa); color: var(--accent-aa); }
   /* User badge / dropdown */
@@ -2248,7 +2267,7 @@
     display: flex; align-items: center; gap: 8px;
     padding: 7px 10px; border-radius: 8px;
     color: var(--accent-mid); font-size: 13px; font-weight: 600;
-    text-decoration: none; transition: background 0.12s;
+    text-decoration: none; transition: background var(--dur-fast);
     border: 1px solid transparent;
   }
   .sidebar-linktree-link:hover {
@@ -2278,6 +2297,84 @@
   .pres-link:hover, .res-tel:hover, .member-contact a:hover, .contact-info a:hover,
   .res-line a:hover { color: var(--accent-aa); }
   .member-contact a, .contact-info a, .res-tel { text-decoration-color: var(--border-strong); }
+
+  /* ═══ MOTION ═══════════════════════════════════════════════════════════════════════
+     Switching tabs was an instant display swap: the new page simply existed, with no
+     sense of having arrived. A brief rise-and-fade is the single biggest improvement to
+     how moving around the app feels, and it costs nothing — opacity and transform are
+     compositor-only, so this never touches layout and never drops a frame.
+
+     180ms and 6px on purpose. Long or large page transitions are the thing that makes an
+     app feel slow, because they delay the content you asked for. The goal is to feel
+     *responsive*, which means acknowledging the input instantly and getting out of the
+     way. */
+  @keyframes pageIn {
+    from { opacity: 0; transform: translate3d(0, 6px, 0); }
+    to   { opacity: 1; transform: none; }
+  }
+  .page.active {
+    animation: pageIn var(--dur-base) var(--ease-out) both;
+  }
+
+  /* Tactile press. A 1.5% squash on the way down is felt more than seen, and it is what
+     makes a button feel like a physical thing rather than a coloured rectangle. Kept off
+     :hover, which should stay instant. */
+  .btn:active, .ev-slot-btn:active, .nav-item:active,
+  .mob-nav-btn:active, .member-acct-role:active {
+    transform: scale(0.985);
+  }
+  .btn, .ev-slot-btn { transition: background-color var(--dur-fast) var(--ease-out),
+                                   border-color var(--dur-fast) var(--ease-out),
+                                   color var(--dur-fast) var(--ease-out),
+                                   transform 60ms var(--ease-out); }
+
+  /* Sidebar items respond immediately on hover, and the active one settles rather than
+     snapping. */
+  .nav-item { transition: background-color var(--dur-fast) var(--ease-out),
+                          color var(--dur-fast) var(--ease-out); }
+
+  /* Cards that are actually clickable lift slightly; ones that are not, do not — a card
+     that moves under the cursor but does nothing when clicked is a lie. */
+  .link-card, .res-mini, .activity-card {
+    transition: transform var(--dur-fast) var(--ease-out),
+                box-shadow var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out);
+  }
+  .link-card:hover, .res-mini:hover, .activity-card:hover {
+    transform: translate3d(0, -2px, 0);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Modals: the dialog arrives, the backdrop just fades. Scaling from 0.98 rather than
+     something smaller keeps it feeling like it was already there. */
+  @keyframes modalIn {
+    from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-overlay.open { animation: backdropIn var(--dur-fast) var(--ease-out) both; }
+  .modal-overlay.open .modal { animation: modalIn var(--dur-base) var(--ease-out) both; }
+
+  /* ── Reduced motion ──────────────────────────────────────────────────────────────
+     Non-negotiable, and the app had no such block at all. Vestibular disorders make
+     movement genuinely unpleasant, and this is a health app. Colour and opacity
+     transitions are kept — they convey state and cause nobody discomfort; everything
+     that MOVES is switched off, rather than merely shortened. */
+  @media (prefers-reduced-motion: reduce) {
+    .page.active,
+    .modal-overlay.open,
+    .modal-overlay.open .modal,
+    .ob-confetti-p { animation: none !important; }
+    .btn:active, .ev-slot-btn:active, .nav-item:active, .mob-nav-btn:active,
+    .member-acct-role:active,
+    .link-card:hover, .res-mini:hover, .activity-card:hover { transform: none !important; }
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
 
   /* ===== DASHBOARD HERO ===== */
   /* No card, no border, no shadow. It sits directly on the page ground, which is what
@@ -2336,7 +2433,7 @@
   .hours-ring-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
   .hours-ring { flex-shrink: 0; }
   .hours-ring-track { stroke: var(--border); }
-  .hours-ring-fill  { stroke: var(--accent); transition: stroke-dashoffset .6s ease; }
+  .hours-ring-fill  { stroke: var(--accent); transition: stroke-dashoffset .var(--dur-slow) var(--ease-out); }
   .hours-ring-done  { stroke: #15803d; }
   .hours-big { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1.1; }
   .hours-big-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
@@ -2385,7 +2482,7 @@
   .roles-manager-body { display: flex; flex: 1; overflow: hidden; }
   .roles-sidebar { width: 200px; min-width: 180px; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 10px 8px 12px; gap: 2px; overflow-y: auto; flex-shrink: 0; }
   .roles-sidebar-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); padding: 4px 10px 8px; }
-  .role-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: background 0.13s; }
+  .role-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: background var(--dur-fast); }
   .role-list-item:hover { background: var(--surface); }
   .role-list-item.active { background: var(--accent-light); }
   .role-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
@@ -2393,7 +2490,7 @@
   .roles-editor { flex: 1; overflow-y: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 18px; }
   .roles-editor-empty { color: var(--text-muted); text-align: center; margin-top: 100px; font-size: 14px; }
   .role-edit-header { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-  .role-name-input { flex: 1; font-size: 20px; font-weight: 700; border: none; background: transparent; outline: none; color: var(--text); border-bottom: 2px solid transparent; padding-bottom: 2px; transition: border-color 0.15s; }
+  .role-name-input { flex: 1; font-size: 20px; font-weight: 700; border: none; background: transparent; outline: none; color: var(--text); border-bottom: 2px solid transparent; padding-bottom: 2px; transition: border-color var(--dur-base); }
   .role-name-input:focus { border-bottom-color: var(--brand, #e4789a); }
   .role-color-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0; }
   .role-color-swatch input[type=color] { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); border: none; cursor: pointer; opacity: 0; }
@@ -2405,9 +2502,9 @@
   .perm-row-desc { font-size: 11px; color: var(--text-muted); }
   .perm-toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
   .perm-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-  .perm-toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; cursor: pointer; transition: background 0.18s; }
+  .perm-toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; cursor: pointer; transition: background var(--dur-base); }
   .perm-toggle input:checked + .perm-toggle-track { background: var(--brand, #e4789a); }
-  .perm-toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.18s; box-shadow: var(--shadow-sm); }
+  .perm-toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform var(--dur-base); box-shadow: var(--shadow-sm); }
   .perm-toggle input:checked + .perm-toggle-track::before { transform: translateX(16px); }
   .perm-toggle input:disabled + .perm-toggle-track { opacity: 0.5; cursor: default; }
   .roles-editor-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); margin-top: auto; gap: 8px; flex-wrap: wrap; }
@@ -2446,7 +2543,7 @@
     color: var(--text-muted);
     cursor: pointer;
     padding: 6px 4px;
-    transition: color 0.15s;
+    transition: color var(--dur-base);
     -webkit-tap-highlight-color: transparent;
   }
   .mob-nav-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
