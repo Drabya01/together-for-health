@@ -11448,6 +11448,20 @@ function _buildTourSteps() {
   var first = currentUser ? currentUser.name.split(' ')[0] : 'there';
   var s = [{ type:'welcome', name:first, isAdmin:isAdmin }];
 
+  // For a member, the two things worth knowing are their hours and how to pick up a shift.
+  // Those used to sit at position nine and ten, behind seven exec tools — so the tour buried
+  // the only parts a member had a reason to come back for. Members get them first now;
+  // staff keep sidebar order, since for them the exec tools genuinely are the point.
+  if (!canEdit) {
+    s.push({ type:'feature', tab:'hours', spotlight:'[data-tab="hours"]',
+      icon:'hours', badge:'My Hours', title:'Your community involvement hours',
+      desc:'Ontario needs 40 volunteer hours to graduate. Log yours here as you do them, and print the log for your school’s form. It is your own record to keep — the club does not certify it, and your school makes the final call on what counts.' });
+
+    s.push({ type:'feature', tab:'calendar', spotlight:'[data-tab="calendar"]',
+      icon:'shifts', badge:'Sign-ups', title:'Claiming a shift',
+      desc:'Open a day in the Calendar and any event with shifts shows them, along with how many are still open. Press Sign up to take one — no need to message anyone. After the event you can turn that shift straight into an hours entry.' });
+  }
+
   // Always-visible tabs, top to bottom
   s.push({ type:'feature', tab:'dashboard', spotlight:'[data-tab="dashboard"]',
     icon:'dashboard', badge:'Dashboard', title:'Dashboard',
@@ -11455,7 +11469,9 @@ function _buildTourSteps() {
 
   s.push({ type:'feature', tab:'calendar', spotlight:'[data-tab="calendar"]',
     icon:'calendar', badge:'Calendar', title:'Calendar',
-    desc:'All club events in one place. Click any day to see what is scheduled.' });
+    desc: canEdit
+      ? 'All club events in one place. Click any day to see what is scheduled. When you add an event you can give it shifts — "Setup 3–4pm", "Booth 4–6pm" — and members claim them themselves instead of you organising coverage over text.'
+      : 'All club events in one place. Click any day to see what is scheduled, and to sign up for shifts.' });
 
   s.push({ type:'feature', tab:'ideas', spotlight:'[data-tab="ideas"]',
     icon:'ideas', badge:'Ideas', title:'Ideas',
@@ -11480,6 +11496,14 @@ function _buildTourSteps() {
   s.push({ type:'feature', tab:'activities', spotlight:'[data-tab="activities"]',
     icon:'activities', badge:'Activities', title:'Activities',
     desc:'A running log of recent activity across the whole club.' });
+
+  // Staff see My Hours here, in its real sidebar position under MEMBERS. Members already
+  // met it as step one, so it is not repeated.
+  if (canEdit) {
+    s.push({ type:'feature', tab:'hours', spotlight:'[data-tab="hours"]',
+      icon:'hours', badge:'My Hours', title:'Community involvement hours',
+      desc:'Every member logs their Ontario 40-hour volunteer requirement here, and can print a log for their school’s form. You can confirm entries for events you supervised, which is worth more to them than a self-logged one — and you get a club-wide total across everyone.' });
+  }
 
   s.push({ type:'feature', tab:'resources', spotlight:'[data-tab="resources"]',
     icon:'resources', badge:'Resources', title:'Resources',
@@ -11666,6 +11690,8 @@ function _obIcon(type) {
     feedback:      '<path d="M1 2h18v12H11l-4 4V14H1z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/><circle cx="6" cy="8" r="1" fill="currentColor"/><circle cx="10" cy="8" r="1" fill="currentColor"/><circle cx="14" cy="8" r="1" fill="currentColor"/>',
     social:        '<circle cx="16" cy="4" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="4" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6.2 9l7.8-4M6.2 11l7.8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
     marketing:     '<rect x="1" y="4" width="18" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M1 9l9 5 9-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    hours:         '<circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 5.5V10l3.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    shifts:        '<path d="M7 9V3.5a1.5 1.5 0 0 1 3 0V9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M10 9V5a1.5 1.5 0 0 1 3 0v4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M13 9V6.5a1.5 1.5 0 0 1 3 0V13a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-2a1.5 1.5 0 0 1 3 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
     profile:       '<circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 17a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
   };
   return icons[type] || icons.dashboard;
