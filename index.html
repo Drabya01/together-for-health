@@ -1424,9 +1424,19 @@
   .vote-btn:hover { border-color: var(--accent-aa); color: var(--accent-aa); background:var(--accent-light); }
 
   /* ── Member enhancements ── */
-  .member-active-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-left:6px; flex-shrink:0; }
-  .member-active-dot.active { background:#22c55e; }
-  .member-active-dot.inactive { background:#d1d5db; }
+  /* The person's account controls, on their own card, so each person appears exactly once
+     on this page. Previously the accounts panel listed everyone AND the roster listed the
+     same people again as cards — two visual languages for one dataset, with three delete
+     affordances per person between them. */
+  .member-acct { margin-top: 8px; }
+  .member-acct-role {
+    width: 100%; max-width: 190px; padding: 5px 8px; font-size: var(--fs-sm);
+    font-family: inherit; border: 1px solid var(--border); border-radius: var(--r-sm);
+    background: var(--surface); color: var(--text); cursor: pointer;
+  }
+  .member-acct-none {
+    margin-top: 8px; font-size: var(--fs-xs); color: var(--text-hint);
+  }
   .copy-email-btn { background:none; border:none; cursor:pointer; color: var(--accent-aa); font-size:11px; padding:0 4px; opacity:0.7; font-family:inherit; }
   .copy-email-btn:hover { opacity:1; }
 
@@ -10100,13 +10110,15 @@ function renderMembers() {
   if (existingAccountsPanel) existingAccountsPanel.remove();
 
   var isAdmin = hasPermission('MANAGE_USERS');
-  var allUsers = state.users || [];
+  // Only accounts awaiting a decision. An "APPROVED" badge on every row badges the rule
+  // rather than the exception, which is noise; approved people simply appear in the roster.
+  var allUsers = (state.users || []).filter(function(u) {
+    return u.status === 'pending' || u.status === 'rejected';
+  });
   var reqGrid = document.getElementById('members-grid');
 
   if (isAdmin && reqGrid && reqGrid.parentElement) {
-    var hasPending = allUsers.some(function(u) { return u.status === 'pending'; });
-    // Show panel whenever there are any users OR pending users
-    if (allUsers.length > 0 || hasPending) {
+    if (allUsers.length > 0) {
       var panel = document.createElement('div');
       panel.id = 'members-accounts-panel';
       panel.style.cssText = 'grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;';
@@ -10188,12 +10200,13 @@ function renderMembers() {
 
       var pendingCount = allUsers.filter(function(u) { return u.status === 'pending'; }).length;
       var pendingBadge = pendingCount > 0
-        ? ' <span style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:20px;background:rgba(245,158,11,0.15);color: var(--warn-text);border:1px solid rgba(245,158,11,0.4);">' + pendingCount + ' pending</span>'
+        ? ' <span style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--tint-warn);color:var(--warn-text);border:1px solid #fcd34d;">' + pendingCount + ' pending</span>'
         : '';
 
       panel.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
-        + '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="color: var(--accent-aa);flex-shrink:0;"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6 4a6 6 0 0 0-12 0h12z"/></svg>'
-        + 'Signed-In Users (' + allUsers.length + ')' + pendingBadge
+        + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);flex-shrink:0;">'
+        + '<path d="M15 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="8.5" cy="7" r="3.5"/><path d="M18 8v6M21 11h-6"/></svg>'
+        + (allUsers.length === 1 ? 'Request to join' : 'Requests to join (' + allUsers.length + ')') + pendingBadge
         + '</div>'
         + rows;
 
@@ -10211,10 +10224,16 @@ function renderMembers() {
     const initials = m.name.split(' ').map(w => w[0] || '').slice(0,2).join('').toUpperCase();
     const color = memberAvatarColor(m.name);
     const active = m.active !== false;
+    // The account behind this roster entry, if there is one. A member added by hand has no
+    // account until they sign in; that is a real state worth showing rather than hiding.
+    const _mlc = (m.email || '').toLowerCase();
+    const acct = (state.users || []).find(u =>
+      (_mlc && (u.email || '').toLowerCase() === _mlc) ||
+      (m.googleId && u.googleId === m.googleId));
+    const acctRole = acct ? ((state.roles || []).find(r => r.id === acct.roleId) || null) : null;
     return `<div class="member-card" style="opacity:${active ? 1 : 0.6}">
-      <div style="position:relative;display:inline-block;margin:0 auto 10px;">
+      <div style="display:inline-block;margin:0 auto 10px;">
         <div class="member-avatar" style="background:${color}">${initials}</div>
-        <span class="member-active-dot ${active ? 'active' : 'inactive'}" style="position:absolute;bottom:2px;right:2px;border:2px solid var(--surface);"></span>
       </div>
       <div class="member-name">${escHtml(m.name)}</div>
       <div class="role-badge">${escHtml(m.role)}</div>
@@ -10228,9 +10247,17 @@ function renderMembers() {
           <input type="checkbox" style="width:auto;" ${active ? 'checked' : ''} onchange="toggleMemberActive('${m.id}',this.checked)"> Active
         </label>
       </div>` : ''}
+      ${isEditor && acct && acct.status === 'approved' ? `<div class="member-acct">
+        <select class="member-acct-role" onchange="setUserRole('${acct.id}',this.value)"
+                aria-label="Role for ${escHtml(m.name)}">
+          ${(state.roles || []).map(r => `<option value="${r.id}" ${r.id === acct.roleId ? 'selected' : ''}>${escHtml(r.name)}</option>`).join('')}
+        </select>
+      </div>` : ''}
+      ${isEditor && !acct ? `<div class="member-acct-none" title="They will appear here with an account once they sign in with Google.">No account yet</div>` : ''}
       <div class="member-actions editor-only-block">
         <button class="btn btn-ghost" onclick="editMember('${m.id}')">Edit</button>
-        <button class="btn btn-ghost btn-danger" onclick="deleteMember('${m.id}')">Delete</button>
+        ${acct ? `<button class="btn btn-ghost btn-danger" onclick="revokeUser('${acct.id}')" title="Remove ${escHtml(m.name)} from the club. They keep their profile and can be let back in with one click.">Remove</button>`
+                : `<button class="btn btn-ghost btn-danger" onclick="deleteMember('${m.id}')">Delete</button>`}
       </div>
     </div>`;
   }).join('');
