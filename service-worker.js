@@ -1,4 +1,4 @@
-const CACHE = 'tfh-v26';
+const CACHE = 'tfh-v27';
 const ASSETS = ['./', './index.html', './firebase-sync.js', './admin-editor.js', './admin-editor.css', './manifest.json', './icon.svg', './icon-maskable.svg'];
 
 self.addEventListener('install', e => {
@@ -36,8 +36,14 @@ self.addEventListener('fetch', e => {
     url.pathname === '/' || url.pathname.endsWith('/');
 
   if (isAppShell) {
+    // `cache: 'no-cache'` forces a revalidation against the server instead of letting the
+    // browser's own HTTP cache answer. Without it "network-first" was a lie: GitHub Pages
+    // serves these files with `Cache-Control: max-age=600`, so fetch() returned a cached
+    // copy for ten minutes and a freshly deployed fix simply did not run. no-cache still
+    // gets a cheap 304 when nothing changed, so this costs a round trip, not a download.
+    const revalidate = new Request(e.request, { cache: 'no-cache' });
     e.respondWith(
-      fetch(e.request).then(res => {
+      fetch(revalidate).then(res => {
         if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));

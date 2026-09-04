@@ -64,7 +64,7 @@
   var CLUB_DOC = db.collection('club').doc('state');
 
   var _userUnsub = null, _clubUnsub = null, _rosterUnsub = null;
-  var _writeTimer = null, _pendingWrite = false, _applyingRemote = false;
+  var _writeTimer = null, _pendingWrite = false, _applyingRemote = false, _suppressWrite = false;
 
   window.TFH_FIREBASE = true;
 
@@ -204,7 +204,7 @@
 
   window.saveState = function () {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
-    if (_applyingRemote) return;            // don't echo a remote change back
+    if (_applyingRemote || _suppressWrite) return;   // don't echo a remote change back
     _pendingWrite = true;
     _syncDot('syncing');
     clearTimeout(_writeTimer);
@@ -236,6 +236,7 @@
   // that carries no actual change — which includes the server's acknowledgement of our
   // OWN write, since every write updates `updatedAt` and so produces a fresh snapshot.
   var _lastClubJson = null;
+  var _lastRosterJson = null;
 
   // Returns true only when the club data genuinely changed and the UI should redraw.
   function _applyClubSnapshot(snap, force) {
@@ -475,6 +476,12 @@
           if (!v.googleId) v.googleId = d.id;
           docs.push(v);
         });
+        // Dedupe like the club listener. Firestore also delivers metadata-only snapshots
+        // (cache-to-server transitions, cross-tab echoes); re-rendering the Members page on
+        // each of those rebuilt its role <select>s repeatedly and read as flickering.
+        var json = JSON.stringify(docs);
+        if (json === _lastRosterJson) return;
+        _lastRosterJson = json;
         _applyRoster(docs);
         var btn = document.querySelector('.nav-item--active');
         var tab = btn && btn.dataset ? btn.dataset.tab : '';
@@ -577,6 +584,26 @@
   // could never persist it — the tour replayed on every single refresh. Persist it to the
   // user's own document instead. Wrapped rather than replaced so the visual teardown in
   // index.html's finishTour() still runs.
+  // renderDash() stamps the viewer's own id into announcement.seenBy and calls saveState().
+  // That is per-person read state, not club data, but it lived in the shared document — so
+  // every viewer rewrote the club doc just by looking at the dashboard. With two tabs signed
+  // in as different people (an admin tab and a member tab, exactly how this gets tested) each
+  // write looked like a real change to the other, which re-rendered, which stamped ITS id,
+  // which wrote again: a cross-tab ping-pong that never settles and shows up as flickering.
+  //
+  // Suppress the Firestore write for the duration of a render. seenBy still persists to
+  // localStorage immediately and rides along with the next genuine save, so nothing is lost.
+  ['renderDash', 'renderMembers', 'renderParticipation'].forEach(function (fn) {
+    var orig = window[fn];
+    if (typeof orig !== 'function') return;
+    window[fn] = function () {
+      var prev = _suppressWrite;
+      _suppressWrite = true;
+      try { return orig.apply(this, arguments); }
+      finally { _suppressWrite = prev; }
+    };
+  });
+
   function _tourKey(uid) { return 'tfh_onboarded_' + uid; }
 
   var _origFinishTour = window.finishTour;
