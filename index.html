@@ -2166,6 +2166,77 @@
     background: var(--accent-light); border-color: rgba(196,120,138,0.25);
   }
 
+  /* On a touch device, iOS Safari zooms the whole page whenever a focused input's font is
+     under 16px — and every form control in this app was 12-14px, so tapping any field on an
+     iPhone jerked the layout and left the user pinching back out. That includes the join
+     form a brand-new member fills in first.
+
+     pointer:coarse rather than a width breakpoint: width misses iPad in landscape, and a
+     third breakpoint would drift from the existing 600/700px pair. Padding is trimmed
+     slightly so the taller text does not change control heights much. */
+  @media (pointer: coarse) {
+    input, textarea, select,
+    .ob-input, .mob-form-input, .mob-form-select, .mob-form-textarea,
+    .pg-field input, .pg-field select, .status-select, .res-search input, .pres-search input {
+      font-size: 16px !important;
+      padding-top: 9px; padding-bottom: 9px;
+    }
+    input[type="checkbox"], input[type="radio"] { font-size: inherit !important; }
+  }
+
+  /* ===== COMMUNITY INVOLVEMENT HOURS ===== */
+  .hours-notice {
+    background: #fef9c3; border: 1px solid #fde047; color: #713f12;
+    border-radius: var(--radius); padding: 13px 16px; font-size: 13px; line-height: 1.65;
+    margin-bottom: 22px;
+  }
+  body.dark-mode .hours-notice { background: #2a2410; border-color: #5c4a0f; color: #e8d98a; }
+  .hours-ring-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .hours-ring { flex-shrink: 0; }
+  .hours-ring-track { stroke: var(--border); }
+  .hours-ring-fill  { stroke: var(--accent); transition: stroke-dashoffset .6s ease; }
+  .hours-ring-done  { stroke: #15803d; }
+  .hours-big { font-size: 30px; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .hours-big-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+  .hours-stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 14px; }
+  .hours-stat-label { font-size: 11.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+  .hours-stat-val { font-size: 17px; font-weight: 600; color: var(--text); margin-top: 2px; }
+  .hours-section-head { font-size: 16px; font-weight: 600; color: var(--text); margin: 30px 0 4px; }
+  .hours-row {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 13px 0; border-bottom: 1px solid var(--border);
+  }
+  .hours-row-main { flex: 1; min-width: 0; }
+  .hours-row-act { font-size: 14px; font-weight: 600; color: var(--text); }
+  .hours-row-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.55; }
+  .hours-row-qty { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
+  .hours-pill {
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+  }
+  /* #15803d / #92400e chosen over the brighter greens and ambers used elsewhere because
+     those measured 2.1-2.3:1 on these backgrounds. These clear 4.5:1 in both themes. */
+  .hours-pill--confirmed { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .hours-pill--logged    { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  body.dark-mode .hours-pill--confirmed { background: #0f2b18; color: #6ee7a0; border-color: #1d5233; }
+  body.dark-mode .hours-pill--logged    { background: #2a2410; color: #f0c869; border-color: #5c4a0f; }
+
+  /* Print: strip the app chrome so the log comes out as a form a student can staple to
+     their board's paperwork, with a supervisor signature column. */
+  @media print {
+    body * { visibility: hidden !important; }
+    #hours-print, #hours-print * { visibility: visible !important; }
+    #hours-print { position: absolute; inset: 0; padding: 0; background: #fff; color: #000; }
+    #hours-print table { width: 100%; border-collapse: collapse; }
+    #hours-print th, #hours-print td {
+      border: 1px solid #333; padding: 7px 9px; font-size: 12px; text-align: left; vertical-align: top;
+    }
+    #hours-print th { background: #f0f0f0; }
+    #hours-print .hp-sig { height: 42px; }
+    @page { margin: 14mm; }
+  }
+  #hours-print { display: none; }
+
   /* ===== ROLES MANAGER ===== */
   .modal-roles-manager { max-width: 800px; width: 100%; height: 600px; max-height: 88vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
   .modal-roles-manager .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -2326,6 +2397,10 @@
       <!-- MEMBERS section -->
       <div class="nav-group">
         <div class="nav-group-label">Members</div>
+        <button class="nav-item" onclick="switchTab('hours')" data-tab="hours">
+          <span class="nav-item-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.5V8l2.5 1.5"/></svg></span>
+          <span class="nav-item-label">My Hours</span>
+        </button>
         <button class="nav-item" onclick="switchTab('resources')" data-tab="resources">
           <span class="nav-item-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3z"/><path d="M10 2v3h3"/><path d="M5 8h6M5 10.5h4"/></svg></span>
           <span class="nav-item-label">Resources</span>
@@ -2773,6 +2848,43 @@
       <button class="social-filter-btn" onclick="filterSocial('posted')">Posted</button>
     </div>
     <div id="social-list"></div>
+  </div>
+
+  <!-- COMMUNITY INVOLVEMENT HOURS -->
+  <div id="page-hours" class="page">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap;">
+      <div>
+        <h1 class="page-title">My Hours</h1>
+        <p class="page-sub">Community involvement hours toward your 40-hour graduation requirement</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" onclick="printHoursLog()" style="min-height:44px;">Print my log</button>
+        <button class="btn btn-primary" onclick="openLogHours()" style="min-height:44px;">+ Log hours</button>
+      </div>
+    </div>
+
+    <div id="hours-summary"></div>
+
+    <!-- Deliberately prominent and worded carefully: this app is a personal record to help a
+         student fill in their board's official form. It is not the school's system, the club
+         cannot certify hours, and only the school decides what counts. Overstating this would
+         be worse than not building it. -->
+    <div class="hours-notice">
+      <strong>This is your own record, not an official one.</strong>
+      Your school makes the final decision on which hours count. Use this to keep track and to fill
+      in your board's Community Involvement form, which still needs a signature from whoever
+      supervised you. Hours generally have to be outside your scheduled class time, and ordinary
+      in-school club meetings usually don't count &mdash; so log the events, outreach and volunteering
+      you actually do, not attendance at our meetings.
+    </div>
+
+    <div id="hours-mine"></div>
+
+    <div id="hours-admin-section" style="display:none">
+      <h2 class="hours-section-head">Everyone's hours</h2>
+      <p class="page-sub" style="margin:-6px 0 14px;">Confirm entries you can vouch for. Confirming is not certification &mdash; it records that an exec saw it.</p>
+      <div id="hours-everyone"></div>
+    </div>
   </div>
 
   <!-- GOALS -->
@@ -3582,6 +3694,47 @@
   </div>
 </div>
 
+<!-- LOG COMMUNITY INVOLVEMENT HOURS -->
+<div class="modal-overlay" id="modal-hours">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="hours-modal-title">Log hours</span>
+      <button class="modal-close" onclick="closeModal('modal-hours')" aria-label="Close">&times;</button>
+    </div>
+    <div class="form-row"><div>
+      <label for="lh-activity">What did you do? *</label>
+      <input type="text" id="lh-activity" placeholder="e.g. Ran the mental health booth at the fall fair">
+    </div></div>
+    <div class="form-row"><div>
+      <label for="lh-org">Where / who was it for?</label>
+      <input type="text" id="lh-org" placeholder="e.g. Together For Health, or a local food bank">
+    </div></div>
+    <div class="form-row form-2col">
+      <div><label for="lh-date">Date *</label><input type="date" id="lh-date"></div>
+      <div><label for="lh-hours">Hours *</label><input type="number" id="lh-hours" placeholder="2.5" min="0.25" max="24" step="0.25"></div>
+    </div>
+    <div class="form-row form-2col">
+      <div><label for="lh-sup">Supervising adult's name</label><input type="text" id="lh-sup" placeholder="Who can vouch for this?"></div>
+      <div><label for="lh-supc">Their phone or email</label><input type="text" id="lh-supc" placeholder="Your school's form asks for this"></div>
+    </div>
+    <div class="form-row"><div>
+      <label for="lh-notes">Notes (optional)</label>
+      <input type="text" id="lh-notes" placeholder="Anything worth remembering">
+    </div></div>
+    <label style="display:flex;gap:9px;align-items:flex-start;margin:4px 0 2px;font-size:13px;line-height:1.55;color:var(--text);cursor:pointer;">
+      <input type="checkbox" id="lh-outside" style="margin-top:2px;width:18px;height:18px;flex-shrink:0;">
+      <span>This was <strong>outside my scheduled class time</strong>, and it wasn't paid work or something I had to do anyway.</span>
+    </label>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.55;margin:10px 0 0;">
+      Your school decides which hours count. This keeps your record straight so filling in their form is easy.
+    </p>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-hours')">Cancel</button>
+      <button class="btn btn-primary" id="lh-save-btn" onclick="saveHoursEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONTACT MODAL -->
 <div class="modal-overlay" id="modal-contact">
   <div class="modal">
@@ -3965,7 +4118,7 @@ function loadState() {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
-  return { events: [], plans: [], ideas: [], presentations: [], checks: {}, meetings: [], members: [], feedback: [], posts: [], announcements: [], goals: [], contacts: [], resources: [], transactions: [], activities: [], emailTemplates: [] };
+  return { events: [], plans: [], ideas: [], presentations: [], checks: {}, meetings: [], members: [], feedback: [], posts: [], announcements: [], goals: [], contacts: [], resources: [], transactions: [], activities: [], emailTemplates: [], hours: [] };
 }
 
 // ====== CLOUD SYNC ======
@@ -4064,7 +4217,7 @@ async function syncFromGist() {
       // Ensure all required arrays exist (cloud state may predate some migrations)
       ['meetings','members','feedback','posts','announcements','goals','contacts','resources',
        'transactions','activities','emailTemplates','teachers','consents','partnerships',
-       'fundraisers','grants','eventBudgets'].forEach(function(k) { if (!state[k]) state[k] = []; });
+       'fundraisers','grants','eventBudgets','hours'].forEach(function(k) { if (!state[k]) state[k] = []; });
       // Merge the local roster back in (see localMembers above). Match on the same identity keys
       // as users: googleId only when both sides have one, else email, else id.
       localMembers.forEach(function(lm) {
@@ -4943,7 +5096,7 @@ function switchTab(name) {
     btn.classList.toggle('nav-item--active', btn.dataset.tab === name);
   });
   // Update header title
-  const TAB_LABELS = { dashboard:'Dashboard', calendar:'Calendar', plans:'Plans', ideas:'Ideas', presentations:'Presentations', marketing:'Marketing', meetings:'Meetings', members:'Members', feedback:'Feedback', social:'Social Media', goals:'Goals', contacts:'Contacts', resources:'Resources', budget:'Budget', activities:'Activities', attendance:'Attendance', outreach:'Outreach', fundraising:'Fundraising' };
+  const TAB_LABELS = { dashboard:'Dashboard', calendar:'Calendar', plans:'Plans', ideas:'Ideas', presentations:'Presentations', marketing:'Marketing', meetings:'Meetings', members:'Members', feedback:'Feedback', social:'Social Media', goals:'Goals', hours:'My Hours', contacts:'Contacts', resources:'Resources', budget:'Budget', activities:'Activities', attendance:'Attendance', outreach:'Outreach', fundraising:'Fundraising' };
   const titleEl = document.getElementById('top-header-title');
   if (titleEl) titleEl.textContent = TAB_LABELS[name] || name;
   if (name === 'calendar') renderCal();
@@ -4956,6 +5109,7 @@ function switchTab(name) {
   if (name === 'feedback') renderFeedback();
   if (name === 'social') renderSocial();
   if (name === 'goals') renderGoals();
+  if (name === 'hours') renderHours();
   if (name === 'contacts') renderContacts();
   if (name === 'resources') renderResources();
   if (name === 'budget') renderBudget();
@@ -7973,6 +8127,313 @@ function deleteAnnouncement(id) {
   if (!confirm('Remove this announcement?')) return;
   state.announcements = state.announcements.filter(x => x.id !== id);
   saveState(); renderDash();
+}
+
+// ====== COMMUNITY INVOLVEMENT HOURS ======
+//
+//  Ontario students need 40 hours of community involvement to graduate, and the rules
+//  matter here, so a few decisions are deliberate:
+//
+//   * Hours are NEVER auto-generated. Not from meeting attendance, not from a claimed
+//     event shift. Community involvement hours must fall outside instructional time, and
+//     routine in-school club meetings are commonly ineligible — minting hours a guidance
+//     counsellor then rejects would discredit the whole log. A student logs what they did.
+//   * "Confirmed" means an exec saw it. It is not certification. The school decides.
+//   * The print view produces a form with a supervisor signature column, because the
+//     board's official form needs a real signature from the supervising adult.
+//
+//  The entries live in state.hours inside the shared club document, so an exec can confirm
+//  them. That means hours are not private between members; for a 20-40 person club that is
+//  an acceptable trade, and it is the reason the UI shows a member only their own rows.
+
+var HOURS_REQUIRED = 40;
+
+function _hoursAll() {
+  if (!Array.isArray(state.hours)) state.hours = [];
+  return state.hours;
+}
+
+// Identify a member's own rows. Firebase uid is the stable key, but match on email too so
+// entries survive a re-registration (deleted account, new uid, same person).
+function _hoursIsMine(h) {
+  var cu = window.currentUser;
+  if (!cu) return false;
+  if (h.userId && (h.userId === cu.id || h.userId === cu.uid)) return true;
+  var mine = (cu.email || '').toLowerCase();
+  return !!mine && (h.memberEmail || '').toLowerCase() === mine;
+}
+
+function _hoursMine() { return _hoursAll().filter(_hoursIsMine); }
+
+function _hoursSum(rows) {
+  return rows.reduce(function (t, h) {
+    var n = parseFloat(h.hours);
+    return t + (isNaN(n) ? 0 : n);
+  }, 0);
+}
+
+function _hoursFmt(n) {
+  return (Math.round(n * 100) / 100).toString().replace(/\.00$/, '');
+}
+
+function _hoursDateLabel(d) {
+  // Parse as local, not UTC. new Date('2026-09-04') is midnight UTC, which renders as
+  // Sep 3 in Ontario — an off-by-one on every single date.
+  if (!d) return '';
+  var p = String(d).split('-');
+  if (p.length !== 3) return escHtml(String(d));
+  var dt = new Date(+p[0], +p[1] - 1, +p[2]);
+  return dt.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function renderHours() {
+  var rows = _hoursMine().slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
+  var total = _hoursSum(rows);
+  var confirmed = _hoursSum(rows.filter(function (h) { return h.status === 'confirmed'; }));
+  var pct = Math.min(100, HOURS_REQUIRED ? (total / HOURS_REQUIRED) * 100 : 0);
+  var remaining = Math.max(0, HOURS_REQUIRED - total);
+  var done = total >= HOURS_REQUIRED;
+
+  // Progress ring. r=52 -> circumference 326.7; offset shrinks as hours accumulate.
+  var C = 326.7;
+  var sum = document.getElementById('hours-summary');
+  if (sum) {
+    sum.innerHTML = '<div class="card"><div class="hours-ring-wrap">'
+      + '<svg class="hours-ring" width="128" height="128" viewBox="0 0 128 128" role="img" '
+      + 'aria-label="' + _hoursFmt(total) + ' of ' + HOURS_REQUIRED + ' hours logged">'
+      + '<circle class="hours-ring-track" cx="64" cy="64" r="52" fill="none" stroke-width="11"/>'
+      + '<circle class="hours-ring-fill' + (done ? ' hours-ring-done' : '') + '" cx="64" cy="64" r="52" fill="none" '
+      + 'stroke-width="11" stroke-linecap="round" stroke-dasharray="' + C + '" '
+      + 'stroke-dashoffset="' + (C - (C * pct / 100)) + '" transform="rotate(-90 64 64)"/>'
+      + '<text x="64" y="60" text-anchor="middle" font-size="25" font-weight="700" fill="currentColor">' + _hoursFmt(total) + '</text>'
+      + '<text x="64" y="79" text-anchor="middle" font-size="12" fill="currentColor" opacity=".62">of ' + HOURS_REQUIRED + '</text>'
+      + '</svg>'
+      + '<div style="flex:1;min-width:200px;">'
+      + '<div class="hours-big">' + (done
+          ? 'All 40 hours logged'
+          : _hoursFmt(remaining) + ' hour' + (remaining === 1 ? '' : 's') + ' to go')
+        + '</div>'
+      + '<div class="hours-big-sub">' + (done
+          ? 'Print your log and get it signed for your school.'
+          : 'Log anything you volunteer for — every bit counts toward the 40.')
+        + '</div>'
+      + '<div class="hours-stat-row">'
+      + '<div><div class="hours-stat-label">Logged</div><div class="hours-stat-val">' + _hoursFmt(total) + ' h</div></div>'
+      + '<div><div class="hours-stat-label">Exec-confirmed</div><div class="hours-stat-val">' + _hoursFmt(confirmed) + ' h</div></div>'
+      + '<div><div class="hours-stat-label">Entries</div><div class="hours-stat-val">' + rows.length + '</div></div>'
+      + '</div></div></div></div>';
+  }
+
+  var mine = document.getElementById('hours-mine');
+  if (mine) {
+    mine.innerHTML = rows.length
+      ? '<div class="card">' + rows.map(_hoursRowHtml).join('') + '</div>'
+      : '<div class="card"><div class="empty-state"><div class="empty-state-text">'
+        + 'No hours logged yet. Press <strong>+ Log hours</strong> after your next event or volunteer shift.'
+        + '</div></div></div>';
+  }
+
+  // Exec view: everyone's hours, with a confirm action.
+  var adminSec = document.getElementById('hours-admin-section');
+  var canManage = typeof hasPermission === 'function' && hasPermission('MANAGE_HOURS');
+  if (adminSec) adminSec.style.display = canManage ? '' : 'none';
+  if (canManage) {
+    var byPerson = {};
+    _hoursAll().forEach(function (h) {
+      var k = (h.memberEmail || h.userId || 'unknown').toLowerCase();
+      (byPerson[k] = byPerson[k] || { name: h.memberName || h.memberEmail || 'Unknown', rows: [] }).rows.push(h);
+    });
+    var keys = Object.keys(byPerson).sort(function (a, b) {
+      return byPerson[a].name.localeCompare(byPerson[b].name);
+    });
+    var el = document.getElementById('hours-everyone');
+    if (el) {
+      el.innerHTML = keys.length ? keys.map(function (k) {
+        var p = byPerson[k];
+        var t = _hoursSum(p.rows);
+        return '<div class="card" style="margin-bottom:12px;">'
+          + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;">'
+          + '<strong style="font-size:14.5px;">' + escHtml(p.name) + '</strong>'
+          + '<span style="font-size:13px;color:var(--text-muted);">' + _hoursFmt(t) + ' / ' + HOURS_REQUIRED + ' h</span>'
+          + '</div>'
+          + p.rows.slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); })
+              .map(function (h) { return _hoursRowHtml(h, true); }).join('')
+          + '</div>';
+      }).join('') : '<div class="card"><div class="empty-state"><div class="empty-state-text">Nobody has logged hours yet.</div></div></div>';
+    }
+  }
+}
+
+function _hoursRowHtml(h, execView) {
+  var isConfirmed = h.status === 'confirmed';
+  var pill = '<span class="hours-pill hours-pill--' + (isConfirmed ? 'confirmed">Confirmed' : 'logged">Logged') + '</span>';
+  var meta = [
+    _hoursDateLabel(h.date),
+    h.organization ? escHtml(h.organization) : '',
+    h.supervisor ? 'Supervisor: ' + escHtml(h.supervisor) : ''
+  ].filter(Boolean).join(' &middot; ');
+  var canManage = typeof hasPermission === 'function' && hasPermission('MANAGE_HOURS');
+  var acts = '';
+  if (execView && canManage && !isConfirmed) {
+    acts += '<button onclick="confirmHoursEntry(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color:#15803d;border:1px solid #86efac;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Confirm</button> ';
+  }
+  if (execView && canManage && isConfirmed) {
+    acts += '<button onclick="unconfirmHoursEntry(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Unconfirm</button> ';
+  }
+  // A member may edit or delete their own entry, but not once an exec has confirmed it —
+  // otherwise "confirmed" would mean nothing.
+  if (!execView && !isConfirmed) {
+    acts += '<button onclick="openLogHours(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color:var(--accent);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Edit</button> '
+         + '<button onclick="deleteHoursEntry(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color:#b91c1c;border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Delete</button>';
+  }
+  return '<div class="hours-row">'
+    + '<div class="hours-row-main">'
+    + '<div class="hours-row-act">' + escHtml(h.activity || 'Volunteering') + ' ' + pill + '</div>'
+    + (meta ? '<div class="hours-row-meta">' + meta + '</div>' : '')
+    + (h.notes ? '<div class="hours-row-meta">' + escHtml(h.notes) + '</div>' : '')
+    + '</div>'
+    + '<div style="text-align:right;flex-shrink:0;">'
+    + '<div class="hours-row-qty">' + _hoursFmt(parseFloat(h.hours) || 0) + ' h</div>'
+    + (acts ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">' + acts + '</div>' : '')
+    + '</div></div>';
+}
+
+function openLogHours(editId) {
+  var h = editId ? _hoursAll().find(function (x) { return x.id === editId; }) : null;
+  if (editId && !h) { showToast('That entry no longer exists.', 'error'); return; }
+  if (h && h.status === 'confirmed') { showToast('This entry has been confirmed and can no longer be edited.', 'info'); return; }
+  editingId = editId || null;
+  var today = new Date();
+  var iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  document.getElementById('hours-modal-title').textContent = editId ? 'Edit hours' : 'Log hours';
+  document.getElementById('lh-activity').value = h ? (h.activity || '') : '';
+  document.getElementById('lh-org').value      = h ? (h.organization || '') : '';
+  document.getElementById('lh-date').value     = h ? (h.date || iso) : iso;
+  document.getElementById('lh-hours').value    = h ? (h.hours != null ? String(h.hours) : '') : '';
+  document.getElementById('lh-sup').value      = h ? (h.supervisor || '') : '';
+  document.getElementById('lh-supc').value     = h ? (h.supervisorContact || '') : '';
+  document.getElementById('lh-notes').value    = h ? (h.notes || '') : '';
+  document.getElementById('lh-outside').checked = !!(h && h.outsideClassTime);
+  openModal('modal-hours');
+  setTimeout(function () { var el = document.getElementById('lh-activity'); if (el) el.focus(); }, 60);
+}
+
+function saveHoursEntry() {
+  var editId = editingId;
+  var cu = window.currentUser;
+  if (!cu) { showToast('Please sign in again.', 'error'); return; }
+  var activity = (document.getElementById('lh-activity').value || '').trim();
+  var hoursRaw = (document.getElementById('lh-hours').value || '').trim();
+  var date = (document.getElementById('lh-date').value || '').trim();
+  var hrs = parseFloat(hoursRaw);
+  if (!activity) { showToast('Please say what you did.', 'error'); return; }
+  if (!date) { showToast('Please pick a date.', 'error'); return; }
+  if (isNaN(hrs) || hrs <= 0) { showToast('Please enter how many hours (e.g. 2.5).', 'error'); return; }
+  if (hrs > 24) { showToast("That's more than a day — please check the hours.", 'error'); return; }
+  if (!document.getElementById('lh-outside').checked) {
+    showToast('Please confirm this was outside your class time — the school requires it.', 'error');
+    return;
+  }
+  var rec = {
+    activity: activity,
+    organization: (document.getElementById('lh-org').value || '').trim(),
+    date: date,
+    hours: hrs,
+    supervisor: (document.getElementById('lh-sup').value || '').trim(),
+    supervisorContact: (document.getElementById('lh-supc').value || '').trim(),
+    notes: (document.getElementById('lh-notes').value || '').trim(),
+    outsideClassTime: true
+  };
+  _hoursAll();
+  if (editId) {
+    var ex = state.hours.find(function (x) { return x.id === editId; });
+    if (!ex) { showToast('That entry no longer exists.', 'error'); return; }
+    if (ex.status === 'confirmed') { showToast('Confirmed entries cannot be edited.', 'error'); return; }
+    Object.assign(ex, rec);
+  } else {
+    state.hours.push(Object.assign({
+      id: uid(),
+      userId: cu.uid || cu.id || '',
+      memberName: cu.name || cu.email || 'Member',
+      memberEmail: cu.email || '',
+      status: 'logged',
+      createdAt: Date.now()
+    }, rec));
+  }
+  saveState();
+  closeModal('modal-hours');
+  renderHours();
+  showToast(editId ? 'Entry updated.' : _hoursFmt(hrs) + ' hour' + (hrs === 1 ? '' : 's') + ' logged.', 'success');
+}
+
+function deleteHoursEntry(id) {
+  var h = _hoursAll().find(function (x) { return x.id === id; });
+  if (!h) return;
+  if (h.status === 'confirmed') { showToast('Confirmed entries cannot be deleted.', 'error'); return; }
+  if (!_hoursIsMine(h) && !(typeof hasPermission === 'function' && hasPermission('MANAGE_HOURS'))) {
+    showToast('You can only delete your own entries.', 'error'); return;
+  }
+  if (!confirm('Delete "' + (h.activity || 'this entry') + '" (' + _hoursFmt(parseFloat(h.hours) || 0) + ' h)?')) return;
+  state.hours = state.hours.filter(function (x) { return x.id !== id; });
+  saveState();
+  renderHours();
+  showToast('Entry deleted.', 'info');
+}
+
+function confirmHoursEntry(id) {
+  if (!hasPermission('MANAGE_HOURS')) { showToast('You do not have permission to confirm hours.', 'error'); return; }
+  var h = _hoursAll().find(function (x) { return x.id === id; });
+  if (!h) return;
+  h.status = 'confirmed';
+  h.confirmedBy = (window.currentUser && (window.currentUser.name || window.currentUser.email)) || 'Exec';
+  h.confirmedAt = Date.now();
+  saveState();
+  renderHours();
+  showToast('Confirmed ' + _hoursFmt(parseFloat(h.hours) || 0) + ' h for ' + escHtml(h.memberName || 'member') + '.', 'success');
+}
+
+function unconfirmHoursEntry(id) {
+  if (!hasPermission('MANAGE_HOURS')) { showToast('You do not have permission.', 'error'); return; }
+  var h = _hoursAll().find(function (x) { return x.id === id; });
+  if (!h) return;
+  h.status = 'logged';
+  delete h.confirmedBy; delete h.confirmedAt;
+  saveState();
+  renderHours();
+  showToast('Confirmation removed.', 'info');
+}
+
+// Build a printable log. Deliberately a form with a signature column, because the board's
+// official document needs a real signature from the supervising adult — a printout from a
+// student's own app proves nothing on its own.
+function printHoursLog() {
+  var rows = _hoursMine().slice().sort(function (a, b) { return (a.date || '').localeCompare(b.date || ''); });
+  if (!rows.length) { showToast('Log some hours first.', 'info'); return; }
+  var cu = window.currentUser || {};
+  var total = _hoursSum(rows);
+  var host = document.getElementById('hours-print') || (function () {
+    var d = document.createElement('div'); d.id = 'hours-print'; document.body.appendChild(d); return d;
+  })();
+  host.innerHTML =
+      '<h2 style="margin:0 0 3px;font-size:19px;">Community Involvement Hours</h2>'
+    + '<p style="margin:0 0 3px;font-size:13px;">' + escHtml(cu.name || '') + (cu.grade ? ' &middot; Grade ' + escHtml(cu.grade) : '') + '</p>'
+    + '<p style="margin:0 0 16px;font-size:12px;color:#444;">Recorded via the Together For Health club app. '
+    + 'This is the student&rsquo;s own record and is not a certification &mdash; each entry needs the supervisor&rsquo;s signature.</p>'
+    + '<table><thead><tr>'
+    + '<th style="width:74px;">Date</th><th>Activity</th><th>Organization</th>'
+    + '<th style="width:46px;">Hrs</th><th style="width:130px;">Supervisor</th><th style="width:150px;">Signature</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(function (h) {
+        return '<tr><td>' + escHtml(h.date || '') + '</td><td>' + escHtml(h.activity || '') + '</td>'
+          + '<td>' + escHtml(h.organization || '') + '</td><td>' + _hoursFmt(parseFloat(h.hours) || 0) + '</td>'
+          + '<td>' + escHtml(h.supervisor || '') + (h.supervisorContact ? '<br><span style="font-size:10px;">' + escHtml(h.supervisorContact) + '</span>' : '') + '</td>'
+          + '<td class="hp-sig"></td></tr>';
+      }).join('')
+    + '<tr><td colspan="3" style="text-align:right;font-weight:700;">Total</td>'
+    + '<td style="font-weight:700;">' + _hoursFmt(total) + '</td><td colspan="2"></td></tr>'
+    + '</tbody></table>'
+    + '<p style="margin-top:18px;font-size:12px;">Student signature: ______________________________ &nbsp;&nbsp; Date: ______________</p>';
+  window.print();
 }
 
 // ====== GOALS ======
@@ -11159,6 +11620,7 @@ var ALL_PERMISSIONS = [
   { id: 'MANAGE_RESOURCES',     label: 'Manage Resources',      category: 'Meetings & Planning',  desc: 'Add, edit, and delete shared resources' },
   { id: 'MANAGE_ANNOUNCEMENTS', label: 'Manage Announcements',  category: 'Meetings & Planning',  desc: 'Post, edit, pin, and delete announcements' },
   // Members & Contacts
+  { id: 'MANAGE_HOURS',         label: 'Confirm Volunteer Hours', category: 'Members & Contacts', desc: "Confirm members' community involvement hours and see everyone's totals" },
   { id: 'VIEW_MEMBERS',         label: 'View Members',          category: 'Members & Contacts',   desc: 'See the full member roster and signed-in users panel' },
   { id: 'MANAGE_MEMBERS',       label: 'Manage Members',        category: 'Members & Contacts',   desc: 'Add, edit, and toggle active status of members' },
   { id: 'VIEW_CONTACTS',        label: 'View Contacts',         category: 'Members & Contacts',   desc: 'See the external contacts directory' },
@@ -11189,7 +11651,7 @@ var DEFAULT_ROLES = [
     permissions: [
       'MANAGE_MEETINGS','MANAGE_ATTENDANCE','MANAGE_GOALS','MANAGE_IDEAS','MANAGE_ACTIVITIES',
       'MANAGE_PLANS','MANAGE_RESOURCES','MANAGE_ANNOUNCEMENTS',
-      'VIEW_MEMBERS','MANAGE_MEMBERS','VIEW_CONTACTS','MANAGE_CONTACTS',
+      'VIEW_MEMBERS','MANAGE_MEMBERS','VIEW_CONTACTS','MANAGE_CONTACTS','MANAGE_HOURS',
       'VIEW_BUDGET','MANAGE_BUDGET','VIEW_FUNDRAISING','MANAGE_FUNDRAISING',
       'VIEW_OUTREACH','MANAGE_OUTREACH','VIEW_FEEDBACK','MANAGE_FEEDBACK',
       'VIEW_SOCIAL','MANAGE_SOCIAL','VIEW_MARKETING','MANAGE_MARKETING',
@@ -11200,7 +11662,7 @@ var DEFAULT_ROLES = [
     id: 'role_secretary', name: 'Secretary', color: '#2563eb',
     permissions: [
       'MANAGE_MEETINGS','MANAGE_ATTENDANCE','MANAGE_GOALS','MANAGE_PLANS',
-      'MANAGE_ACTIVITIES','MANAGE_ANNOUNCEMENTS','MANAGE_RESOURCES','VIEW_MEMBERS',
+      'MANAGE_ACTIVITIES','MANAGE_ANNOUNCEMENTS','MANAGE_RESOURCES','VIEW_MEMBERS','MANAGE_HOURS',
     ],
     isDefault: true, canDelete: false
   },
@@ -11236,7 +11698,7 @@ var DEFAULT_ROLES = [
   {
     id: 'role_activities', name: 'Activities Coordinator', color: '#4f46e5',
     permissions: [
-      'MANAGE_ACTIVITIES','MANAGE_IDEAS','MANAGE_PLANS','MANAGE_RESOURCES','VIEW_MEMBERS',
+      'MANAGE_ACTIVITIES','MANAGE_IDEAS','MANAGE_PLANS','MANAGE_RESOURCES','VIEW_MEMBERS','MANAGE_HOURS',
     ],
     isDefault: true, canDelete: false
   },

@@ -99,7 +99,7 @@
     ['events', 'plans', 'ideas', 'presentations', 'meetings', 'members', 'feedback', 'posts',
      'announcements', 'goals', 'contacts', 'resources', 'transactions', 'activities',
      'emailTemplates', 'teachers', 'consents', 'partnerships', 'fundraisers', 'grants',
-     'eventBudgets'].forEach(function (k) { if (!Array.isArray(state[k])) state[k] = []; });
+     'eventBudgets', 'hours'].forEach(function (k) { if (!Array.isArray(state[k])) state[k] = []; });
     if (!state.checks || typeof state.checks !== 'object') state.checks = {};
     if (!Array.isArray(state.users)) state.users = [];
     state.meetings.forEach(function (m) {
