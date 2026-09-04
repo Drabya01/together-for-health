@@ -8210,7 +8210,32 @@ function hpSlideClosing(pptx, slide, s, meta, imgHero) {
   slide.addText('Together For Health', { x:0.5,y:7.14,w:6,h:0.3, fontSize:10,color:'F9B8C4',align:'left',italic:true });
 }
 
+// Loads a script once and remembers the promise, so concurrent callers share one request
+// and a second export does not refetch.
+var _scriptCache = {};
+function loadScriptOnce(src) {
+  if (_scriptCache[src]) return _scriptCache[src];
+  _scriptCache[src] = new Promise(function (resolve, reject) {
+    var el = document.createElement('script');
+    el.src = src;
+    el.onload = function () { resolve(); };
+    el.onerror = function () { delete _scriptCache[src]; reject(new Error('Could not load ' + src)); };
+    document.head.appendChild(el);
+  });
+  return _scriptCache[src];
+}
+
 async function hpBuildPPTX(slides, meta) {
+  // 466KB, needed only here. Fetching it on demand keeps it off every page load.
+  if (typeof PptxGenJS === 'undefined') {
+    if (typeof showToast === 'function') showToast('Preparing the export…', 'info');
+    try {
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('Could not load the export tool — check your connection.', 'error');
+      throw e;
+    }
+  }
   var pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.title = meta.title;
@@ -13064,9 +13089,8 @@ function deleteRole(roleId) {
   showToast('Role deleted', 'success');
 }
 </script>
-<script src="admin-editor.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script defer src="admin-editor.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- Firebase (compat builds: they expose a global `firebase`, so they work with this
      file's classic scripts and its ~250 inline onclick handlers. The modular SDK would
      require <script type="module">, whose scope is not global, and every one of those
