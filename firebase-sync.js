@@ -409,6 +409,21 @@
     if (!_clubUnsub) {
       _clubUnsub = CLUB_DOC.onSnapshot(function (snap) {
         var first = !_appShown;
+        if (!snap.exists) {
+          // First run on a fresh database. Everything the club already has lives in this
+          // device's localStorage (it was never publishable without a GitHub token), so
+          // seed the shared document from it. Staff only — a member must never author the
+          // club document from their own partial copy.
+          if (_hasStaffTier(u) && !snap.metadata.hasPendingWrites) {
+            _flushClubWrite().then(function (ok) {
+              if (ok && typeof showToast === 'function') {
+                showToast('Club data moved to the new database.', 'success');
+              }
+            });
+          }
+          _showAppOnce();
+          return;
+        }
         _applyClubSnapshot(snap);
         if (first) { _showAppOnce(); }
         else if (!snap.metadata.hasPendingWrites) { _rerenderActiveTab(); }
