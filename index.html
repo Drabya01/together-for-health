@@ -8329,11 +8329,27 @@ function _evSlots(ev) {
   return ev.slots;
 }
 
-function _slotIsMine(sl) {
+// Claims live in state.claims, NOT inside the event object. An event is staff-owned data;
+// a claim is a member's own action. Keeping them separate is what lets the security rules
+// give members write access to their sign-ups without also handing them the events, the
+// budget and the roster. See firestore.rules: club/state is staff-write, club/open is
+// member-write, and claims are an open key.
+function _claims() {
+  if (!Array.isArray(state.claims)) state.claims = [];
+  return state.claims;
+}
+
+function _claimFor(evId, slotId) {
+  return _claims().find(function (c) { return c.eventId === evId && c.slotId === slotId; });
+}
+
+function _slotIsMine(sl, evId) {
   var cu = window.currentUser;
-  if (!cu || !sl.memberId) return false;
-  return sl.memberId === (cu.uid || cu.id) ||
-         (!!cu.email && (sl.memberEmail || '').toLowerCase() === cu.email.toLowerCase());
+  if (!cu) return false;
+  var c = _claimFor(evId, sl.id);
+  if (!c || !c.memberId) return false;
+  return c.memberId === (cu.uid || cu.id) ||
+         (!!cu.email && (c.memberEmail || '').toLowerCase() === cu.email.toLowerCase());
 }
 
 function addEventSlotRow(label) {
@@ -8359,8 +8375,11 @@ function _collectEventSlots(existing) {
   document.querySelectorAll('#ev-slots-builder .ev-slot-input').forEach(function (inp) {
     var label = (inp.value || '').trim();
     if (!label) return;
+    // Reuse the existing slot's ID when the label is unchanged, so claims keyed by that
+    // ID survive an event edit. A renamed shift is a new shift and loses its claim, which
+    // is the honest behaviour: nobody signed up for the new thing.
     var kept = prev.find(function (p) { return p.label === label; });
-    out.push(kept || { id: uid(), label: label, memberId: '', memberName: '', memberEmail: '', claimedAt: 0 });
+    out.push({ id: kept ? kept.id : uid(), label: label });
   });
   return out;
 }
@@ -8372,14 +8391,16 @@ function claimSlot(evId, slotId) {
   if (!ev) return;
   var sl = _evSlots(ev).find(function (s) { return s.id === slotId; });
   if (!sl) return;
-  if (sl.memberId && !_slotIsMine(sl)) {
-    showToast(escHtml(sl.memberName || 'Someone') + ' already has that shift.', 'info');
+  var existing = _claimFor(evId, slotId);
+  if (existing && existing.memberId && !_slotIsMine(sl, evId)) {
+    showToast((existing.memberName || 'Someone') + ' already has that shift.', 'info');
     return;
   }
-  sl.memberId = cu.uid || cu.id || '';
-  sl.memberName = cu.name || cu.email || 'Member';
-  sl.memberEmail = cu.email || '';
-  sl.claimedAt = Date.now();
+  if (!existing) { existing = { eventId: evId, slotId: slotId }; _claims().push(existing); }
+  existing.memberId = cu.uid || cu.id || '';
+  existing.memberName = cu.name || cu.email || 'Member';
+  existing.memberEmail = cu.email || '';
+  existing.claimedAt = Date.now();
   saveState();
   renderCal(); renderDayPanel(ev.date); renderDash();
   showToast("You're signed up for “" + (sl.label || 'this shift') + '”.', 'success');
@@ -8390,15 +8411,17 @@ function unclaimSlot(evId, slotId) {
   if (!ev) return;
   var sl = _evSlots(ev).find(function (s) { return s.id === slotId; });
   if (!sl) return;
-  var mine = _slotIsMine(sl);
+  var c = _claimFor(evId, slotId);
+  if (!c || !c.memberId) return;
+  var mine = _slotIsMine(sl, evId);
   // An exec can free up a shift someone else abandoned; a member can only drop their own.
   if (!mine && !hasPermission('MANAGE_MEETINGS')) {
     showToast('You can only drop your own shifts.', 'error');
     return;
   }
   if (!confirm(mine ? 'Drop your shift "' + (sl.label || '') + '"?'
-                    : 'Free up "' + (sl.label || '') + '" from ' + (sl.memberName || 'that member') + '?')) return;
-  sl.memberId = ''; sl.memberName = ''; sl.memberEmail = ''; sl.claimedAt = 0;
+                    : 'Free up "' + (sl.label || '') + '" from ' + (c.memberName || 'that member') + '?')) return;
+  state.claims = _claims().filter(function (x) { return !(x.eventId === evId && x.slotId === slotId); });
   saveState();
   renderCal(); renderDayPanel(ev.date); renderDash();
   showToast('Shift is open again.', 'info');
@@ -8407,14 +8430,15 @@ function unclaimSlot(evId, slotId) {
 function _slotsHtml(ev) {
   var slots = _evSlots(ev);
   if (!slots.length) return '';
-  var open = slots.filter(function (s) { return !s.memberId; }).length;
+  var open = slots.filter(function (s) { var c = _claimFor(ev.id, s.id); return !c || !c.memberId; }).length;
   return '<div class="ev-slots">'
     + '<div class="ev-slots-head">Shifts'
     + (open ? '<span class="ev-slots-open">' + open + ' open</span>'
             : '<span class="ev-slots-full">all covered</span>') + '</div>'
     + slots.map(function (s) {
-        var mine = _slotIsMine(s);
-        var taken = !!s.memberId;
+        var mine = _slotIsMine(s, ev.id);
+        var _c = _claimFor(ev.id, s.id);
+        var taken = !!(_c && _c.memberId);
         var btn;
         if (mine) {
           btn = '<button onclick="unclaimSlot(\'' + ev.id + '\',\'' + s.id + '\')" class="ev-slot-btn ev-slot-btn--drop">Drop</button>';
@@ -8427,7 +8451,7 @@ function _slotsHtml(ev) {
         }
         return '<div class="ev-slot">'
           + '<div class="ev-slot-main"><span class="ev-slot-label">' + escHtml(s.label) + '</span>'
-          + (taken ? '<span class="ev-slot-who">' + (mine ? 'You' : escHtml(s.memberName || 'Taken')) + '</span>'
+          + (taken ? '<span class="ev-slot-who">' + (mine ? 'You' : escHtml((_c && _c.memberName) || 'Taken')) + '</span>'
                    : '<span class="ev-slot-who ev-slot-who--open">Nobody yet</span>')
           + '</div>' + btn + '</div>';
       }).join('')
@@ -8444,7 +8468,7 @@ function _pastClaimedShifts() {
   (state.events || []).forEach(function (ev) {
     if (!ev.date || ev.date > todayStr) return;
     _evSlots(ev).forEach(function (s) {
-      if (!_slotIsMine(s)) return;
+      if (!_slotIsMine(s, ev.id)) return;
       var alreadyLogged = (state.hours || []).some(function (h) {
         return _hoursIsMine(h) && h.date === ev.date && (h.activity || '').indexOf(ev.title) !== -1;
       });

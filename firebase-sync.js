@@ -39,9 +39,18 @@
     appId: "1:552108386821:web:2d058bb5fb79a581a6ca6c"
   };
 
-  // Bootstrap owner. Mirrors the check in firestore.rules; unlike the old
-  // client-side wildcard this one is ALSO enforced server-side, so editing it
-  // here grants nothing on its own.
+  // EMERGENCY BOOTSTRAP ONLY. These addresses can mint the first admin when the users
+  // collection is empty, because otherwise nobody could ever approve the first person and
+  // the club would be locked out of its own app.
+  //
+  // This is NOT how succession works. Once anyone is an admin, the next president is made
+  // one by approving them with permissionTier 'admin' in the Members tab — no code change
+  // and no redeploy. Add the club-owned account here (and drop the personal one) so the
+  // app outlives whoever set it up: a personal address alone means the club loses recovery
+  // access the moment that student graduates.
+  //
+  // Must match the list in firestore.rules. The rules copy is the one actually enforced —
+  // editing this file alone grants nothing.
   var OWNER_EMAILS = ['golussaud@gmail.com'];
 
   if (typeof firebase === 'undefined' || !firebase.initializeApp) {
@@ -62,8 +71,29 @@
 
   var USERS = 'users';
   var CLUB_DOC = db.collection('club').doc('state');
+  var OPEN_DOC = db.collection('club').doc('open');
 
-  var _userUnsub = null, _clubUnsub = null, _rosterUnsub = null;
+  // The club document is split in two so the security rules can tell the difference
+  // between "data the exec team owns" and "things a member does themselves".
+  //
+  //   club/state  staff write, approved read  - events, meetings, budget, roster, resources
+  //   club/open   approved write              - these four keys only
+  //
+  // Before the split, one document meant any approved member could technically rewrite the
+  // budget, the roster or the whole calendar, because the app's 30-permission system is UI
+  // gating and the rules cannot see it. Now an ordinary member's write reaches nothing else.
+  //
+  // Why these four: ideas and feedback are member submissions by design; hours are the
+  // member's own declaration; claims are their own sign-ups. Shift claims live here rather
+  // than inside the event object precisely so events can stay staff-only.
+  //
+  // Honest limitation: club/open is still ONE document, so a member can technically edit
+  // another member's hours entry or delete someone's idea. Fixing that needs per-record
+  // documents (hours/{uid}). This is a large improvement over "any member can wipe the
+  // budget", and the remaining exposure is small, visible and inside the club.
+  var OPEN_KEYS = ['ideas', 'feedback', 'hours', 'claims'];
+
+  var _userUnsub = null, _clubUnsub = null, _rosterUnsub = null, _openUnsub = null;
   var _writeTimer = null, _pendingWrite = false, _applyingRemote = false, _suppressWrite = false;
 
   window.TFH_FIREBASE = true;
@@ -116,13 +146,22 @@
     } catch (e) {}
   }
 
-  // The club document, minus anything that lives elsewhere or is gist-era cruft.
+  // The staff-owned document: everything except the member-writable keys, the users
+  // collection (which has its own collection) and gist-era cruft.
   function _clubPayload() {
     var out = {};
     Object.keys(state).forEach(function (k) {
       if (k === 'users' || k === '_syncTs' || k === '_syncVersion' || k === '_sitePin') return;
+      if (OPEN_KEYS.indexOf(k) !== -1) return;
       out[k] = state[k];
     });
+    return out;
+  }
+
+  // The member-writable document: only the four open keys.
+  function _openPayload() {
+    var out = {};
+    OPEN_KEYS.forEach(function (k) { out[k] = Array.isArray(state[k]) ? state[k] : []; });
     return out;
   }
 
@@ -156,18 +195,29 @@
     // bounced back as a snapshot, redrew the page, and renderDash()'s seen-marking saved
     // again — a write loop that both flickered the UI and burned Firestore quota.
     _lastClubJson = JSON.stringify(payload);
-    return CLUB_DOC.set({
-      data: payload,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedBy: auth.currentUser.email || auth.currentUser.uid
-    }, { merge: false }).then(function () {
+    var openPayload = _openPayload();
+    _lastOpenJson = JSON.stringify(openPayload);
+    var meta = function () {
+      return { updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+               updatedBy: auth.currentUser.email || auth.currentUser.uid };
+    };
+
+    // Every approved member may write club/open. Only staff may write club/state, so do
+    // not even attempt it otherwise: a guaranteed permission-denied on every save would
+    // spam the console and the error toast for ordinary members.
+    var writes = [OPEN_DOC.set(Object.assign({ data: openPayload }, meta()), { merge: false })];
+    if (_hasStaffTier(window.currentUser)) {
+      writes.push(CLUB_DOC.set(Object.assign({ data: payload }, meta()), { merge: false }));
+    }
+
+    return Promise.all(writes).then(function () {
       _syncDot('synced');
       return true;
     }).catch(function (err) {
       console.warn('[tfh] club write failed:', err && err.code);
       _syncDot('error');
       if (err && err.code === 'permission-denied' && typeof showToast === 'function') {
-        showToast('You do not have permission to change club data.', 'error');
+        showToast('You do not have permission to change that.', 'error');
       }
       return false;
     });
@@ -195,8 +245,9 @@
   window.syncFromGist = function () {
     if (!auth.currentUser) { _syncDot('offline'); return Promise.resolve(false); }
     _syncDot('syncing');
-    return CLUB_DOC.get().then(function (snap) {
-      if (snap.exists) _applyClubSnapshot(snap, true);
+    return Promise.all([CLUB_DOC.get(), OPEN_DOC.get()]).then(function (snaps) {
+      if (snaps[0].exists) _applyClubSnapshot(snaps[0], true);
+      if (snaps[1].exists) _applyOpenSnapshot(snaps[1], true);
       _syncDot('synced');
       return 'current';
     }).catch(function () { _syncDot('error'); return false; });
@@ -236,6 +287,7 @@
   // that carries no actual change — which includes the server's acknowledgement of our
   // OWN write, since every write updates `updatedAt` and so produces a fresh snapshot.
   var _lastClubJson = null;
+  var _lastOpenJson = null;
   var _lastRosterJson = null;
 
   // Returns true only when the club data genuinely changed and the UI should redraw.
@@ -259,6 +311,22 @@
     } finally {
       _applyingRemote = false;
     }
+    return true;
+  }
+
+  // Same dedupe and echo-suppression contract as _applyClubSnapshot, for the open document.
+  function _applyOpenSnapshot(snap, force) {
+    if (!snap.exists) return false;
+    if (!force && snap.metadata && snap.metadata.hasPendingWrites) return false;
+    var d = (snap.data() || {}).data || {};
+    var incoming = JSON.stringify(d);
+    if (incoming === _lastOpenJson) return false;
+    _lastOpenJson = incoming;
+    _applyingRemote = true;
+    try {
+      OPEN_KEYS.forEach(function (k) { state[k] = Array.isArray(d[k]) ? d[k] : []; });
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+    } finally { _applyingRemote = false; }
     return true;
   }
 
@@ -322,6 +390,7 @@
   window.signOut = function () {
     if (_userUnsub) { _userUnsub(); _userUnsub = null; }
     if (_clubUnsub) { _clubUnsub(); _clubUnsub = null; }
+    if (_openUnsub) { _openUnsub(); _openUnsub = null; }
     if (_rosterUnsub) { _rosterUnsub(); _rosterUnsub = null; }
     auth.signOut().catch(function () {}).then(function () {
       try {
@@ -516,6 +585,23 @@
         console.warn('[tfh] club listener error:', err && err.code);
         _showAppOnce();
       });
+    }
+    if (!_openUnsub) {
+      _openUnsub = OPEN_DOC.onSnapshot(function (snap) {
+        if (!snap.exists) {
+          // Migration off the single combined document. The four open keys are still inside
+          // club/state from before the split; one staff write lifts them into club/open and
+          // drops them from club/state in the same pass. Staff-only, because a member must
+          // not author the initial split from their own partial copy.
+          if (_hasStaffTier(u) && !snap.metadata.hasPendingWrites) {
+            _flushClubWrite().then(function (ok) {
+              if (ok) console.log('[tfh] split club/open out of club/state');
+            });
+          }
+          return;
+        }
+        if (_applyOpenSnapshot(snap)) _rerenderActiveTab();
+      }, function (err) { console.warn('[tfh] open listener error:', err && err.code); });
     }
     if (_hasStaffTier(u) && !_rosterUnsub) {
       _rosterUnsub = db.collection(USERS).onSnapshot(function (qs) {

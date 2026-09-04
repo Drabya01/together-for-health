@@ -21,10 +21,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Bootstrap owner, by verified Google email. Needed because the very first
-    // sign-in happens when no user document exists yet, so nobody could
-    // otherwise be an admin and approve the first person. This is checked
-    // against the Google-issued token, not against anything the client sends.
+    // EMERGENCY BOOTSTRAP AND RECOVERY ONLY. Needed because the very first sign-in
+    // happens when no user document exists, so nobody could otherwise be an admin and
+    // approve the first person. Checked against the Google-issued, verified token — not
+    // against anything the client sends.
+    //
+    // Succession does NOT run through this list: once anyone is an admin, the next
+    // president is made one by approving them with permissionTier 'admin'. Keep this to
+    // the CLUB-OWNED Google account, so recovery access does not leave with a graduating
+    // student. Must match OWNER_EMAILS in firebase-sync.js.
     function isOwner() {
       return signedIn()
         && request.auth.token.email_verified == true
@@ -95,18 +100,35 @@ service cloud.firestore {
 
     // ---- club data ---------------------------------------------------------
     //
-    //  The shared club document: events, meetings, roster, budget, resources
-    //  and so on. Readable and writable only by an approved member, so an
-    //  unapproved or rejected account sees nothing, and a revoked member is
-    //  genuinely revoked rather than still holding a write credential.
-    //
-    //  Note: this is one document, so any approved member can write all of it.
-    //  Splitting it per collection (so members can add an idea but not edit the
-    //  budget) is the next step; it is a real limitation, not an oversight.
+    //  Split in two, because the app's 30-permission role system is UI gating that these
+    //  rules cannot see. With a single document, "approved member" was the only distinction
+    //  available, so any member could technically rewrite the budget, the roster or the
+    //  whole calendar. The split gives the rules something real to enforce.
 
-    match /club/{document} {
+    //  Staff-owned: events, meetings, roster, budget, resources, outreach, plans, goals.
+    //  Every approved member reads it; only admins and officers write it.
+    match /club/state {
+      allow read:  if isApproved();
+      allow write: if isStaff();
+    }
+
+    //  Member-owned: ideas, feedback, hours and shift claims — the four things a member
+    //  legitimately creates for themselves. Shift claims live here rather than inside the
+    //  event object precisely so that events can stay staff-only while sign-ups stay open.
+    //
+    //  Known limitation, stated rather than hidden: this is still one document, so a member
+    //  can technically edit another member's hours entry or delete someone's idea. Ending
+    //  that needs per-record documents (hours/{uid}/entries/{id}). It is a much smaller
+    //  exposure than the budget, and it is confined to approved club members.
+    match /club/open {
       allow read:  if isApproved();
       allow write: if isApproved();
+    }
+
+    //  Anything else under club/ is not part of the schema.
+    match /club/{other} {
+      allow read:  if isApproved();
+      allow write: if isStaff();
     }
 
     // ---- default deny ------------------------------------------------------
