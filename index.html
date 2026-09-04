@@ -927,7 +927,12 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg);
+    /* wrap so the shift list below becomes its own full-width row instead of a third flex
+       column, which squeezed the event title into one word per line */
+    flex-wrap: wrap;
   }
+  .cal-event-item-info { min-width: 0; flex: 1 1 60%; }
+  .cal-event-item .ev-slots { flex: 1 1 100%; width: 100%; margin-top: 4px; }
 
   .cal-event-item-info { flex: 1; min-width: 0; }
   .cal-event-item-title { font-size: 14px; font-weight: 500; }
@@ -2228,6 +2233,34 @@
     input[type="checkbox"], input[type="radio"] { font-size: inherit !important; }
   }
 
+  /* ===== EVENT SHIFT SIGN-UPS ===== */
+  .ev-slots { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--border); }
+  .ev-slots-head {
+    display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px;
+  }
+  .ev-slots-open  { background: var(--tint-warn); color: var(--warn-text); font-weight: 700;
+                    font-size: 10.5px; padding: 2px 8px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
+  .ev-slots-full  { background: var(--tint-ok); color: var(--ok-text); font-weight: 700;
+                    font-size: 10.5px; padding: 2px 8px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
+  .ev-slot { display: flex; align-items: center; gap: 9px; padding: 5px 0; }
+  .ev-slot-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .ev-slot-label { font-size: 13px; color: var(--text); font-weight: 500; }
+  .ev-slot-who { font-size: 11.5px; color: var(--text-muted); }
+  .ev-slot-who--open { color: var(--warn-text); }
+  .ev-slot-btn {
+    min-height: 30px; padding: 4px 11px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; flex-shrink: 0;
+    background: none; color: var(--text-muted); border: 1px solid var(--border);
+  }
+  .ev-slot-btn--claim { background: var(--accent-btn); color: var(--on-accent); border-color: var(--accent-btn); }
+  .ev-slot-btn--drop  { color: var(--danger-text); border-color: var(--border-strong); }
+  .shift-nudge {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--tint-info); border: 1px solid var(--border); color: var(--text);
+    border-radius: var(--radius); padding: 11px 14px; font-size: 13px; margin-bottom: 16px;
+  }
+
   /* ===== COMMUNITY INVOLVEMENT HOURS ===== */
   .hours-notice {
     background: var(--tint-warn); border: 1px solid #fde047; color: var(--warn-text);
@@ -2908,6 +2941,7 @@
     </div>
 
     <div id="hours-summary"></div>
+    <div id="hours-nudges"></div>
 
     <!-- Deliberately prominent and worded carefully: this app is a personal record to help a
          student fill in their board's official form. It is not the school's system, the club
@@ -3270,6 +3304,13 @@
       <label>Reminder (optional)</label>
       <input type="datetime-local" id="ev-reminder">
       <p class="form-hint">Get a browser notification at this time — works while the app is open or running in a tab.</p>
+    </div></div>
+    <div class="form-row"><div>
+      <label>Shifts members can sign up for (optional)</label>
+      <div id="ev-slots-builder"></div>
+      <button type="button" class="btn" onclick="addEventSlotRow()" style="margin-top:8px;min-height:38px;">+ Add a shift</button>
+      <p class="form-hint">e.g. &ldquo;Setup 3&ndash;4pm&rdquo;, &ldquo;Booth 4&ndash;6pm&rdquo;. Members claim these themselves, so you stop
+      organising coverage over text message. Leave empty if the event needs no sign-ups.</p>
     </div></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-event')">Cancel</button>
@@ -5483,10 +5524,12 @@ function renderDayPanel(dateStr) {
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="btn-ghost btn" style="font-size:12px;padding:4px 8px;" onclick="editEvent('${ev.id}')">Edit</button>
-        <button class="btn-ghost btn btn-danger" style="font-size:12px;padding:4px 8px;" onclick="deleteEvent('${ev.id}')">Del</button>
+        <button class="btn-ghost btn editor-only" style="font-size:12px;padding:4px 8px;" onclick="editEvent('${ev.id}')">Edit</button>
+        <button class="btn-ghost btn btn-danger editor-only" style="font-size:12px;padding:4px 8px;" onclick="deleteEvent('${ev.id}')">Del</button>
       </div>
     `;
+    const _sl = _slotsHtml(ev);
+    if (_sl) { const w = document.createElement('div'); w.innerHTML = _sl; item.appendChild(w.firstChild); }
     list.appendChild(item);
   });
 }
@@ -5541,6 +5584,8 @@ function openAddEvent() {
   document.getElementById('ev-cat').value = 'general';
   document.getElementById('ev-notes').value = '';
   document.getElementById('ev-reminder').value = '';
+  var _sb2 = document.getElementById('ev-slots-builder');
+  if (_sb2) _sb2.innerHTML = '';
   openModal('modal-event');
 }
 
@@ -5561,6 +5606,8 @@ function editEvent(id) {
   document.getElementById('ev-cat').value = ev.cat;
   document.getElementById('ev-notes').value = ev.notes || '';
   document.getElementById('ev-reminder').value = ev.reminder || '';
+  var _sb = document.getElementById('ev-slots-builder');
+  if (_sb) { _sb.innerHTML = ''; (ev.slots || []).forEach(function (sl) { addEventSlotRow(sl.label); }); }
   openModal('modal-event');
 }
 
@@ -5579,7 +5626,10 @@ function saveEvent() {
     time: document.getElementById('ev-time').value,
     cat: document.getElementById('ev-cat').value,
     notes: document.getElementById('ev-notes').value.trim(),
-    reminder: reminder || ''
+    reminder: reminder || '',
+    // Preserve claims across an edit: _collectEventSlots matches on label, so changing an
+    // event's time does not silently wipe everyone who had signed up.
+    slots: _collectEventSlots(editingId ? ((state.events.find(function(x){return x.id===editingId;})||{}).slots) : [])
   };
   if (editingId) {
     state.events = state.events.map(e => e.id === editingId ? ev : e);
@@ -8173,6 +8223,163 @@ function deleteAnnouncement(id) {
   saveState(); renderDash();
 }
 
+// ====== EVENT SHIFT SIGN-UPS ======
+//
+//  Coverage for events was organised entirely off-app, over text message, which is the
+//  audit's "the club's core coordination happens nowhere near this tool" finding. An event
+//  can now carry slots that members claim themselves.
+//
+//  A claim is an INTENTION, not attendance and not hours. Nothing here writes to
+//  state.hours: after the event a member logs their own hours and attests to them, because
+//  Ontario community-involvement hours are the student's declaration, not the club's.
+//  What this does offer is a shortcut that pre-fills the hours form from a shift that has
+//  already happened — the member still confirms and attests.
+
+function _evSlots(ev) {
+  if (!ev) return [];
+  if (!Array.isArray(ev.slots)) ev.slots = [];
+  return ev.slots;
+}
+
+function _slotIsMine(sl) {
+  var cu = window.currentUser;
+  if (!cu || !sl.memberId) return false;
+  return sl.memberId === (cu.uid || cu.id) ||
+         (!!cu.email && (sl.memberEmail || '').toLowerCase() === cu.email.toLowerCase());
+}
+
+function addEventSlotRow(label) {
+  var host = document.getElementById('ev-slots-builder');
+  if (!host) return;
+  var row = document.createElement('div');
+  row.className = 'ev-slot-row';
+  row.style.cssText = 'display:flex;gap:7px;align-items:center;margin-bottom:7px;';
+  row.innerHTML = '<input type="text" class="ev-slot-input" placeholder="e.g. Booth 4–6pm" value="' + escHtml(label || '') + '" style="flex:1;">'
+    + '<button type="button" onclick="this.parentNode.remove()" aria-label="Remove this shift" '
+    + 'style="min-width:38px;min-height:38px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--danger-text);cursor:pointer;font-family:inherit;font-size:15px;">&times;</button>';
+  host.appendChild(row);
+  var inp = row.querySelector('input');
+  if (inp && !label) inp.focus();
+}
+
+// Read the builder back, preserving who already claimed a shift. Matching by label is
+// deliberate: rebuilding slots from scratch on every edit would silently drop every claim
+// the moment an exec changed an event's time.
+function _collectEventSlots(existing) {
+  var prev = Array.isArray(existing) ? existing : [];
+  var out = [];
+  document.querySelectorAll('#ev-slots-builder .ev-slot-input').forEach(function (inp) {
+    var label = (inp.value || '').trim();
+    if (!label) return;
+    var kept = prev.find(function (p) { return p.label === label; });
+    out.push(kept || { id: uid(), label: label, memberId: '', memberName: '', memberEmail: '', claimedAt: 0 });
+  });
+  return out;
+}
+
+function claimSlot(evId, slotId) {
+  var cu = window.currentUser;
+  if (!cu) { showToast('Please sign in again.', 'error'); return; }
+  var ev = state.events.find(function (e) { return e.id === evId; });
+  if (!ev) return;
+  var sl = _evSlots(ev).find(function (s) { return s.id === slotId; });
+  if (!sl) return;
+  if (sl.memberId && !_slotIsMine(sl)) {
+    showToast(escHtml(sl.memberName || 'Someone') + ' already has that shift.', 'info');
+    return;
+  }
+  sl.memberId = cu.uid || cu.id || '';
+  sl.memberName = cu.name || cu.email || 'Member';
+  sl.memberEmail = cu.email || '';
+  sl.claimedAt = Date.now();
+  saveState();
+  renderCal(); renderDayPanel(ev.date); renderDash();
+  showToast("You're signed up for “" + (sl.label || 'this shift') + '”.', 'success');
+}
+
+function unclaimSlot(evId, slotId) {
+  var ev = state.events.find(function (e) { return e.id === evId; });
+  if (!ev) return;
+  var sl = _evSlots(ev).find(function (s) { return s.id === slotId; });
+  if (!sl) return;
+  var mine = _slotIsMine(sl);
+  // An exec can free up a shift someone else abandoned; a member can only drop their own.
+  if (!mine && !hasPermission('MANAGE_MEETINGS')) {
+    showToast('You can only drop your own shifts.', 'error');
+    return;
+  }
+  if (!confirm(mine ? 'Drop your shift "' + (sl.label || '') + '"?'
+                    : 'Free up "' + (sl.label || '') + '" from ' + (sl.memberName || 'that member') + '?')) return;
+  sl.memberId = ''; sl.memberName = ''; sl.memberEmail = ''; sl.claimedAt = 0;
+  saveState();
+  renderCal(); renderDayPanel(ev.date); renderDash();
+  showToast('Shift is open again.', 'info');
+}
+
+function _slotsHtml(ev) {
+  var slots = _evSlots(ev);
+  if (!slots.length) return '';
+  var open = slots.filter(function (s) { return !s.memberId; }).length;
+  return '<div class="ev-slots">'
+    + '<div class="ev-slots-head">Shifts'
+    + (open ? '<span class="ev-slots-open">' + open + ' open</span>'
+            : '<span class="ev-slots-full">all covered</span>') + '</div>'
+    + slots.map(function (s) {
+        var mine = _slotIsMine(s);
+        var taken = !!s.memberId;
+        var btn;
+        if (mine) {
+          btn = '<button onclick="unclaimSlot(\'' + ev.id + '\',\'' + s.id + '\')" class="ev-slot-btn ev-slot-btn--drop">Drop</button>';
+        } else if (taken) {
+          btn = hasPermission('MANAGE_MEETINGS')
+            ? '<button onclick="unclaimSlot(\'' + ev.id + '\',\'' + s.id + '\')" class="ev-slot-btn">Free up</button>'
+            : '';
+        } else {
+          btn = '<button onclick="claimSlot(\'' + ev.id + '\',\'' + s.id + '\')" class="ev-slot-btn ev-slot-btn--claim">Sign up</button>';
+        }
+        return '<div class="ev-slot">'
+          + '<div class="ev-slot-main"><span class="ev-slot-label">' + escHtml(s.label) + '</span>'
+          + (taken ? '<span class="ev-slot-who">' + (mine ? 'You' : escHtml(s.memberName || 'Taken')) + '</span>'
+                   : '<span class="ev-slot-who ev-slot-who--open">Nobody yet</span>')
+          + '</div>' + btn + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+// Shifts a member claimed for an event that has already happened, so they can turn one into
+// an hours entry without retyping it. Still opens the normal form: they set the hours and
+// tick the attestation themselves.
+function _pastClaimedShifts() {
+  var t = new Date();
+  var todayStr = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+  var out = [];
+  (state.events || []).forEach(function (ev) {
+    if (!ev.date || ev.date > todayStr) return;
+    _evSlots(ev).forEach(function (s) {
+      if (!_slotIsMine(s)) return;
+      var alreadyLogged = (state.hours || []).some(function (h) {
+        return _hoursIsMine(h) && h.date === ev.date && (h.activity || '').indexOf(ev.title) !== -1;
+      });
+      if (!alreadyLogged) out.push({ ev: ev, slot: s });
+    });
+  });
+  return out.sort(function (a, b) { return (b.ev.date || '').localeCompare(a.ev.date || ''); });
+}
+
+function logHoursFromShift(evId, slotId) {
+  var ev = (state.events || []).find(function (e) { return e.id === evId; });
+  if (!ev) return;
+  var sl = _evSlots(ev).find(function (s) { return s.id === slotId; });
+  openLogHours();
+  document.getElementById('lh-activity').value = ev.title + (sl && sl.label ? ' — ' + sl.label : '');
+  document.getElementById('lh-org').value = 'Together For Health';
+  document.getElementById('lh-date').value = ev.date;
+  // Hours and the attestation are deliberately left blank: only the member knows how long
+  // they actually stayed, and the attestation has to be theirs to make.
+  document.getElementById('lh-hours').focus();
+  showToast('Fill in how many hours you actually did.', 'info');
+}
+
 // ====== COMMUNITY INVOLVEMENT HOURS ======
 //
 //  Ontario students need 40 hours of community involvement to graduate, and the rules
@@ -8266,6 +8473,20 @@ function renderHours() {
       + '<div><div class="hours-stat-label">Exec-confirmed</div><div class="hours-stat-val">' + _hoursFmt(confirmed) + ' h</div></div>'
       + '<div><div class="hours-stat-label">Entries</div><div class="hours-stat-val">' + rows.length + '</div></div>'
       + '</div></div></div></div>';
+  }
+
+  // Shifts already worked but not yet logged. A claim is not hours, so this only offers a
+  // pre-filled form — the member still enters the real duration and makes the attestation.
+  var nudgeHost = document.getElementById('hours-nudges');
+  if (nudgeHost) {
+    var pending = _pastClaimedShifts().slice(0, 4);
+    nudgeHost.innerHTML = pending.map(function (x) {
+      return '<div class="shift-nudge"><div style="flex:1;min-width:170px;">'
+        + 'You signed up for <strong>' + escHtml(x.slot.label || 'a shift') + '</strong> at '
+        + '<strong>' + escHtml(x.ev.title) + '</strong> on ' + _hoursDateLabel(x.ev.date) + '.</div>'
+        + '<button class="btn btn-primary" style="min-height:38px;" onclick="logHoursFromShift(\''
+        + x.ev.id + '\',\'' + x.slot.id + '\')">Log these hours</button></div>';
+    }).join('');
   }
 
   var mine = document.getElementById('hours-mine');
