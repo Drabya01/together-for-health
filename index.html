@@ -9165,7 +9165,10 @@ function renderMembers() {
         } else if (u.status === 'rejected') {
           actions = '<button onclick="showApproveModal(\'' + u.id + '\')" style="padding:5px 10px;background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Re-approve</button>';
         } else {
-          actions = '<button onclick="revokeUser(\'' + u.id + '\')" style="padding:5px 8px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;" title="Revoke access">Revoke</button>';
+          // "Remove" is the everyday action (a kick they can come back from), so give it the
+          // clearer label and the larger target. Permanent deletion is deliberately quieter.
+          actions = '<button onclick="revokeUser(\'' + u.id + '\')" style="min-height:32px;padding:6px 12px;background:none;color:#b91c1c;border:1px solid #fca5a5;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;" title="Remove from the club. They can be let back in with one click.">Remove</button>'
+            + ' <button onclick="removeUserCompletely(\'' + u.id + '\')" style="min-height:32px;padding:6px 9px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:11.5px;cursor:pointer;font-family:inherit;" title="Permanently delete their account record. They would have to fill in the join form again.">Delete account</button>';
         }
 
         var metaLine = [u.email ? escHtml(u.email) : '', u.grade ? 'Grade ' + escHtml(u.grade) : ''].filter(Boolean).join(' · ');

@@ -357,7 +357,24 @@
       window.currentUser = u;
       if (u.status === 'approved') {
         _onApproved(u);
-      } else if (u.status === 'rejected' || u.status === 'pending') {
+      } else {
+        // They are pending or rejected. If the app was already open, they have just been
+        // removed while using it — tear down the live club and roster listeners so they
+        // stop receiving club data, and reset _appShown so a later re-approval opens the
+        // app again cleanly. (The rules would refuse them anyway, but leaving the listeners
+        // attached means an errored subscription and stale data on screen.)
+        if (_appShown) {
+          if (_clubUnsub) { _clubUnsub(); _clubUnsub = null; }
+          if (_rosterUnsub) { _rosterUnsub(); _rosterUnsub = null; }
+          _appShown = false;
+          _lastClubJson = null;
+          _lastRosterJson = null;
+          var shell = document.getElementById('app-shell');
+          if (shell) shell.style.visibility = 'hidden';
+          if (typeof showToast === 'function') {
+            showToast('Your access to the club app was removed by an admin.', 'info');
+          }
+        }
         if (typeof showPendingScreen === 'function') showPendingScreen();
       }
     }, function (err) {
@@ -601,14 +618,122 @@
   };
 
   window.setUserRole = function (userId, roleId, roleName) {
+    // The Members UI calls this as setUserRole(id, select.value) with no name, so derive the
+    // display name from the roles list — otherwise user.role kept the previous role's label.
+    if (!roleName) {
+      var r = (state.roles || []).find(function (x) { return x.id === roleId; });
+      if (r) roleName = r.name;
+    }
     var patch = { roleId: roleId };
     if (roleName) patch.role = roleName;
+    // An admin role must carry the admin tier, or the person gets the title without the
+    // access (and vice versa) — the two fields were previously set independently.
+    if (roleId === 'role_president') patch.permissionTier = 'admin';
     return db.collection(USERS).doc(userId).update(patch).then(function () {
       if (typeof showToast === 'function') showToast('Role updated.', 'success');
       if (typeof renderMembers === 'function') renderMembers();
     }).catch(function (err) {
       if (typeof showToast === 'function') showToast('Could not update role: ' + (err.code || 'error'), 'error');
     });
+  };
+
+  // ── removing people ───────────────────────────────────────────────────────
+  //
+  //  Two distinct actions, because they are not the same thing:
+  //
+  //    revokeUser()          a KICK. Access ends immediately, their profile is kept, and
+  //                          they reappear in the pending list so they can be let back in
+  //                          with one click. Not a ban — nothing stops them returning.
+  //    removeUserCompletely() erases the account record entirely. They would sign in as a
+  //                          brand-new applicant and refill the form.
+  //
+  //  The old revokeUser() mutated state.users and called saveState(), which writes
+  //  club/state — and club/state deliberately excludes the users collection. So revoking
+  //  someone did nothing at all: the button appeared to work and the person kept access.
+
+  window.revokeUser = function (userId) {
+    var u = (state.users || []).find(function (x) { return x.id === userId; });
+    var who = u ? (u.name || u.email || 'This member') : 'This member';
+    if (!confirm('Remove ' + who + ' from the club?\n\n' +
+                 'They lose access straight away, but this is not a ban — they stay in your list ' +
+                 'as "pending", so you can let them back in with one click whenever you want.')) return;
+    return db.collection(USERS).doc(userId).update({ status: 'pending' }).then(function () {
+      if (typeof showToast === 'function') {
+        showToast(who + ' has been removed. They are in your pending list if you want them back.', 'success');
+      }
+      if (typeof renderMembers === 'function') renderMembers();
+    }).catch(function (err) {
+      if (typeof showToast === 'function') {
+        showToast(err.code === 'permission-denied'
+          ? 'You do not have permission to remove members.'
+          : 'Could not remove: ' + (err.code || 'error'), 'error');
+      }
+    });
+  };
+
+  window.removeUserCompletely = function (userId) {
+    var u = (state.users || []).find(function (x) { return x.id === userId; });
+    var who = u ? (u.name || u.email || 'this member') : 'this member';
+    if (!confirm('Permanently delete ' + who + "'s account record?\n\n" +
+                 'Their name, grade and profile are erased. If they ever want back in they would ' +
+                 'sign in and fill the join form again from scratch.\n\n' +
+                 'To simply remove their access, use Remove instead — it keeps their profile.')) return;
+    return db.collection(USERS).doc(userId).delete().then(function () {
+      // Also drop the matching roster card, which lives in the club document.
+      if (u && Array.isArray(state.members)) {
+        var lc = (u.email || '').toLowerCase();
+        var before = state.members.length;
+        state.members = state.members.filter(function (m) {
+          return (m.email || '').toLowerCase() !== lc && m.googleId !== userId;
+        });
+        if (state.members.length !== before) window.saveState();
+      }
+      if (typeof showToast === 'function') showToast(who + "'s account was deleted.", 'success');
+      if (typeof renderMembers === 'function') renderMembers();
+    }).catch(function (err) {
+      if (typeof showToast === 'function') showToast('Could not delete: ' + (err.code || 'error'), 'error');
+    });
+  };
+
+  // Deleting a roster card used to leave the person's ACCESS untouched, so someone removed
+  // from the Members list could still sign in and use the app. Offer to do both.
+  var _origDeleteMember = window.deleteMember;
+  window.deleteMember = function (id) {
+    var m = (state.members || []).find(function (x) { return x.id === id; });
+    if (!m) { if (typeof _origDeleteMember === 'function') return _origDeleteMember.apply(this, arguments); }
+    var lc = (m.email || '').toLowerCase();
+    var acct = (state.users || []).find(function (u) {
+      return (u.email || '').toLowerCase() === lc || (m.googleId && u.id === m.googleId);
+    });
+    var name = m.name || m.email || 'this member';
+    if (!confirm('Remove ' + name + ' from the roster?')) return;
+    state.members = (state.members || []).filter(function (x) { return x.id !== id; });
+    window.saveState();
+    if (typeof renderMembers === 'function') renderMembers();
+    if (acct && acct.status === 'approved') {
+      if (confirm(name + ' still has an account that can sign in.\n\nRemove their access too?')) {
+        return db.collection(USERS).doc(acct.id).update({ status: 'pending' }).then(function () {
+          if (typeof showToast === 'function') showToast(name + ' removed from the roster and signed out of the app.', 'success');
+          if (typeof renderMembers === 'function') renderMembers();
+        }).catch(function () {});
+      }
+      if (typeof showToast === 'function') showToast('Removed from the roster. ' + name + ' can still sign in.', 'info');
+    }
+  };
+
+  // Deleting a role reassigned affected users via state.users + saveState(), which went
+  // nowhere. Reassign them in Firestore instead, then let the original clean up the role.
+  var _origDeleteRole = window.deleteRole;
+  window.deleteRole = function (roleId) {
+    var affected = (state.users || []).filter(function (u) { return u.roleId === roleId; });
+    var out = (typeof _origDeleteRole === 'function') ? _origDeleteRole.apply(this, arguments) : undefined;
+    affected.forEach(function (u) {
+      db.collection(USERS).doc(u.id).update({ roleId: 'role_member', role: 'Member' }).catch(function () {});
+    });
+    if (affected.length && typeof showToast === 'function') {
+      showToast(affected.length + ' member' + (affected.length === 1 ? '' : 's') + ' moved to the Member role.', 'info');
+    }
+    return out;
   };
 
   // The tour's "don't show me again" flag lives on the person, not on the club, so
@@ -666,6 +791,32 @@
       if (seen || (window.currentUser && window.currentUser.onboarded)) return;
     }
     if (typeof _origMaybeStartTour === 'function') return _origMaybeStartTour.apply(this, arguments);
+  };
+
+  // The email approve/reject links were built for the Gist era, where a member's signup
+  // never reached the admin's device and the link had to carry their details so the record
+  // could be created locally. With Firestore the applicant registers themselves and shows
+  // up in the live roster, so that materialisation path is not just unnecessary — it writes
+  // to state.users and would be silently discarded. Send the admin to the Members tab,
+  // where approving is one click on live data.
+  window.processPendingAction = function () {
+    var raw;
+    try { raw = sessionStorage.getItem('tfh_pending_action'); } catch (e) { return; }
+    if (!raw) return;
+    try { sessionStorage.removeItem('tfh_pending_action'); } catch (e) {}
+    var action;
+    try { action = JSON.parse(raw); } catch (e) { return; }
+    if (!window.currentUser || !_hasStaffTier(window.currentUser)) {
+      if (typeof showToast === 'function') showToast('Admin access is required to review requests.', 'error');
+      return;
+    }
+    if (typeof switchTab === 'function') switchTab('members');
+    var name = action.name || action.email || 'the applicant';
+    if (typeof showToast === 'function') {
+      showToast(action.type === 'approve'
+        ? 'Approve ' + name + ' below — their request is in the list.'
+        : 'Review ' + name + "'s request below.", 'info');
+    }
   };
 
   // ── sync panel ────────────────────────────────────────────────────────────
