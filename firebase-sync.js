@@ -128,11 +128,36 @@
 
   // ── writing ───────────────────────────────────────────────────────────────
 
+  // Circuit breaker. The Spark plan has a daily write quota, and a feedback loop between
+  // a snapshot and a save can spend it in seconds. If writes ever spike far above what
+  // human editing could produce, stop and say so rather than silently burning the quota.
+  var _writeTimes = [];
+  function _writeStormDetected() {
+    var now = Date.now();
+    _writeTimes.push(now);
+    _writeTimes = _writeTimes.filter(function (t) { return now - t < 10000; });
+    if (_writeTimes.length > 25) {
+      console.error('[tfh] write loop detected — pausing writes. ' + _writeTimes.length + ' in 10s.');
+      if (typeof showToast === 'function') {
+        showToast('Sync paused: the app was saving in a loop. Please reload — and tell Claude this happened.', 'error');
+      }
+      return true;
+    }
+    return false;
+  }
+
   function _flushClubWrite() {
     if (!auth.currentUser) { _pendingWrite = false; return Promise.resolve(false); }
+    if (_writeStormDetected()) { _pendingWrite = false; return Promise.resolve(false); }
     _pendingWrite = false;
+    var payload = _clubPayload();
+    // Remember what we sent, so the server's acknowledgement of this very write is
+    // recognised as "no change" and does not trigger a redraw. Without this, every save
+    // bounced back as a snapshot, redrew the page, and renderDash()'s seen-marking saved
+    // again — a write loop that both flickered the UI and burned Firestore quota.
+    _lastClubJson = JSON.stringify(payload);
     return CLUB_DOC.set({
-      data: _clubPayload(),
+      data: payload,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedBy: auth.currentUser.email || auth.currentUser.uid
     }, { merge: false }).then(function () {
@@ -207,12 +232,21 @@
 
   // ── applying remote data ──────────────────────────────────────────────────
 
+  // JSON of the club payload as we last saw or wrote it. Used to recognise a snapshot
+  // that carries no actual change — which includes the server's acknowledgement of our
+  // OWN write, since every write updates `updatedAt` and so produces a fresh snapshot.
+  var _lastClubJson = null;
+
+  // Returns true only when the club data genuinely changed and the UI should redraw.
   function _applyClubSnapshot(snap, force) {
-    if (!snap.exists) return;
+    if (!snap.exists) return false;
     // Skip our own un-acknowledged writes; otherwise every local edit would
     // bounce back through here and re-render mid-typing.
-    if (!force && snap.metadata && snap.metadata.hasPendingWrites) return;
+    if (!force && snap.metadata && snap.metadata.hasPendingWrites) return false;
     var d = (snap.data() || {}).data || {};
+    var incoming = JSON.stringify(d);
+    if (incoming === _lastClubJson) return false;   // nothing new — do not redraw
+    _lastClubJson = incoming;
     _applyingRemote = true;
     try {
       var users = state.users;
@@ -224,6 +258,7 @@
     } finally {
       _applyingRemote = false;
     }
+    return true;
   }
 
   function _applyRoster(docs) {
@@ -424,9 +459,9 @@
           _showAppOnce();
           return;
         }
-        _applyClubSnapshot(snap);
+        var changed = _applyClubSnapshot(snap);
         if (first) { _showAppOnce(); }
-        else if (!snap.metadata.hasPendingWrites) { _rerenderActiveTab(); }
+        else if (changed) { _rerenderActiveTab(); }   // only redraw on a real change
       }, function (err) {
         console.warn('[tfh] club listener error:', err && err.code);
         _showAppOnce();
@@ -535,6 +570,23 @@
     }).catch(function (err) {
       if (typeof showToast === 'function') showToast('Could not update role: ' + (err.code || 'error'), 'error');
     });
+  };
+
+  // The tour's "don't show me again" flag lives on the person, not on the club, so
+  // saveState() (which writes club/state and deliberately excludes the users collection)
+  // could never persist it — the tour replayed on every single refresh. Persist it to the
+  // user's own document instead. Wrapped rather than replaced so the visual teardown in
+  // index.html's finishTour() still runs.
+  var _origFinishTour = window.finishTour;
+  window.finishTour = function () {
+    var u = auth.currentUser;
+    if (u) {
+      if (window.currentUser) window.currentUser.onboarded = true;
+      db.collection(USERS).doc(u.uid).update({ onboarded: true }).catch(function (e) {
+        console.warn('[tfh] could not persist onboarded flag:', e && e.code);
+      });
+    }
+    if (typeof _origFinishTour === 'function') return _origFinishTour.apply(this, arguments);
   };
 
   // ── sync panel ────────────────────────────────────────────────────────────
