@@ -33,10 +33,7 @@ service cloud.firestore {
     function isOwner() {
       return signedIn()
         && request.auth.token.email_verified == true
-        && request.auth.token.email in [
-             'togetherforhealthmdhs@gmail.com',   // club-owned: keep permanently
-             'golussaud@gmail.com'                // personal: remove once the club account is verified
-           ];
+        && request.auth.token.email in ['togetherforhealthmdhs@gmail.com'];
     }
 
     function myDoc() {

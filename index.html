@@ -11798,106 +11798,31 @@ function processPendingAction() {
   }
 }
 
-// ====== SITE LOCK SCREEN ======
-/* ─── Google Auth ──────────────────────────────────────── */
-function initGoogleAuth() {
-  if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleSignIn,
-    ux_mode: 'popup',
-    auto_select: false
-  });
-  var btnEl = document.getElementById('google-signin-btn');
-  if (btnEl) {
-    google.accounts.id.renderButton(btnEl, {
-      theme: 'outline', size: 'large', width: 280, shape: 'rectangular'
-    });
-  }
-  var stored = localStorage.getItem('tfh_google_session');
-  if (stored) {
-    try {
-      var s = JSON.parse(stored);
-      processSignIn(s.googleId, s.email, s.name, s.photo);
-      return;
-    } catch(e) { /* auto-login failed — fall through to show the sign-in button */ }
-  }
-}
+// ====== SIGN-IN ======
+//
+//  The Google Identity Services flow that used to live here is GONE, along with the
+//  auth bypass it carried. It base64-decoded the Google JWT with decodeJwt() and never
+//  verified the signature, then wrote the decoded claims to localStorage and replayed
+//  them on every later load. So this was a complete authentication bypass:
+//
+//      localStorage.setItem('tfh_google_session',
+//        JSON.stringify({googleId:'x', email:'<owner@example.com>', name:'A', photo:''}))
+//
+//  plus a reload made anyone the President. That is how the app was first opened during
+//  this session's own debugging, which is exactly the point.
+//
+//  Sign-in is now Firebase Auth in firebase-sync.js: the token is verified by Google's
+//  servers, the session is restored by onAuthStateChanged rather than replayed from
+//  localStorage, and firestore.rules decides what the resulting identity may do. Nothing
+//  the browser can write to localStorage grants anything.
+//
+//  initGoogleAuth() is redefined by firebase-sync.js, which loads after this file; the
+//  stub below only exists so an early call cannot throw before it is replaced.
+function initGoogleAuth() { /* replaced by firebase-sync.js */ }
 
-function handleGoogleSignIn(response) {
-  var payload = decodeJwt(response.credential);
-  var googleId = payload.sub;
-  var email = payload.email || '';
-  var name = payload.name || email;
-  var photo = payload.picture || '';
-  localStorage.setItem('tfh_google_session', JSON.stringify({ googleId: googleId, email: email, name: name, photo: photo }));
-  processSignIn(googleId, email, name, photo);
-}
+// processSignIn() removed with the GSI flow above — it trusted a client-supplied email
+// and minted the owner's identity from it. Firestore rules now decide this server-side.
 
-function decodeJwt(token) {
-  try {
-    var base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    var pad = base64.length % 4;
-    if (pad) base64 += '===='.slice(pad);
-    return JSON.parse(atob(base64));
-  } catch(e) { return {}; }
-}
-
-function processSignIn(googleId, email, name, photo) {
-  if (!state.users) state.users = [];
-  var user = state.users.find(function(u) { return u.googleId === googleId; });
-  if (email) {
-    var _lc = email.toLowerCase();
-    var approvedByEmail = state.users.find(function(u) { return u.status === 'approved' && (u.email || '').toLowerCase() === _lc; });
-    if (approvedByEmail && (!user || user.status !== 'approved')) {
-      // An admin pre-approved this email. Adopt the verified Google ID onto that record and
-      // drop any stale duplicate (e.g. an old pending record left on this device).
-      approvedByEmail.googleId = googleId;
-      if (photo && !approvedByEmail.photo) approvedByEmail.photo = photo;
-      if (user && user !== approvedByEmail) { state.users = state.users.filter(function(u) { return u !== user; }); }
-      user = approvedByEmail;
-      saveState();
-    } else if (!user) {
-      var byEmail = state.users.find(function(u) { return (u.email || '').toLowerCase() === _lc && (!u.googleId || u.googleId === googleId); });
-      if (byEmail) { byEmail.googleId = googleId; if (photo && !byEmail.photo) byEmail.photo = photo; user = byEmail; saveState(); }
-    }
-  }
-  if (!user) {
-    if (email === 'golussaud@gmail.com') {
-      // Owner always gets bootstrapped as President on first sign-in
-      var adminUser = {
-        id: uid(), googleId: googleId, email: email, name: name, photo: photo,
-        grade: '', roleInterest: '', bio: '',
-        role: 'President', permissionTier: 'admin', roleId: 'role_president',
-        status: 'approved', joinedAt: Date.now()
-      };
-      state.users.push(adminUser);
-      saveState();
-      currentUser = adminUser;
-      showApp();
-    } else {
-      showMemberOnboard(googleId, email, name, photo);
-    }
-  } else if (user.status === 'pending') {
-    currentUser = user;
-    showPendingScreen();
-  } else if (user.status === 'rejected') {
-    user.status = 'pending';
-    saveState();
-    currentUser = user;
-    showPendingScreen();
-  } else {
-    currentUser = user;
-    // Superadmin: always enforce full admin access regardless of stored tier
-    if (user.email === 'golussaud@gmail.com' && (user.permissionTier !== 'admin' || user.status !== 'approved' || user.roleId !== 'role_president')) {
-      user.permissionTier = 'admin';
-      user.roleId = 'role_president';
-      user.status = 'approved';
-      saveState();
-    }
-    showApp();
-  }
-}
 
 function showMemberOnboard(googleId, email, name, photo) {
   document.getElementById('auth-overlay').style.display = 'none';
@@ -12150,7 +12075,6 @@ function initRoles() {
 
 function hasPermission(perm) {
   if (!window.currentUser) return false;
-  if (window.currentUser.email === 'golussaud@gmail.com') return true;
   if (!state.roles) return false;
   var role = state.roles.find(function(r) { return r.id === window.currentUser.roleId; });
   if (!role) return false;
@@ -12160,7 +12084,6 @@ function hasPermission(perm) {
 
 function hasStaffAccess() {
   if (!window.currentUser) return false;
-  if (window.currentUser.email === 'golussaud@gmail.com') return true;
   if (!state.roles) return false;
   var role = state.roles.find(function(r) { return r.id === window.currentUser.roleId; });
   if (!role) return false;

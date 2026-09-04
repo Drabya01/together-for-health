@@ -51,12 +51,18 @@
   //
   // Must match the list in firestore.rules. The rules copy is the one actually enforced —
   // editing this file alone grants nothing.
-  // Emergency bootstrap and recovery only — NOT how succession works. Once anyone is an
-  // admin, the next president is made one by approving them with permissionTier 'admin'.
-  // The club-owned address is listed first because it is the one that should outlive any
-  // individual student. The personal address stays only until the club account is confirmed
-  // working, then delete it here AND in firestore.rules (the rules copy is what enforces).
-  var OWNER_EMAILS = ['togetherforhealthmdhs@gmail.com', 'golussaud@gmail.com'];
+  // Emergency bootstrap and recovery ONLY — not how succession works, and not how anyone
+  // normally gets admin. Once anyone is an admin, the next president is made one by
+  // approving them with permissionTier 'admin': no code edit, no console, no credentials.
+  //
+  // Deliberately the club-owned account and nothing else. Individual students' addresses do
+  // not belong here — recovery access has to outlive whoever happens to be president, which
+  // is the whole reason the club account exists. Verified working before the founding
+  // president's personal address was removed.
+  //
+  // Must stay identical to isOwner() in firestore.rules. The rules copy is what enforces;
+  // this copy only decides who gets bootstrapped as President on a first sign-in.
+  var OWNER_EMAILS = ['togetherforhealthmdhs@gmail.com'];
 
   if (typeof firebase === 'undefined' || !firebase.initializeApp) {
     console.error('[tfh] Firebase SDK missing — sync disabled.');
