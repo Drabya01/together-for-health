@@ -4227,7 +4227,111 @@ function generateSyncSetupUrl() {
   });
 }
 
+// Truthful sync panel. The old version hardcoded a green "Sync connected" dot whenever a token
+// string existed — without ever checking that the token was valid, had gist scope, or that this
+// device's data had actually reached the cloud — and it hid the paste field entirely once any token
+// was present, so there was no way to replace a dead one. That combination is how an admin can be
+// shown "connected" while every approval silently stays on their own machine.
 function openSyncModal() {
+  var body = document.getElementById('sync-modal-body');
+  if (!body) return;
+  body.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0;">Checking sync status…</p>';
+  openModal('modal-sync');
+  renderSyncPanel();
+}
+
+async function renderSyncPanel() {
+  var body = document.getElementById('sync-modal-body');
+  if (!body) return;
+  var token = getSyncToken();
+  var gistId = getSyncGistId();
+  var local = { users: (state.users || []).length, members: (state.members || []).length, version: state._syncVersion || 0 };
+  var cloud = null, tokenState = token ? 'checking' : 'none';
+
+  // What is actually in the cloud right now? (reads need no credentials)
+  try {
+    if (gistId) {
+      var r = await fetch('https://api.github.com/gists/' + gistId, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+      if (r.ok) {
+        var j = await r.json();
+        var f = j.files && j.files[TFH_GIST_FILE];
+        if (f && f.content) {
+          var cs = JSON.parse(f.content);
+          cloud = { users: (cs.users || []).length, members: (cs.members || []).length, version: cs._syncVersion || 0 };
+        }
+      }
+    }
+  } catch (e) {}
+
+  // Does the token genuinely work for writing?
+  if (token) {
+    try {
+      var vr = await fetch('https://api.github.com/gists/' + gistId, {
+        headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token }
+      });
+      if (vr.status === 401) tokenState = 'invalid';
+      else if (vr.ok) {
+        var scopes = vr.headers.get('x-oauth-scopes');
+        tokenState = (scopes === null || /gist/.test(scopes)) ? 'ok' : 'noscope';
+      } else tokenState = 'error';
+    } catch (e) { tokenState = 'offline'; }
+  }
+
+  var unpublished = cloud && (local.users > cloud.users || local.members > cloud.members);
+  var esc = function(s) { return escHtml(String(s)); };
+  var row = function(colour, label, detail) {
+    return '<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);">'
+      + '<span style="width:9px;height:9px;border-radius:50%;background:' + colour + ';flex-shrink:0;"></span>'
+      + '<span style="font-size:13px;font-weight:600;color:var(--text);">' + label + '</span>'
+      + '<span style="font-size:12px;color:var(--text-muted);margin-left:auto;text-align:right;">' + detail + '</span></div>';
+  };
+  var tokenRow = {
+    none:     ['#ef4444', 'No token on this device', 'approvals cannot be published'],
+    ok:       ['#10b981', 'Token works', 'can publish'],
+    invalid:  ['#ef4444', 'Token rejected by GitHub', 'expired or revoked — replace it'],
+    noscope:  ['#ef4444', 'Token missing “gist” scope', 'regenerate with gist checked'],
+    error:    ['#f59e0b', 'Could not verify token', 'try again'],
+    offline:  ['#f59e0b', 'Offline', 'cannot reach GitHub'],
+    checking: ['#f59e0b', 'Checking…', '']
+  }[tokenState];
+
+  var html = '<div style="margin-bottom:16px;">'
+    + row(tokenRow[0], tokenRow[1], tokenRow[2])
+    + row('#64748b', 'On this device', local.users + ' account' + (local.users === 1 ? '' : 's') + ' · ' + local.members + ' roster · v' + local.version)
+    + (cloud
+        ? row(unpublished ? '#ef4444' : '#10b981', 'In the cloud',
+              cloud.users + ' account' + (cloud.users === 1 ? '' : 's') + ' · ' + cloud.members + ' roster · v' + cloud.version)
+        : row('#f59e0b', 'In the cloud', 'could not read'))
+    + '</div>';
+
+  if (unpublished) {
+    html += '<div style="padding:11px 13px;border-radius:9px;background:#fef2f2;border:1px solid #fca5a5;margin-bottom:14px;">'
+      + '<div style="font-size:12.5px;color:#991b1b;line-height:1.55;font-weight:600;margin-bottom:3px;">This device has people the cloud does not.</div>'
+      + '<div style="font-size:12px;color:#991b1b;line-height:1.55;">They are approved here but no one else can see them. '
+      + (tokenState === 'ok' ? 'Press <strong>Publish now</strong>.' : 'Add a working token below, then publish.') + '</div></div>';
+  }
+
+  if (tokenState === 'ok') {
+    html += '<button onclick="publishThisDevice()" style="width:100%;padding:11px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:9px;">'
+         + (unpublished ? 'Publish now — fix this' : 'Publish this device’s data') + '</button>'
+      + '<button onclick="forceSyncNow()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:9px;">Pull latest from cloud</button>'
+      + '<button onclick="generateSyncSetupUrl();closeModal(\'modal-sync\');" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:16px;">Copy device setup link</button>';
+  }
+
+  // The paste field is ALWAYS available, whatever the current token state.
+  html += '<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:5px;">'
+       + (token ? 'Replace the token' : 'Paste a GitHub token (needs “gist” scope)') + '</label>'
+    + '<input id="sync-token-input" type="password" placeholder="ghp_…" autocomplete="off" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;margin-bottom:9px;" />'
+    + '<button onclick="saveSyncToken()" style="width:100%;padding:10px;background:' + (tokenState === 'ok' ? 'none' : 'var(--accent)') + ';color:' + (tokenState === 'ok' ? 'var(--text)' : 'white') + ';border:' + (tokenState === 'ok' ? '1px solid var(--border)' : 'none') + ';border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px;">Save token &amp; publish</button>'
+    + '<p style="font-size:11.5px;color:var(--text-muted);line-height:1.55;margin:0 0 12px;">github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic) → tick <strong>gist</strong> only.</p>';
+
+  if (token) {
+    html += '<button onclick="clearSyncToken()" style="width:100%;padding:9px;background:none;color:#ef4444;border:1px solid #fca5a5;border-radius:8px;font-size:12.5px;cursor:pointer;font-family:inherit;">Disconnect sync on this device</button>';
+  }
+  body.innerHTML = html;
+}
+
+function _openSyncModal_legacy() {
   var token = getSyncToken();
   var body = document.getElementById('sync-modal-body');
   if (!body) return;
@@ -4263,13 +4367,22 @@ function openSyncModal() {
 
 function saveSyncToken() {
   var input = document.getElementById('sync-token-input');
-  if (!input || !input.value.trim()) { showToast('Paste your token first', 'error'); return; }
-  localStorage.setItem('tfh_sync_token', input.value.trim());
-  closeModal('modal-sync');
+  // Strip whitespace and any quotes picked up by copy/paste — a stray space makes GitHub reject an
+  // otherwise valid token, which previously surfaced as a generic "push failed".
+  var val = input ? String(input.value || '').trim().replace(/^["'\s]+|["'\s]+$/g, '') : '';
+  if (!val) { showToast('Paste your token first', 'error'); return; }
+  localStorage.setItem('tfh_sync_token', val);
   updateSyncIndicator('syncing');
+  showToast('Saving and publishing…', 'info');
   pushToGist().then(function(ok) {
-    if (ok) { showToast('Sync connected! Data saved to cloud.', 'success'); }
-    else { showToast('Token saved but push failed — check it has gist scope.', 'error'); updateSyncIndicator('error'); }
+    if (ok) showToast('Connected. This device’s data is now in the cloud.', 'success');
+    else { showToast('Token saved, but publishing failed — see the status above.', 'error'); updateSyncIndicator('error'); }
+    // Stay open and re-render, so the cloud counts visibly update instead of the modal
+    // vanishing and leaving no way to tell whether it worked.
+    renderSyncPanel();
+  }).catch(function() {
+    showToast('Token saved, but publishing failed.', 'error');
+    renderSyncPanel();
   });
 }
 
