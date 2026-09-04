@@ -6456,8 +6456,84 @@ function openPres(id, ev) {
   if (!p || !p.url) return;
   p.openCount = (p.openCount || 0) + 1;
   saveState();
-  window.open(p.url, '_blank', 'noopener');
+  // The club's own decks are 1920x1080 artboards that scale to whatever space they get.
+  // Opened in an ordinary tab at a typical window size they render at roughly 43% — which
+  // is why they looked soft. Presenting them full-screen is the difference between ~820px
+  // and the full 1920, so club decks get the present mode and external links do not
+  // (Google Slides and Canva have their own).
+  if (_isDeckEntry(p)) { presentDeck(p.url, p.title); }
+  else { window.open(p.url, '_blank', 'noopener'); }
   renderPres();
+}
+
+// ── Present mode ───────────────────────────────────────────────────────────────────────
+//
+//  Puts a deck on the whole screen with no browser chrome at all. Fullscreen is requested
+//  on the iframe itself rather than on a wrapper, so the deck owns every pixel — no tab
+//  strip, no address bar, no app sidebar. On a 1920x1080 display that is the difference
+//  between the artboard rendering at 0.43x and essentially 1:1.
+var _presentEl = null;
+
+function presentDeck(url, title) {
+  closePresentDeck();
+  var wrap = document.createElement('div');
+  wrap.id = 'tfh-present';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-modal', 'true');
+  wrap.setAttribute('aria-label', 'Presenting ' + (title || 'deck'));
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:10050;background:#000;display:flex;';
+
+  var frame = document.createElement('iframe');
+  frame.src = url;
+  frame.title = title || 'Presentation';
+  frame.setAttribute('allowfullscreen', '');
+  frame.style.cssText = 'flex:1;width:100%;height:100%;border:0;display:block;';
+
+  // Deliberately minimal, and it fades out: any persistent chrome would both steal pixels
+  // from the slide and end up projected onto a classroom wall.
+  var hint = document.createElement('div');
+  hint.textContent = 'Esc to exit';
+  hint.style.cssText = 'position:fixed;bottom:14px;right:16px;z-index:10051;font:12px/1 ' +
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:rgba(255,255,255,0.75);' +
+    'background:rgba(0,0,0,0.55);padding:6px 10px;border-radius:999px;pointer-events:none;' +
+    'transition:opacity 400ms ease;';
+  setTimeout(function () { hint.style.opacity = '0'; }, 2600);
+
+  wrap.appendChild(frame);
+  wrap.appendChild(hint);
+  document.body.appendChild(wrap);
+  document.body.style.overflow = 'hidden';
+  _presentEl = wrap;
+
+  // Must be called from the user's click for the browser to allow it.
+  if (frame.requestFullscreen) {
+    frame.requestFullscreen().catch(function () {
+      // Denied or unsupported: the overlay alone still removes the app's own chrome, which
+      // is most of the win. Not worth an error message.
+    });
+  }
+
+  document.addEventListener('keydown', _presentKeys, true);
+  document.addEventListener('fullscreenchange', _presentFsChange);
+}
+
+function _presentKeys(e) {
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closePresentDeck(); }
+}
+
+function _presentFsChange() {
+  // Leaving fullscreen by any route (Esc handled by the browser, F11, losing focus) should
+  // tear the overlay down too, or the user is left on a black screen with no way back.
+  if (!document.fullscreenElement) closePresentDeck();
+}
+
+function closePresentDeck() {
+  document.removeEventListener('keydown', _presentKeys, true);
+  document.removeEventListener('fullscreenchange', _presentFsChange);
+  if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
+  if (_presentEl && _presentEl.parentNode) _presentEl.parentNode.removeChild(_presentEl);
+  _presentEl = null;
+  document.body.style.overflow = '';
 }
 
 function togglePinPres(id, ev) {
