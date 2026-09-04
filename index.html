@@ -4215,20 +4215,33 @@ var _syncStarted = false;
 var GOOGLE_CLIENT_ID = '1010052442736-kv3qsn1j0pov5re2v6na15opsvuga1v6.apps.googleusercontent.com';
 var currentUser = null;
 
+// Where this copy of the app is actually served from, worked out at runtime instead of
+// being written down. It was hardcoded to drabya01.github.io, which meant that moving the
+// repo to a club-owned GitHub organisation — the whole point of the succession plan —
+// silently broke every link in the approval emails, since they are built from this value.
+// Deriving it means a domain change needs no code edit, now or the next time.
+//   /together-for-health/index.html -> https://host/together-for-health
+//   /together-for-health/           -> https://host/together-for-health
+//   /                               -> https://host
+var APP_ORIGIN = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
+
 // ── Canva API ──
+// Dead: canvaConnect() is referenced only by its own definition, and the token exchange
+// would be CORS-blocked from a static site regardless. Kept only so the constants resolve.
 var CANVA_CLIENT_ID    = 'OC-AZ7s7VWq1JwO';
-var CANVA_REDIRECT_URI = 'https://drabya01.github.io/together-for-health/';
+var CANVA_REDIRECT_URI = APP_ORIGIN + '/';
 var CANVA_AUTH_URL     = 'https://www.canva.com/api/oauth/authorize';
 var CANVA_TOKEN_URL    = 'https://api.canva.com/rest/v1/oauth/token';
 var CANVA_API_BASE     = 'https://api.canva.com/rest/v1';
 
 // ── Email notifications (fill in after EmailJS setup at emailjs.com) ──
+// ADMIN_NOTIFY_EMAIL should become the club-owned address once it exists, so new-member
+// notifications keep arriving after the current president graduates.
 var EMAILJS_PUBLIC_KEY  = '8DUpv_hT5Ck2EWVSH';
 var EMAILJS_SERVICE_ID  = 'service_mmz4bct';
 var EMAILJS_TEMPLATE_ID          = 'template_z0grn3o';
 var EMAILJS_APPROVED_TEMPLATE_ID = 'template_2kjc25a';
 var ADMIN_NOTIFY_EMAIL           = 'golussaud@gmail.com';
-var APP_ORIGIN          = 'https://drabya01.github.io/together-for-health';
 
 function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
 // Reading a Gist needs no credentials, so ANY device can pull club state — and therefore its own
