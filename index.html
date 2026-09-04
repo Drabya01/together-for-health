@@ -5231,11 +5231,99 @@ function closeMobileSidebar() {
 // Nav tab click listener kept for legacy compatibility (sidebar handles active state)
 
 // ====== MODAL ======
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  editingId = null;
+// ── Modal accessibility ────────────────────────────────────────────────────────────────
+//
+//  All 27 modals previously had no dialog semantics, no focus management and no way to
+//  dismiss with the keyboard — the shortcuts modal in particular could not close itself.
+//  Handled once here rather than in 27 markup blocks and 78 call sites.
+//
+//  Focus containment is `inert` on #app-shell. Every modal is a SIBLING of that element,
+//  never a descendant, so making the shell inert removes the whole app from the tab order
+//  and focus is confined to the dialog without hand-rolling a Tab trap — which is the
+//  most error-prone third of doing this properly.
+
+var _modalStack = [];          // supports a modal opened from another modal
+var _modalReturnFocus = [];
+
+function _focusablesIn(el) {
+  return Array.prototype.filter.call(
+    el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+    function (n) { return n.offsetParent !== null || n === document.activeElement; }
+  );
 }
+
+function openModal(id) {
+  var ov = document.getElementById(id);
+  if (!ov) return;
+  var dlg = ov.querySelector('.modal') || ov;
+  dlg.setAttribute('role', 'dialog');
+  dlg.setAttribute('aria-modal', 'true');
+  // Name the dialog from its own heading so a screen reader announces what opened.
+  var title = dlg.querySelector('.modal-title');
+  if (title) {
+    if (!title.id) title.id = id + '-title';
+    dlg.setAttribute('aria-labelledby', title.id);
+  }
+  if (!dlg.hasAttribute('tabindex')) dlg.setAttribute('tabindex', '-1');
+
+  _modalReturnFocus.push(document.activeElement);
+  ov.classList.add('open');
+  if (_modalStack.indexOf(id) === -1) _modalStack.push(id);
+
+  var shell = document.getElementById('app-shell');
+  if (shell) { shell.inert = true; shell.setAttribute('aria-hidden', 'true'); }
+
+  // Focus the first real control, but skip the close button — landing on "×" invites
+  // dismissing the dialog you just opened. Fall back to the dialog itself.
+  setTimeout(function () {
+    var f = _focusablesIn(dlg).filter(function (n) { return !n.classList.contains('modal-close'); });
+    (f[0] || dlg).focus();
+  }, 40);
+}
+
+function closeModal(id) {
+  var ov = document.getElementById(id);
+  if (ov) ov.classList.remove('open');
+  editingId = null;
+
+  var i = _modalStack.lastIndexOf(id);
+  if (i !== -1) _modalStack.splice(i, 1);
+
+  // Only release the shell once the LAST modal closes, or a stacked dialog would hand the
+  // page back while another is still open.
+  if (!_modalStack.length) {
+    var shell = document.getElementById('app-shell');
+    if (shell) { shell.inert = false; shell.removeAttribute('aria-hidden'); }
+  }
+  var back = _modalReturnFocus.pop();
+  if (back && typeof back.focus === 'function' && document.contains(back)) {
+    try { back.focus(); } catch (e) {}
+  }
+}
+
+function closeTopModal() {
+  if (!_modalStack.length) return false;
+  closeModal(_modalStack[_modalStack.length - 1]);
+  return true;
+}
+
+// Escape closes the topmost dialog. Capture phase so it runs before any field-level
+// handler swallows the key.
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  // Don't fight the onboarding tour, which owns Escape while it is running.
+  var tour = document.getElementById('ob-overlay');
+  if (tour && tour.style.display === 'block') return;
+  if (closeTopModal()) { e.preventDefault(); e.stopPropagation(); }
+}, true);
+
+// Clicking the dimmed area outside the dialog closes it, which people expect and which
+// also gives mouse users the same escape as Escape.
+document.addEventListener('click', function (e) {
+  if (!e.target.classList || !e.target.classList.contains('modal-overlay')) return;
+  if (!e.target.classList.contains('open')) return;
+  closeModal(e.target.id);
+}, false);
 
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', function(e) {
