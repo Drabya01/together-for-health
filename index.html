@@ -4008,7 +4008,11 @@ var ADMIN_NOTIFY_EMAIL           = 'golussaud@gmail.com';
 var APP_ORIGIN          = 'https://drabya01.github.io/together-for-health';
 
 function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
-function getSyncGistId() { return localStorage.getItem('tfh_gist_id') || ''; }
+// Reading a Gist needs no credentials, so ANY device can pull club state — and therefore its own
+// approval status — with no token and no hand-delivered setup link. Falling back to the club's
+// canonical Gist is what lets a member who just opened the public URL ever get approved.
+// Writing still requires a token, so this grants read-only visibility, not write access.
+function getSyncGistId() { return localStorage.getItem('tfh_gist_id') || TFH_GIST_ID || ''; }
 
 async function syncFromGist() {
   try {
@@ -4024,9 +4028,16 @@ async function syncFromGist() {
     const content = gist.files[TFH_GIST_FILE] && gist.files[TFH_GIST_FILE].content;
     if (!content) { updateSyncIndicator(getSyncToken() ? 'synced' : 'offline'); return false; }
     const cloudState = JSON.parse(content);
-    const cloudTs = cloudState._syncTs || 0;
-    const localTs = state._syncTs || 0;
-    if (cloudTs > 0 && cloudTs > localTs) {
+    // Order by _syncVersion (monotonic, incremented once per successful push) and use the
+    // wall-clock _syncTs only to break ties or when a pre-versioning blob is still in the Gist.
+    // _syncTs alone is Date.now() from different machines: a device with a slow clock would have
+    // its work discarded forever, and one with a fast clock would win every conflict permanently.
+    const cloudVer = cloudState._syncVersion || 0;
+    const localVer = state._syncVersion || 0;
+    const cloudTs  = cloudState._syncTs || 0;
+    const localTs  = state._syncTs || 0;
+    const cloudIsNewer = (cloudVer !== localVer) ? (cloudVer > localVer) : (cloudTs > localTs);
+    if ((cloudVer > 0 || cloudTs > 0) && cloudIsNewer) {
       // Preserve any local users not yet in cloud (e.g. pending member on this device)
       var localUsers = (state.users || []).slice();
       var localBackup = localStorage.getItem(STORE_KEY);
@@ -4034,7 +4045,12 @@ async function syncFromGist() {
       Object.assign(state, cloudState);
       if (!state.users) state.users = [];
       localUsers.forEach(function(lu) {
-        var cloudUser = state.users.find(function(cu) { return cu.googleId === lu.googleId; });
+        var _lulc = (lu.email || '').toLowerCase();
+        // Match on googleId only when BOTH sides actually have one — otherwise two records with
+        // an empty googleId (e.g. members the admin created from a magic link) compare equal and
+        // get merged into one person. Fall back to email, which is the real identity here.
+        var cloudUser = (lu.googleId && state.users.find(function(cu) { return cu.googleId && cu.googleId === lu.googleId; }))
+                     || (_lulc && state.users.find(function(cu) { return (cu.email || '').toLowerCase() === _lulc; }));
         if (!cloudUser) {
           state.users.push(lu);
         } else if (lu.status === 'approved' && cloudUser.status !== 'approved') {
@@ -4065,36 +4081,47 @@ async function pushToGist() {
   const token = getSyncToken();
   if (!token) return false;
   try {
-    state._syncVersion = (state._syncVersion || 0) + 1;
-    state._syncTs = Date.now();
-    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    // Compute the next version/timestamp as LOCALS and commit them to state only after the write
+    // actually lands. Stamping them up-front (as this used to) meant one failed push left the
+    // device permanently "ahead" of the Gist, so syncFromGist never saw the cloud as newer again
+    // and the device silently stopped pulling forever — while the dot still went green.
+    const nextVersion = (state._syncVersion || 0) + 1;
+    const nextTs = Date.now();
     updateSyncIndicator('syncing');
     const headers = {
       'Authorization': 'token ' + token,
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.github.v3+json'
     };
-    const fileBody = JSON.stringify({ files: { [TFH_GIST_FILE]: { content: JSON.stringify(state) } } });
+    const payload = Object.assign({}, state, { _syncVersion: nextVersion, _syncTs: nextTs });
+    const fileBody = JSON.stringify({ files: { [TFH_GIST_FILE]: { content: JSON.stringify(payload) } } });
+    function _commitPushed() {
+      state._syncVersion = nextVersion;
+      state._syncTs = nextTs;
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      updateSyncIndicator('synced');
+    }
     var gistId = getSyncGistId();
     // Try PATCH if we have an ID; fall through to create if missing/forbidden
     if (gistId) {
       const patch = await fetch('https://api.github.com/gists/' + gistId, { method: 'PATCH', headers: headers, body: fileBody });
-      if (patch.ok) { updateSyncIndicator('synced'); return true; }
+      if (patch.ok) { _commitPushed(); return true; }
       if (patch.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); return false; }
       // 403/404 = don't own this gist — fall through and create a new one
     }
     // Create a new private Gist owned by this account
     const create = await fetch('https://api.github.com/gists', {
       method: 'POST', headers: headers,
-      body: JSON.stringify({ description: 'Together For Health — Club Sync', public: false, files: { [TFH_GIST_FILE]: { content: JSON.stringify(state) } } })
+      body: JSON.stringify({ description: 'Together For Health — Club Sync', public: false, files: { [TFH_GIST_FILE]: { content: JSON.stringify(payload) } } })
     });
     if (create.ok) {
       const created = await create.json();
       localStorage.setItem('tfh_gist_id', created.id);
-      updateSyncIndicator('synced');
+      _commitPushed();
       return true;
     }
     if (create.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); }
+    updateSyncIndicator('error');
     return false;
   } catch(e) { updateSyncIndicator('error'); return false; }
 }
@@ -10586,6 +10613,17 @@ function closeOnboarding() { finishTour(); }
 function obFinish() { finishTour(); }
 
 // ====== EMAIL NOTIFICATIONS ======
+// Applicant identity encoded into the approve/reject magic links (see sendApprovalEmail).
+function _applicantParams(user) {
+  var q = '';
+  if (user.email)        q += '&e=' + encodeURIComponent(user.email);
+  if (user.name)         q += '&n=' + encodeURIComponent(user.name);
+  if (user.grade)        q += '&g=' + encodeURIComponent(user.grade);
+  if (user.roleInterest) q += '&r=' + encodeURIComponent(user.roleInterest);
+  if (user.googleId)     q += '&gid=' + encodeURIComponent(user.googleId);
+  return q;
+}
+
 function sendApprovalEmail(user) {
   if (!EMAILJS_PUBLIC_KEY || typeof emailjs === 'undefined') return;
   var base = APP_ORIGIN.replace(/\/$/, '');
@@ -10596,8 +10634,12 @@ function sendApprovalEmail(user) {
     applicant_grade: user.grade         || 'Not specified',
     applicant_role:  user.roleInterest  || 'Not specified',
     applicant_bio:   user.bio           || 'None provided',
-    approve_link:    base + '/?approve=' + encodeURIComponent(user.id),
-    reject_link:     base + '/?reject='  + encodeURIComponent(user.id),
+    // Carry the applicant's identity in the magic link, not just their id. A member has no write
+    // token, so their pending record never reaches the Gist and never reaches the admin's device
+    // — an id alone was unresolvable and the approve link silently did nothing. With these params
+    // the admin's device can create and approve the record outright.
+    approve_link:    base + '/?approve=' + encodeURIComponent(user.id) + _applicantParams(user),
+    reject_link:     base + '/?reject='  + encodeURIComponent(user.id) + _applicantParams(user),
   }, EMAILJS_PUBLIC_KEY).catch(function(err) {
     console.warn('Approval email failed:', err);
   });
@@ -10626,30 +10668,47 @@ function processPendingAction() {
       return;
     }
     function _doAction() {
-      var user = (state.users || []).find(function(u) { return u.id === action.userId; });
+      if (!state.users) state.users = [];
+      var lc = (action.email || '').toLowerCase();
+      var user = state.users.find(function(u) { return u.id === action.userId; })
+              || (action.googleId && state.users.find(function(u) { return u.googleId === action.googleId; }))
+              || (lc && state.users.find(function(u) { return (u.email || '').toLowerCase() === lc; }));
       if (!user) {
-        // Member not on this device yet — just open Members tab so they can approve manually
-        switchTab('members');
-        return;
+        // The member's device has no write token, so their pending record never reached the Gist.
+        // Materialise it here from the magic-link params — this is the admin's device, which does
+        // have a token, so approving now pushes a record the member's device can finally read.
+        if (!lc) { switchTab('members'); showToast('Could not identify that applicant — approve them manually below.', 'info'); return; }
+        user = {
+          id: action.userId || uid(), googleId: action.googleId || '', email: action.email,
+          name: action.name || action.email, photo: '',
+          grade: action.grade || '', roleInterest: action.roleInterest || '', bio: '',
+          role: '', permissionTier: 'member', roleId: 'role_member',
+          status: 'pending', joinedAt: Date.now()
+        };
+        state.users.push(user);
       }
       if (user.status !== 'pending') {
-        showToast(escHtml(user.name) + ' has already been processed.', 'info');
+        switchTab('members');
+        showToast(escHtml(user.name || user.email) + ' has already been processed.', 'info');
         return;
       }
       switchTab('members');
+      // Use the resolved record's own id — the magic link's id will not match a record we
+      // located by email or Google id, and approveUser() looks up strictly by id.
       if (action.type === 'approve') {
-        approveUser(action.userId, 'member', user.roleInterest || 'Member');
+        approveUser(user.id, 'member', user.roleInterest || 'Member');
       } else {
         user.status = 'rejected';
         saveState();
         renderMembers();
-        showToast(escHtml(user.name) + '\'s application was rejected.', 'info');
+        showToast(escHtml(user.name || user.email) + '\'s application was rejected.', 'info');
       }
     }
-    // Pull from cloud first so we have the latest user list, then act
+    // Pull from cloud first so we have the latest user list, then act. No token gate — the read
+    // is unauthenticated, and skipping the pull was how an admin ended up acting on a stale list.
     setTimeout(function() {
       var user = (state.users || []).find(function(u) { return u.id === action.userId; });
-      if (!user && getSyncToken()) {
+      if (!user) {
         syncFromGist().then(function() { _doAction(); }).catch(function() { _doAction(); });
       } else {
         _doAction();
@@ -10813,13 +10872,21 @@ function showPendingScreen() {
 }
 
 function checkApprovalStatus() {
-  if (!getSyncToken()) {
-    showToast('No sync connected — ask the admin to share the setup link.', 'info');
-    return;
-  }
+  // No token check: Gist reads are unauthenticated, so a member can always check their own
+  // status. Requiring a token here was why the button told members to "ask the admin for the
+  // setup link" instead of simply working.
   showToast('Checking approval status…', 'info');
-  syncFromGist().then(function() { _checkApprovalFromSync(); }).catch(function() {
-    showToast('Could not reach sync — check your connection.', 'error');
+  syncFromGist().then(function(result) {
+    var before = window.currentUser;
+    _checkApprovalFromSync();
+    // If _checkApprovalFromSync found an approval it has already swapped to the app, so only
+    // report back when the member is genuinely still waiting. Silence reads as a broken button.
+    if (window.currentUser === before && document.getElementById('pending-overlay').style.display !== 'none') {
+      if (result === false) showToast('Could not reach the club sync — check your connection and try again.', 'error');
+      else showToast('Not approved yet. An admin still needs to review your request.', 'info');
+    }
+  }).catch(function() {
+    showToast('Could not reach the club sync — check your connection and try again.', 'error');
   });
 }
 
@@ -11052,7 +11119,16 @@ function signOut() {
     try { google.accounts.id.disableAutoSelect(); } catch(e) {}
   }
   currentUser = null;
-  location.reload();
+  // Drop the caches too, so signing out on a shared or family computer does not leave the club's
+  // roster and contact records sitting in Cache Storage for the next person.
+  var _done = function() { location.reload(); };
+  if (window.caches && caches.keys) {
+    caches.keys()
+      .then(function(keys) { return Promise.all(keys.map(function(k) { return caches.delete(k); })); })
+      .then(_done, _done);
+  } else {
+    _done();
+  }
 }
 
 function updateHeaderUserBadge() {
@@ -11152,7 +11228,18 @@ function approveUser(userId, tier, roleName) {
   saveState();
   sendApprovedEmail(user);
   renderMembers();
-  showToast(user.name + ' approved as ' + (tier || 'member') + '.', 'success');
+  // Push immediately rather than relying on saveState()'s 1500ms debounce. An approval that only
+  // ever lands in the admin's own localStorage is exactly the "I approved them and they're still
+  // stuck" bug: close the tab inside the debounce window and the member waits forever. Report the
+  // real outcome so the admin knows whether the member can actually get in.
+  var _who = user.name || user.email || 'Member';
+  showToast(_who + ' approved as ' + (tier || 'member') + ' — syncing…', 'success');
+  pushToGist().then(function(ok) {
+    if (ok) showToast(_who + ' can now sign in.', 'success');
+    else showToast('Approved locally, but the sync did not go through. ' + _who + ' cannot get in until this device syncs — check your connection and use Cloud sync → Sync now.', 'error');
+  }).catch(function() {
+    showToast('Approved locally, but the sync failed. ' + _who + ' cannot get in yet.', 'error');
+  });
 }
 
 function rejectUser(userId) {
@@ -11250,7 +11337,15 @@ function submitAuthPin() {
     var p = new URLSearchParams(window.location.search);
     var a = p.get('approve'), r = p.get('reject');
     if (a || r) {
-      sessionStorage.setItem('tfh_pending_action', JSON.stringify({ type: a ? 'approve' : 'reject', userId: a || r }));
+      sessionStorage.setItem('tfh_pending_action', JSON.stringify({
+        type: a ? 'approve' : 'reject',
+        userId: a || r,
+        // Applicant details from the magic link, used to materialise the record when the
+        // member's own device could never push it to the Gist.
+        email: p.get('e') || '', name: p.get('n') || '',
+        grade: p.get('g') || '', roleInterest: p.get('r') || '',
+        googleId: p.get('gid') || ''
+      }));
       history.replaceState({}, '', window.location.pathname);
     }
   } catch(e) {}
@@ -11445,11 +11540,24 @@ function startCloudSync() {
       }).catch(function() {});
     }
   }, 2 * 60 * 1000);
-  // Fast-poll every 30s when user is on the pending screen waiting for approval
+  // Fast-poll every 30s while the member sits on the pending screen. This must NOT require a
+  // sync token — reads are unauthenticated, and the members who most need this poll are exactly
+  // the ones who were never handed a token, so the old gate meant they waited forever.
+  function _pendingVisible() {
+    var el = document.getElementById('pending-overlay');
+    return !!el && el.style.display !== 'none';
+  }
   setInterval(function() {
-    var pendingVisible = document.getElementById('pending-overlay') && document.getElementById('pending-overlay').style.display !== 'none';
-    if (pendingVisible && getSyncToken()) syncFromGist().then(_checkApprovalFromSync).catch(function() {});
+    if (_pendingVisible() && !document.hidden) syncFromGist().then(_checkApprovalFromSync).catch(function() {});
   }, 30 * 1000);
+  // Re-check the moment the member comes back to the tab. Without this, someone who is told
+  // "you're approved" and switches back to the app can still sit on the pending screen for
+  // another 30 seconds, which reads as the approval not having worked.
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) return;
+    if (_pendingVisible()) syncFromGist().then(_checkApprovalFromSync).catch(function() {});
+    else if (window.currentUser) syncFromGist().catch(function() {});
+  });
 }
 
 function _checkApprovalFromSync() {
