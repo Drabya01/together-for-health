@@ -12008,7 +12008,17 @@ function deleteRole(roleId) {
 <script src="admin-editor.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script async src="https://accounts.google.com/gsi/client" onload="initGoogleAuth()"></script>
+<!-- Firebase (compat builds: they expose a global `firebase`, so they work with this
+     file's classic scripts and its ~250 inline onclick handlers. The modular SDK would
+     require <script type="module">, whose scope is not global, and every one of those
+     handlers would break at once.) Loaded before firebase-sync.js, which needs them. -->
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<!-- Replaces the Gist sync and the Google Identity Services script that used to live
+     here. It overrides the old sync/auth functions in place, so existing call sites are
+     unchanged. Must load last. -->
+<script src="./firebase-sync.js"></script>
 
 <!-- AUTH OVERLAYS -->
 <div id="auth-overlay" class="auth-overlay-base">

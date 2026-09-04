@@ -1,5 +1,5 @@
-const CACHE = 'tfh-v21';
-const ASSETS = ['./', './index.html', './admin-editor.js', './admin-editor.css', './manifest.json', './icon.svg', './icon-maskable.svg'];
+const CACHE = 'tfh-v22';
+const ASSETS = ['./', './index.html', './firebase-sync.js', './admin-editor.js', './admin-editor.css', './manifest.json', './icon.svg', './icon-maskable.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

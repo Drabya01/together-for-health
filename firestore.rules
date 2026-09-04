@@ -1,0 +1,111 @@
+rules_version = '2';
+
+// ============================================================================
+//  Together For Health — Firestore security rules
+// ============================================================================
+//  This file is the actual access control for the club's data. It runs on
+//  Google's servers and the client cannot change it, which is the whole point
+//  of moving off the GitHub Gist: before this, "approved" was a flag inside a
+//  blob the browser owned, so any member could edit their own status, and the
+//  entire database was readable by anyone with no credentials at all.
+//
+//  Paste this into: Firebase console -> Firestore Database -> Rules -> Publish
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers -----------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Bootstrap owner, by verified Google email. Needed because the very first
+    // sign-in happens when no user document exists yet, so nobody could
+    // otherwise be an admin and approve the first person. This is checked
+    // against the Google-issued token, not against anything the client sends.
+    function isOwner() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['golussaud@gmail.com'];
+    }
+
+    function myDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function myDocExists() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isApproved() {
+      return isOwner() || (myDocExists() && myDoc().status == 'approved');
+    }
+
+    function isStaff() {
+      return isOwner() || (myDocExists()
+        && myDoc().status == 'approved'
+        && myDoc().permissionTier in ['admin', 'officer']);
+    }
+
+    // ---- users -------------------------------------------------------------
+    //
+    //  One document per person, keyed by their Firebase Auth uid. A member can
+    //  always read their own record — that is what makes instant approval work
+    //  without exposing any club data to someone not yet approved.
+
+    match /users/{uid} {
+
+      allow get: if signedIn() && (request.auth.uid == uid || isStaff());
+
+      // Only staff can enumerate the roster. A member listing all users would
+      // be a directory of every student's name, email and grade.
+      allow list: if isStaff();
+
+      // You may create only your own record, only as 'pending', only with your
+      // own verified email, and only as an ordinary member. This is what makes
+      // self-approval impossible rather than merely discouraged.
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending'
+        && request.resource.data.permissionTier == 'member'
+        && request.resource.data.roleId == 'role_member';
+
+      // Staff may change anything. A member may edit their own profile fields
+      // but can never touch the three fields that grant access.
+      allow update: if isStaff()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.status == resource.data.status
+            && request.resource.data.permissionTier == resource.data.permissionTier
+            && request.resource.data.roleId == resource.data.roleId
+            && request.resource.data.email == resource.data.email);
+
+      allow delete: if isStaff();
+    }
+
+    // ---- club data ---------------------------------------------------------
+    //
+    //  The shared club document: events, meetings, roster, budget, resources
+    //  and so on. Readable and writable only by an approved member, so an
+    //  unapproved or rejected account sees nothing, and a revoked member is
+    //  genuinely revoked rather than still holding a write credential.
+    //
+    //  Note: this is one document, so any approved member can write all of it.
+    //  Splitting it per collection (so members can add an idea but not edit the
+    //  budget) is the next step; it is a real limitation, not an oversight.
+
+    match /club/{document} {
+      allow read:  if isApproved();
+      allow write: if isApproved();
+    }
+
+    // ---- default deny ------------------------------------------------------
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
