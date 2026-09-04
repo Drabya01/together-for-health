@@ -1120,6 +1120,19 @@
   .link-provider { position:absolute; left:11px; bottom:11px; z-index:2; display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; background:rgba(255,255,255,.94); font-size:11px; font-weight:700; color:#1f2937; box-shadow: var(--shadow-sm); }
   .lp-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 
+  .link-present {
+    position:absolute; right:11px; bottom:11px; z-index:3;
+    display:inline-flex; align-items:center; gap:5px;
+    min-height:30px; padding:5px 11px; border:none; border-radius:var(--r-pill);
+    background:rgba(0,0,0,0.62); color:#fff; font-family:inherit;
+    font-size:var(--fs-sm); font-weight:600; cursor:pointer;
+    opacity:0; transition:opacity var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .link-card:hover .link-present, .link-present:focus-visible { opacity:1; }
+  .link-present:hover { background:rgba(0,0,0,0.8); }
+  /* Touch has no hover, so on a phone it is always visible rather than unreachable. */
+  @media (pointer: coarse) { .link-present { opacity:1; } }
+
   .link-pin { position:absolute; left:11px; top:11px; z-index:3; width:27px; height:27px; border-radius:50%; background:rgba(255,255,255,.92); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; line-height:1; box-shadow: var(--shadow-sm); opacity:0; transition:opacity .var(--dur-slow), transform .1s; }
   .link-pin:hover { transform:scale(1.12); }
   .link-card:hover .link-pin { opacity:1; }
@@ -6431,6 +6444,13 @@ function renderPres() {
       + '<div class="link-thumb" style="background:' + prov.grad + '">' + thumbInner
         + '<span class="link-provider"><span class="lp-dot" style="background:' + prov.color + '"></span>' + escHtml(prov.name) + '</span>'
       + '</div>'
+      // Present, on the club's own decks only. Clicking the card already presents, but
+      // nobody guesses that — this is the button you reach for in front of a class.
+      + (_isDeckEntry(p)
+          ? '<button class="link-present" onclick="presentFromCard(\'' + p.id + '\',event)" title="Present full screen at full size">'
+            + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>'
+            + 'Present</button>'
+          : '')
       + '<button class="link-pin" title="' + (p.pinned ? 'Unpin' : 'Pin to top') + '" onclick="togglePinPres(\'' + p.id + '\',event)">' + (p.pinned ? '📌' : '📍') + '</button>'
       + '<div class="link-actions">'
         + '<button class="link-act" title="Copy link" onclick="copyPresLink(\'' + p.id + '\',event)">' + ICON_COPY + '</button>'
@@ -6473,6 +6493,17 @@ function openPres(id, ev) {
 //  strip, no address bar, no app sidebar. On a 1920x1080 display that is the difference
 //  between the artboard rendering at 0.43x and essentially 1:1.
 var _presentEl = null;
+var _presentTimers = [];
+
+function presentFromCard(id, ev) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var p = (state.presentations || []).find(function (x) { return x.id === id; });
+  if (!p || !p.url) return;
+  p.openCount = (p.openCount || 0) + 1;
+  saveState();
+  presentDeck(p.url, p.title);
+  renderPres();
+}
 
 function presentDeck(url, title) {
   closePresentDeck();
@@ -6505,6 +6536,30 @@ function presentDeck(url, title) {
   document.body.style.overflow = 'hidden';
   _presentEl = wrap;
 
+  // Hide the deck's own thumbnail rail once it exists. `no-rail` is a supported attribute
+  // on <deck-stage> (it declares observedAttributes ['width','height','noscale','no-rail'])
+  // and its attributeChangedCallback re-runs _fit(), so the artboard grows into the freed
+  // space by itself. Measured at a 1600px window: 1412x794 (0.735x) -> 1600x900 (0.833x).
+  // In fullscreen at 1920x1080 that becomes exactly 1:1.
+  //
+  // Same-origin, so reaching in is legitimate rather than a hack — but polled, because the
+  // element is defined by a bundle that unpacks asynchronously and holds layout until
+  // document.fonts.ready (capped at 2s).
+  var tries = 0;
+  var railTimer = setInterval(function () {
+    tries++;
+    var doc = null;
+    try { doc = frame.contentDocument; } catch (e) { clearInterval(railTimer); return; }
+    var stage = doc && doc.querySelector('deck-stage');
+    if (stage) {
+      stage.setAttribute('no-rail', '');
+      clearInterval(railTimer);
+    } else if (tries > 60) {          // ~6s, then give up quietly
+      clearInterval(railTimer);
+    }
+  }, 100);
+  _presentTimers.push(railTimer);
+
   // Must be called from the user's click for the browser to allow it.
   if (frame.requestFullscreen) {
     frame.requestFullscreen().catch(function () {
@@ -6528,6 +6583,8 @@ function _presentFsChange() {
 }
 
 function closePresentDeck() {
+  _presentTimers.forEach(clearInterval);
+  _presentTimers = [];
   document.removeEventListener('keydown', _presentKeys, true);
   document.removeEventListener('fullscreenchange', _presentFsChange);
   if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
