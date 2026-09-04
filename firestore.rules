@@ -67,6 +67,13 @@ service cloud.firestore {
       // You may create only your own record, only as 'pending', only with your
       // own verified email, and only as an ordinary member. This is what makes
       // self-approval impossible rather than merely discouraged.
+      //
+      // NOTE: this restriction deliberately applies to the OWNER's first write too, so
+      // there is no owner exemption here. firebase-sync.js bootstraps the owner in two
+      // steps instead — create within these limits, then elevate via update (which
+      // isStaff/isOwner does permit). Do not "fix" this by adding isOwner() to the create
+      // rule: that would weaken the one rule that makes privilege escalation impossible,
+      // for the sake of a once-ever operation that already works.
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.email == request.auth.token.email

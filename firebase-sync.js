@@ -373,23 +373,55 @@
     });
   }
 
+  // Run the bootstrap at most once per session. The user-document listener fires again on
+  // every failed attempt (the document still does not exist), so without this guard a
+  // rejected write becomes an unbounded retry loop — observed at ~600 failures and ~140
+  // re-renders in six seconds, which is what the "flickering" actually was.
+  var _bootstrapTried = false;
+
   function _createOwnUserDoc(uid, fbUser) {
     var email = (fbUser.email || '').toLowerCase();
     var owner = _isOwnerEmail(email);
     // A brand-new person goes through onboarding to collect grade/role/bio.
     // The owner is bootstrapped straight to president.
     if (!owner) {
+      // Guard this too: the listener re-fires while the document is still absent, and
+      // re-running showMemberOnboard would reset the form under the member as they type.
+      var ov = document.getElementById('member-onboard-overlay');
+      if (ov && ov.style.display === 'flex') return;
       if (typeof showMemberOnboard === 'function') {
         showMemberOnboard(uid, fbUser.email || '', fbUser.displayName || fbUser.email || '', fbUser.photoURL || '');
       }
       return;
     }
-    db.collection(USERS).doc(uid).set({
+    if (_bootstrapTried) return;
+    _bootstrapTried = true;
+
+    // Two steps on purpose. firestore.rules only permits a person to CREATE their own
+    // record as status:'pending' / permissionTier:'member' — that restriction is what makes
+    // self-approval impossible, and it applies to the owner's own first write too. So
+    // create the record within those limits, then elevate it with an UPDATE, which the
+    // rules do allow for the owner. Doing it in one privileged create would have required
+    // an owner exemption in the create rule, i.e. a weaker rule for a once-ever operation.
+    var ref = db.collection(USERS).doc(uid);
+    ref.set({
       email: fbUser.email || '', name: fbUser.displayName || 'Owner', photo: fbUser.photoURL || '',
       grade: '', roleInterest: '', bio: '',
-      role: 'President', permissionTier: 'admin', roleId: 'role_president',
-      status: 'approved', joinedAt: Date.now()
-    }).catch(function (e) { console.error('[tfh] owner bootstrap failed', e); });
+      role: '', permissionTier: 'member', roleId: 'role_member',
+      status: 'pending', joinedAt: Date.now()
+    }).then(function () {
+      return ref.update({
+        role: 'President', permissionTier: 'admin', roleId: 'role_president', status: 'approved'
+      });
+    }).then(function () {
+      console.log('[tfh] owner bootstrapped as President');
+    }).catch(function (e) {
+      console.error('[tfh] owner bootstrap failed', e);
+      var m = 'Could not create your account record: ' + (e && e.code ? e.code : 'error') +
+              '. If this says permission-denied, the security rules may not be published.';
+      if (typeof showToast === 'function') showToast(m, 'error');
+      _fatal(m);
+    });
   }
 
   // Members submitting their profile — writes their own pending document.
