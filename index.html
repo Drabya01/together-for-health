@@ -4047,6 +4047,11 @@ async function syncFromGist() {
       // Resurrecting a member someone deleted elsewhere is visible and re-fixable; silently losing
       // the roster is not. Identity collections get merged, not overwritten.
       var localMembers = (state.members || []).slice();
+      // Set when the merge below recovers a record the cloud did not have. Those records exist ONLY
+      // on this device, so preserving them locally is not enough — without republishing they stay
+      // trapped here forever, which is exactly how an admin ends up looking at an APPROVED roster
+      // that no member's device can see. If this device can write, it publishes the merge back.
+      var _mergedLocalOnly = false;
       var localBackup = localStorage.getItem(STORE_KEY);
       if (localBackup) localStorage.setItem(STORE_KEY + '_presync_bk', localBackup);
       Object.assign(state, cloudState);
@@ -4060,6 +4065,7 @@ async function syncFromGist() {
                      || (_lulc && state.users.find(function(cu) { return (cu.email || '').toLowerCase() === _lulc; }));
         if (!cloudUser) {
           state.users.push(lu);
+          _mergedLocalOnly = true;
         } else if (lu.status === 'approved' && cloudUser.status !== 'approved') {
           // Never downgrade an approved user — owner may have approved locally
           // before the approval was pushed to the Gist
@@ -4067,6 +4073,7 @@ async function syncFromGist() {
           cloudUser.permissionTier = lu.permissionTier || cloudUser.permissionTier;
           cloudUser.roleId = lu.roleId || cloudUser.roleId;
           cloudUser.role = lu.role || cloudUser.role;
+          _mergedLocalOnly = true;
         }
       });
       // Ensure all required arrays exist (cloud state may predate some migrations)
@@ -4080,12 +4087,20 @@ async function syncFromGist() {
         var hit = (lm.googleId && state.members.find(function(cm) { return cm.googleId && cm.googleId === lm.googleId; }))
                || (_lmlc && state.members.find(function(cm) { return (cm.email || '').toLowerCase() === _lmlc; }))
                || (lm.id && state.members.find(function(cm) { return cm.id === lm.id; }));
-        if (!hit) state.members.push(lm);
+        if (!hit) { state.members.push(lm); _mergedLocalOnly = true; }
       });
       state.meetings.forEach(function(m) { if (!m.attendance) m.attendance = {}; if (!m.actionItems) m.actionItems = []; });
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
       initRoles();
       updateSyncIndicator('synced');
+      // Republish the merge so the records this device was holding privately become visible to
+      // everyone else. pushToGist() bumps past the cloud version, so the next pull is a no-op and
+      // this cannot loop. Only a device with a write token can do it; members simply skip it.
+      if (_mergedLocalOnly && getSyncToken()) {
+        pushToGist().then(function(ok) {
+          if (ok) showToast('Published records that were only on this device — approved members can now sign in.', 'success');
+        }).catch(function() {});
+      }
       return 'updated';
     }
     updateSyncIndicator(getSyncToken() ? 'synced' : 'offline');
