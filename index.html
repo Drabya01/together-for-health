@@ -4081,13 +4081,34 @@ async function pushToGist() {
   const token = getSyncToken();
   if (!token) return false;
   try {
+    updateSyncIndicator('syncing');
     // Compute the next version/timestamp as LOCALS and commit them to state only after the write
     // actually lands. Stamping them up-front (as this used to) meant one failed push left the
     // device permanently "ahead" of the Gist, so syncFromGist never saw the cloud as newer again
     // and the device silently stopped pulling forever — while the dot still went green.
-    const nextVersion = (state._syncVersion || 0) + 1;
+    //
+    // The version must also be monotonic GLOBALLY, not just for this device. A device that has
+    // been offline for a while (or whose state predates a manual Gist edit or restore) can hold a
+    // lower counter than the cloud; pushing local+1 would then move the cloud version BACKWARDS,
+    // and every device that already pulled the higher number would reject this device's data
+    // forever. So take max(local, cloud) + 1. If the pre-read fails, fall back to local+1 rather
+    // than blocking the write.
+    let baseVersion = state._syncVersion || 0;
+    try {
+      var _peekId = getSyncGistId();
+      if (_peekId) {
+        const peek = await fetch('https://api.github.com/gists/' + _peekId, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (peek.ok) {
+          const pj = await peek.json();
+          const pc = pj.files && pj.files[TFH_GIST_FILE] && pj.files[TFH_GIST_FILE].content;
+          if (pc) baseVersion = Math.max(baseVersion, JSON.parse(pc)._syncVersion || 0);
+        }
+      }
+    } catch(_) { /* offline or rate-limited — local+1 is still safe to attempt */ }
+    const nextVersion = baseVersion + 1;
     const nextTs = Date.now();
-    updateSyncIndicator('syncing');
     const headers = {
       'Authorization': 'token ' + token,
       'Content-Type': 'application/json',
@@ -11233,6 +11254,13 @@ function approveUser(userId, tier, roleName) {
   // stuck" bug: close the tab inside the debounce window and the member waits forever. Report the
   // real outcome so the admin knows whether the member can actually get in.
   var _who = user.name || user.email || 'Member';
+  // Approving with no sync token is the single most confusing failure in this app: the roster says
+  // APPROVED on the admin's screen while the member's device sees nothing, because the record never
+  // left this browser. Say so explicitly instead of failing silently.
+  if (!getSyncToken()) {
+    showToast(_who + ' is approved on THIS device only — cloud sync is not connected, so they cannot sign in yet. Open Cloud sync in the sidebar and connect a GitHub token to publish the roster.', 'error');
+    return;
+  }
   showToast(_who + ' approved as ' + (tier || 'member') + ' — syncing…', 'success');
   pushToGist().then(function(ok) {
     if (ok) showToast(_who + ' can now sign in.', 'success');
