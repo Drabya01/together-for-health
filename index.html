@@ -2389,6 +2389,68 @@
     }
   }
 
+  .setup-steps {
+    margin: 18px 0 4px; padding: 16px 18px;
+    background: var(--tint-neutral); border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .setup-steps-head { font-weight: 650; font-size: var(--fs-sm); margin-bottom: 10px; }
+  .setup-steps ol { margin: 0; padding-left: 20px; }
+  .setup-steps li { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.7; margin-bottom: 6px; }
+  .setup-copy {
+    display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px;
+    padding: 5px 11px; font: inherit; font-size: var(--fs-xs); font-weight: 600;
+    color: var(--text); background: var(--surface);
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    cursor: pointer; transition: background var(--dur-fast) var(--ease-out);
+  }
+  .setup-copy:hover { background: var(--tint-neutral); }
+
+  /* The nudge shown on Feedback until a form is connected. */
+  .fb-connect {
+    display: none; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin: 0 0 22px; padding: 14px 18px;
+    border: 1px dashed var(--border-strong); border-radius: var(--r-md);
+    background: var(--tint-neutral);
+  }
+  body.user-has-staff-access .fb-connect { display: flex; }
+  .fb-connect-text { font-size: var(--fs-sm); color: var(--text-muted); flex: 1; min-width: 220px; }
+
+  /* ===== FEEDBACK ===== */
+  .fb-summary {
+    display: flex; flex-wrap: wrap; gap: 30px; align-items: baseline;
+    padding: 2px 0 22px;
+  }
+  .fb-stat { display: flex; flex-direction: column; gap: 1px; }
+  .fb-stat-num {
+    font-family: var(--font-display); font-size: var(--fs-2xl); font-weight: 600;
+    line-height: 1; color: var(--text); letter-spacing: -0.02em;
+  }
+  .fb-stat-lbl { font-size: var(--fs-sm); color: var(--text-muted); }
+
+  .feedback-card.is-from-form { border-left: 3px solid var(--accent); }
+  .fb-badge {
+    display: inline-block; margin-left: 8px; vertical-align: middle;
+    font-size: var(--fs-xs); font-weight: 700; letter-spacing: .02em;
+    padding: 2px 8px; border-radius: var(--r-pill);
+    background: var(--accent-light); color: var(--accent-aa);
+  }
+  .fb-stars { display: inline-flex; gap: 1px; color: var(--warn-text); vertical-align: -2px; margin-left: 4px; }
+
+  /* The one line worth reading, given room to be read. */
+  .fb-quote {
+    margin: 12px 0 4px; padding: 0 0 0 16px;
+    border-left: 2px solid var(--border-strong);
+    font-family: var(--font-display); font-size: var(--fs-lg); line-height: 1.5;
+    color: var(--text); white-space: pre-line;
+  }
+  .feedback-section-text { white-space: pre-line; }   /* keep paragraph-answer line breaks */
+  .fb-none { color: var(--text-hint); font-style: italic; }
+
+  @media (max-width: 700px) {
+    .fb-summary { gap: 20px; }
+  }
+
   /* ===== DASHBOARD HERO ===== */
   /* No card, no border, no shadow. It sits directly on the page ground, which is what
      gives it more presence than the four bordered boxes it replaced — hierarchy from
@@ -3064,8 +3126,14 @@
         <h1 class="page-title">Feedback</h1>
         <p class="page-sub">Track what went well and what to improve after each presentation</p>
       </div>
-      <button class="btn btn-primary editor-only" onclick="openAddFeedback()">+ Log feedback</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn editor-only" id="fb-sync-btn" onclick="importFormResponses()" title="Pull the latest responses from the feedback form">Sync form</button>
+        <button class="btn editor-only" onclick="openConnectForm()" title="Connect the Google Form that collects this feedback">Form setup</button>
+        <button class="btn btn-primary editor-only" onclick="openAddFeedback()">+ Log feedback</button>
+      </div>
     </div>
+    <div id="feedback-connect"></div>
+    <div id="feedback-summary"></div>
     <div id="feedback-list"></div>
   </div>
 
@@ -3790,6 +3858,52 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-feedback')">Cancel</button>
       <button class="btn btn-primary" onclick="saveFeedback()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORM CONNECT MODAL -->
+<div class="modal-overlay" id="modal-form-connect">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Feedback form setup</span>
+      <button class="modal-close" onclick="closeModal('modal-form-connect')">&times;</button>
+    </div>
+
+    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">Teachers fill in a Google Form after each presentation. Paste the link
+    to that form&rsquo;s <strong>response spreadsheet</strong> and every answer appears on this
+    page automatically &mdash; no copying anything across by hand.</p>
+
+    <div class="form-row"><div>
+      <label for="fc-url">Response spreadsheet link *</label>
+      <input type="text" id="fc-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+    </div></div>
+    <div class="form-row"><div>
+      <label for="fc-tab">Sheet tab name <span class="form-hint" style="display:inline;margin:0;font-weight:400">(only if the responses aren&rsquo;t on the first tab)</span></label>
+      <input type="text" id="fc-tab" placeholder="Form Responses 1">
+    </div></div>
+
+    <div class="setup-steps">
+      <div class="setup-steps-head">First time? Three steps.</div>
+      <ol>
+        <li>At <strong>forms.new</strong>, create a form and add the eight questions below.
+          <button class="setup-copy" onclick="copyFormQuestions()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy the eight questions</button></li>
+        <li>In the form&rsquo;s <strong>Responses</strong> tab, click the Sheets icon &rarr;
+          <strong>Create a new spreadsheet</strong>.</li>
+        <li>In that spreadsheet: <strong>Share &rarr; Anyone with the link &rarr; Viewer</strong>,
+          then copy its link into the box above.</li>
+      </ol>
+      <p class="form-hint" style="margin-top:10px;line-height:1.7">The spreadsheet becomes readable to anyone
+      holding its link, so the form deliberately asks for no names or emails &mdash; only how the
+      presentation went.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" id="fc-disconnect" onclick="disconnectFormSheet()" style="margin-right:auto">Disconnect</button>
+      <button class="btn" onclick="closeModal('modal-form-connect')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFormConnection()">Connect &amp; sync</button>
     </div>
   </div>
 </div>
@@ -5424,7 +5538,7 @@ function switchTab(name) {
   if (name === 'dashboard') renderDash();
   if (name === 'meetings') renderMeetings();
   if (name === 'members') renderMembers();
-  if (name === 'feedback') renderFeedback();
+  if (name === 'feedback') { renderFeedback(); maybeSyncFeedback(); }
   if (name === 'social') renderSocial();
   if (name === 'goals') renderGoals();
   if (name === 'hours') renderHours();
@@ -10579,40 +10693,323 @@ function deleteMember(id) {
   saveState(); renderMembers();
 }
 
+// ====== FEEDBACK: GOOGLE FORM IMPORT ======
+//
+//  A Google Form's responses land in a linked Sheet, and that Sheet can be read
+//  cross-origin through Google's gviz CSV endpoint (verified: returns 200 with
+//  Access-Control-Allow-Origin set). So the site pulls responses directly.
+//
+//  Deliberately NOT Apps Script: that route needs a service-account key pasted into the
+//  script and re-authorised when it rotates. This needs no credential at all, which for a
+//  club that hands over every June is the difference between working and not working.
+//
+//  Trade-off, stated plainly: "anyone with the link can view" makes the response Sheet
+//  readable by URL. So the form must NOT collect names or emails. Presentation feedback is
+//  not sensitive; a teacher's contact details would be.
+//  The sheet id lives in club state, not in this file. Next year's president can connect a
+//  new form from the UI in ten seconds; if it lived in the source they would need someone
+//  who can edit and redeploy the site, which is exactly the dependency that kills handovers.
+function feedbackSheetId() {
+  return (typeof state === 'object' && state && state.feedbackSheetId) || '';
+}
+
+function feedbackSheetUrl() {
+  var id = feedbackSheetId();
+  if (!id) return '';
+  var u = 'https://docs.google.com/spreadsheets/d/' + id + '/gviz/tq?tqx=out:csv';
+  var tab = (state && state.feedbackSheetTab) || '';
+  if (tab) u += '&sheet=' + encodeURIComponent(tab);
+  return u;
+}
+
+// Accepts either a full Sheets URL or a bare id, because nobody pastes what you asked for.
+function _extractSheetId(input) {
+  var v = String(input || '').trim();
+  var m = v.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]{20,})/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(v)) return v;
+  return '';
+}
+
+function openConnectForm() {
+  var f = document.getElementById('fc-url');
+  if (f) f.value = feedbackSheetId() ? ('https://docs.google.com/spreadsheets/d/' + feedbackSheetId() + '/edit') : '';
+  var dis = document.getElementById('fc-disconnect');
+  if (dis) dis.style.display = feedbackSheetId() ? '' : 'none';
+  openModal('modal-form-connect');
+}
+
+async function saveFormConnection() {
+  var raw = (document.getElementById('fc-url') || {}).value || '';
+  var id = _extractSheetId(raw);
+  if (!id) { showToast('That does not look like a Google Sheets link.', 'error'); return; }
+  state.feedbackSheetId = id;
+  state.feedbackSheetTab = ((document.getElementById('fc-tab') || {}).value || '').trim();
+  saveState();
+  closeModal('modal-form-connect');
+  // Sync immediately: a connection that silently does nothing is indistinguishable from a
+  // broken one, so the very first thing the president sees is either responses or the reason.
+  _lastFormSync = Date.now();
+  var res = await importFormResponses();
+  if (!res.ok) { renderFeedback(); }
+}
+
+function disconnectFormSheet() {
+  if (!confirm('Disconnect the response sheet? Responses already imported stay here.')) return;
+  state.feedbackSheetId = '';
+  state.feedbackSheetTab = '';
+  saveState(); closeModal('modal-form-connect'); renderFeedback();
+  showToast('Form disconnected.');
+}
+
+// RFC4180 parser, written out rather than using split(',') because paragraph answers
+// routinely contain commas, quotes and NEWLINES inside a quoted field. A naive split
+// corrupts every response after the first multi-line one.
+function parseCsv(text) {
+  var rows = [], row = [], val = '', inQ = false, i = 0;
+  text = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  while (i < text.length) {
+    var c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { val += '"'; i += 2; continue; }   // escaped quote
+        inQ = false; i++; continue;
+      }
+      val += c; i++; continue;
+    }
+    if (c === '"') { inQ = true; i++; continue; }
+    if (c === ',') { row.push(val); val = ''; i++; continue; }
+    if (c === '\n') { row.push(val); rows.push(row); row = []; val = ''; i++; continue; }
+    val += c; i++;
+  }
+  if (val !== '' || row.length) { row.push(val); rows.push(row); }
+  return rows.filter(function (r) {
+    return r.some(function (c) { return String(c).trim() !== ''; });
+  });
+}
+
+// Map sheet columns onto our fields by KEYWORD rather than exact text, so the wording of a
+// question can be reworded without breaking the import.
+function _mapFeedbackHeaders(headers) {
+  var idx = {};
+  headers.forEach(function (h, i) {
+    var k = String(h).toLowerCase();
+    if (/timestamp|submitted/.test(k) && idx.stamp == null) idx.stamp = i;
+    else if (/which presentation|presentation|topic|lesson/.test(k) && idx.title == null) idx.title = i;
+    else if (/how many|number of students|audience size|attend/.test(k) && idx.size == null) idx.size = i;
+    else if (/school|class|grade|where/.test(k) && idx.audience == null) idx.audience = i;
+    else if (/overall|rating|how did it go|out of 5|score/.test(k) && idx.rating == null) idx.rating = i;
+    else if (/well|strength|liked|worked/.test(k) && idx.wentWell == null) idx.wentWell = i;
+    else if (/improve|better|differently/.test(k) && idx.improve == null) idx.improve = i;
+    else if (/question/.test(k) && idx.questions == null) idx.questions = i;
+    else if (/date/.test(k) && idx.date == null) idx.date = i;
+  });
+  return idx;
+}
+
+function _isoDate(v) {
+  if (!v) return '';
+  var m = String(v).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return m[0];
+  var d = new Date(v);
+  if (!isNaN(d.getTime())) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+           '-' + String(d.getDate()).padStart(2, '0');
+  }
+  return '';
+}
+
+// Pull responses and merge them in. Idempotent: every response carries a stable formKey, so
+// re-running never duplicates, and a response edited in the Sheet updates in place.
+async function importFormResponses(opts) {
+  opts = opts || {};
+  var url = feedbackSheetUrl();
+  if (!url) {
+    if (!opts.quiet) showToast('No response sheet connected yet.', 'info');
+    return { ok: false, reason: 'not-configured' };
+  }
+  try {
+    var resp = await fetch(url, { cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var rows = parseCsv(await resp.text());
+    if (rows.length < 2) {
+      if (!opts.quiet) showToast('No responses yet.', 'info');
+      return { ok: true, added: 0, updated: 0 };
+    }
+    var idx = _mapFeedbackHeaders(rows[0]);
+    if (idx.title == null && idx.wentWell == null) {
+      if (!opts.quiet) showToast('Could not recognise the sheet columns \u2014 check the form questions.', 'error');
+      return { ok: false, reason: 'unmapped' };
+    }
+    if (!Array.isArray(state.feedback)) state.feedback = [];
+    var dismissed = Array.isArray(state.feedbackDismissed) ? state.feedbackDismissed : [];
+    var added = 0, updated = 0;
+    rows.slice(1).forEach(function (r, n) {
+      var get = function (k) { return idx[k] != null ? String(r[idx[k]] || '').trim() : ''; };
+      var stamp = get('stamp');
+      var formKey = 'form:' + (stamp || ('row' + n)) + '|' + get('title').toLowerCase().slice(0, 40);
+      var rec = {
+        presentationTitle: get('title') || 'Presentation feedback',
+        date: _isoDate(get('date') || stamp),
+        audience: get('audience'),
+        audienceSize: parseInt(get('size').replace(/[^0-9]/g, ''), 10) || 0,
+        rating: parseInt((get('rating').match(/[1-5]/) || [0])[0], 10) || 0,
+        wentWell: get('wentWell'),
+        improve: get('improve'),
+        questions: get('questions'),
+        source: 'form',
+        formKey: formKey
+      };
+      if (dismissed.indexOf(formKey) !== -1) return;   // deleted on purpose; don't resurrect
+      var existing = state.feedback.find(function (f) { return f.formKey === formKey; });
+      if (existing) { Object.assign(existing, rec); updated++; }
+      else { rec.id = uid(); state.feedback.push(rec); added++; }
+    });
+    if (added || updated) { saveState(); renderFeedback(); }
+    if (!opts.quiet) {
+      showToast(added || updated
+        ? ('Synced \u2014 ' + added + ' new, ' + updated + ' updated.')
+        : 'Already up to date.', 'success');
+    }
+    return { ok: true, added: added, updated: updated };
+  } catch (e) {
+    if (!opts.quiet) {
+      showToast('Could not read the response sheet. Check it is shared as "anyone with the link can view".', 'error');
+    }
+    return { ok: false, reason: String(e).slice(0, 80) };
+  }
+}
+
+// Quiet auto-sync when the Feedback tab opens, at most once every two minutes.
+var _lastFormSync = 0;
+function maybeSyncFeedback() {
+  if (!feedbackSheetId()) return;
+  if (Date.now() - _lastFormSync < 120000) return;
+  _lastFormSync = Date.now();
+  importFormResponses({ quiet: true });
+}
+
+// The exact questions to put in the Google Form. Kept beside _mapFeedbackHeaders() on purpose:
+// these strings are what that function's keyword matchers are written against, so if anyone
+// edits one they can see immediately which matcher they need to keep satisfying.
+var FEEDBACK_FORM_QUESTIONS = [
+  'Which presentation did you see?  (short answer)',
+  'What school and class was it for?  (short answer, e.g. "Westview SS, Grade 9 Health")',
+  'What date was the presentation?  (date)',
+  'How many students were in the room?  (short answer, number)',
+  'Overall, how did it go?  (linear scale 1-5)',
+  'What went well?  (paragraph)',
+  'What could we improve or do differently?  (paragraph)',
+  'What questions did students ask?  (paragraph)'
+];
+
+function copyFormQuestions() {
+  var text = FEEDBACK_FORM_QUESTIONS.join('\n\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function () { showToast('Questions copied — paste them into your form.'); },
+      function () { showToast('Copy failed', 'error'); });
+  } else {
+    showToast('Copy failed', 'error');
+  }
+}
+
 // ====== FEEDBACK ======
+// Everything above the list: the connect nudge, the Sync button's label, the summary strip.
+// Split out of renderFeedback so the empty path gets it too.
+function _renderFeedbackChrome(sorted) {
+  const connected = !!feedbackSheetId();
+
+  const btn = document.getElementById('fb-sync-btn');
+  if (btn) {
+    // A button that always fails reads as a broken app, so it only appears once there is
+    // something to sync from. Priority matters: .editor-only is `!important`.
+    if (connected) btn.style.removeProperty('display');
+    else btn.style.setProperty('display', 'none', 'important');
+  }
+
+  const nudge = document.getElementById('feedback-connect');
+  if (nudge) {
+    nudge.innerHTML = !connected ? (
+      '<div class="fb-connect">'
+      + '<div class="fb-connect-text">Let teachers submit this themselves. Connect a Google Form '
+      + 'and every response lands here automatically, with the ratings and student counts totalled.</div>'
+      + '<button class="btn btn-primary" onclick="openConnectForm()">Set up the form</button>'
+      + '</div>'
+    ) : '';
+  }
+
+  const summaryEl = document.getElementById('feedback-summary');
+  if (!summaryEl) return;
+  if (!sorted.length) { summaryEl.innerHTML = ''; return; }
+  const rated = sorted.filter(f => f.rating > 0);
+  const avg = rated.length ? (rated.reduce((t,f) => t + f.rating, 0) / rated.length) : 0;
+  const reached = sorted.reduce((t,f) => t + (parseInt(f.audienceSize,10) || 0), 0);
+  const fromForm = sorted.filter(f => f.source === 'form').length;
+  const stat = (num, lbl) => '<div class="fb-stat"><span class="fb-stat-num">' + num + '</span>'
+    + '<span class="fb-stat-lbl">' + lbl + '</span></div>';
+  summaryEl.innerHTML = '<div class="fb-summary">'
+    + stat(sorted.length, sorted.length === 1 ? 'response' : 'responses')
+    + (avg ? stat(avg.toFixed(1), 'average rating') : '')
+    + (reached ? stat(reached, 'students reached') : '')
+    + (fromForm ? stat(fromForm, 'from the form') : '')
+    + '</div>';
+}
+
 function renderFeedback() {
   const list = document.getElementById('feedback-list');
   if (!list) return;
   if (!state.feedback.length) {
+    _renderFeedbackChrome([]);
     list.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="empty-state-text">No feedback logged yet. Add notes after each presentation.</div></div>`;
     return;
   }
-  const sorted = [...state.feedback].sort((a,b) => b.date.localeCompare(a.date));
+  const sorted = [...state.feedback].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  // "students reached" finally comes from a number someone reported, not a regex scraped out
+  // of a free-text field: the form asks how many students were in the room.
+  _renderFeedbackChrome(sorted);
+
   list.innerHTML = sorted.map(f => {
-    const stars = '⭐'.repeat(f.rating||0) + '☆'.repeat(5-(f.rating||0));
-    return `<div class="feedback-card">
+    const r = Math.max(0, Math.min(5, parseInt(f.rating,10) || 0));
+    // Stars as inline SVG, not the ⭐ emoji: emoji render differently on every platform and
+    // at 5-per-card they dominate the card visually.
+    const star = (filled) => '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (filled ? 'currentColor' : 'none')
+      + '" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+      + '<polygon points="12 2 15.1 8.6 22 9.6 17 14.5 18.2 21.4 12 18.1 5.8 21.4 7 14.5 2 9.6 8.9 8.6 12 2"/></svg>';
+    const stars = r ? '<span class="fb-stars" role="img" aria-label="' + r + ' out of 5">'
+      + [1,2,3,4,5].map(i => star(i <= r)).join('') + '</span>' : '';
+    const isForm = f.source === 'form';
+    const metaBits = [
+      f.date ? fmtMeetingDate(f.date) : '',
+      f.audience ? escHtml(f.audience) : '',
+      f.audienceSize ? (f.audienceSize + ' students') : ''
+    ].filter(Boolean).join(' &middot; ');
+    return `<div class="feedback-card${isForm ? ' is-from-form' : ''}">
       <div class="feedback-header">
-        <div>
-          <div class="feedback-title">${escHtml(f.presentationTitle)}</div>
-          <div class="feedback-meta">${fmtMeetingDate(f.date)}${f.audience ? ' · ' + escHtml(f.audience) : ''}${f.rating ? ' · ' + stars : ''}</div>
+        <div style="min-width:0">
+          <div class="feedback-title">${escHtml(f.presentationTitle)}
+            ${isForm ? '<span class="fb-badge" title="Submitted through the feedback form">Host feedback</span>' : ''}
+          </div>
+          <div class="feedback-meta">${metaBits}${stars ? ' ' + stars : ''}</div>
         </div>
         <div class="editor-only-block" style="flex-direction:row;gap:6px;flex-shrink:0;margin-top:0">
-          <button class="btn btn-ghost" onclick="editFeedback('${f.id}')">Edit</button>
+          ${isForm ? '' : `<button class="btn btn-ghost" onclick="editFeedback('${f.id}')">Edit</button>`}
           <button class="btn btn-ghost btn-danger" onclick="deleteFeedback('${f.id}')">Delete</button>
         </div>
       </div>
+      ${f.wentWell ? `<blockquote class="fb-quote">${escHtml(f.wentWell)}</blockquote>` : ''}
       <div class="feedback-sections">
-        <div class="feedback-section">
+        ${f.wentWell ? '' : `<div class="feedback-section">
           <div class="feedback-section-label went-well"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg>Went well</div>
-          <div class="feedback-section-text">${escHtml(f.wentWell||'—')}</div>
-        </div>
+          <div class="feedback-section-text">${escHtml(f.wentWell||'').trim() || '<span class="fb-none">Nothing recorded</span>'}</div>
+        </div>`}
         <div class="feedback-section">
           <div class="feedback-section-label improve"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Improve</div>
-          <div class="feedback-section-text">${escHtml(f.improve||'—')}</div>
+          <div class="feedback-section-text">${escHtml(f.improve||'').trim() || '<span class="fb-none">Nothing recorded</span>'}</div>
         </div>
         <div class="feedback-section">
           <div class="feedback-section-label questions"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Questions asked</div>
-          <div class="feedback-section-text">${escHtml(f.questions||'—')}</div>
+          <div class="feedback-section-text">${escHtml(f.questions||'').trim() || '<span class="fb-none">None noted</span>'}</div>
         </div>
       </div>
     </div>`;
@@ -10665,6 +11062,13 @@ function saveFeedback() {
 
 function deleteFeedback(id) {
   if (!confirm('Delete this feedback entry?')) return;
+  // A form response deleted here would simply come back on the next sync, since the sheet
+  // still holds it. Remember the key so "delete" means deleted.
+  const gone = state.feedback.find(x => x.id === id);
+  if (gone && gone.formKey) {
+    if (!Array.isArray(state.feedbackDismissed)) state.feedbackDismissed = [];
+    if (state.feedbackDismissed.indexOf(gone.formKey) === -1) state.feedbackDismissed.push(gone.formKey);
+  }
   state.feedback = state.feedback.filter(x => x.id !== id);
   saveState(); renderFeedback();
 }
