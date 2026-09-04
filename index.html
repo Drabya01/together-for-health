@@ -4203,6 +4203,8 @@ function openSyncModal() {
       + '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">To add another device, copy the setup link and open it in that browser. It stores the token automatically.</p>'
       + '<button onclick="generateSyncSetupUrl();closeModal(\'modal-sync\');" style="width:100%;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;">Copy device setup link</button>'
       + '<button onclick="forceSyncNow()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:10px;">Sync now</button>'
+      + '<button onclick="publishThisDevice()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:10px;">Publish this device&rsquo;s data</button>'
+      + '<p style="font-size:11.5px;color:var(--text-muted);margin:-4px 0 14px;line-height:1.5;">Use <strong>Publish</strong> when this device has the correct roster and members still cannot sign in.</p>'
       + '<button onclick="clearSyncToken()" style="width:100%;padding:10px;background:none;color:#ef4444;border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Disconnect sync on this device</button>';
   }
   openModal('modal-sync');
@@ -4239,8 +4241,38 @@ function forceSyncNow() {
     } else if (result === 'current') {
       pushToGist().then(function(ok) {
         if (ok) showToast('Already up to date — pushed local state.', 'success');
+        else showToast('Could not push this device’s changes to the cloud.', 'error');
       });
+    } else {
+      showToast('Could not reach the club sync.', 'error');
     }
+  });
+}
+
+// Publish THIS device's data upward, without pulling first.
+//
+// "Sync now" pulls when the cloud looks newer, which is wrong in one important case: this device
+// holds the real roster but its version counter is behind the cloud (it was offline for a while,
+// or the Gist was restored/edited out of band). Pulling then discards local work that was never
+// published. This is the deliberate, user-directed escape hatch for that — the monotonic version
+// guard in pushToGist() makes sure the result is accepted by every device afterwards.
+function publishThisDevice() {
+  if (!getSyncToken()) {
+    showToast('Connect cloud sync first — paste a GitHub token with gist scope.', 'error');
+    return;
+  }
+  var u = (state.users || []).length, m = (state.members || []).length;
+  if (!confirm('Publish this device\'s data to the cloud, replacing what is there?\n\n' +
+               'This device has ' + u + ' account' + (u === 1 ? '' : 's') + ' and ' +
+               m + ' roster entr' + (m === 1 ? 'y' : 'ies') + '.\n\n' +
+               'Use this when THIS device has the correct data.')) return;
+  closeModal('modal-sync');
+  showToast('Publishing this device’s data…', 'info');
+  pushToGist().then(function(ok) {
+    if (ok) showToast('Published. Approved members can now sign in on their own devices.', 'success');
+    else showToast('Publish failed — check your connection and that the token has gist scope.', 'error');
+  }).catch(function() {
+    showToast('Publish failed — check your connection.', 'error');
   });
 }
 
