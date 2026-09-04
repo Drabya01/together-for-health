@@ -1573,9 +1573,11 @@
   .feedback-title { font-weight:600; font-size:16px; }
   .feedback-meta { font-size:12px; color:var(--text-muted); margin-top:3px; }
   .feedback-sections { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .feedback-sections.cols-1 { grid-template-columns:minmax(0, 60ch); }
+  .feedback-sections.cols-2 { grid-template-columns:1fr 1fr; }
   .feedback-section { background:var(--bg); border-radius:var(--radius-sm); padding:10px 12px; }
   .feedback-section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px; }
-  .feedback-section-label.went-well { color:#10b981; }
+  .feedback-section-label.went-well { color: var(--ok-text); }   /* was #10b981 at 2.41:1 */
   .feedback-section-label.improve { color: var(--warn-text); }
   .feedback-section-label.questions { color: var(--text); }
   .feedback-section-text { font-size:13px; color:var(--text); white-space:pre-wrap; line-height:1.5; }
@@ -1601,7 +1603,9 @@
   .status-select { font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--border); font-family:inherit; background:var(--surface); color:var(--text); cursor:pointer; }
 
   @media(max-width:700px) {
-    .feedback-sections { grid-template-columns:1fr; }
+    .feedback-sections,
+    .feedback-sections.cols-1,
+    .feedback-sections.cols-2 { grid-template-columns:1fr; }
     .members-grid { grid-template-columns:1fr 1fr; }
   }
 
@@ -2436,6 +2440,19 @@
     background: var(--accent-light); color: var(--accent-aa);
   }
   .fb-stars { display: inline-flex; gap: 1px; color: var(--warn-text); vertical-align: -2px; margin-left: 4px; }
+  .fb-rebook {
+    display: inline-block; margin-left: 6px; vertical-align: middle;
+    font-size: var(--fs-xs); font-weight: 600; padding: 2px 8px; border-radius: var(--r-pill);
+  }
+  .fb-rebook.is-yes { background: var(--tint-ok);   color: var(--ok-text); }
+  .fb-rebook.is-no  { background: var(--tint-warn); color: var(--warn-text); }
+
+  /* Attribution sits outside the blockquote, so it keeps the body face and normal
+     white-space; the 16px inset lines it up under the quote's text. */
+  .fb-cite {
+    margin: 6px 0 0; padding: 0 0 0 16px;
+    font-size: var(--fs-sm); color: var(--text-muted);
+  }
 
   /* The one line worth reading, given room to be read. */
   .fb-quote {
@@ -3124,11 +3141,11 @@
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
         <h1 class="page-title">Feedback</h1>
-        <p class="page-sub">Track what went well and what to improve after each presentation</p>
+        <p class="page-sub">What the teachers we present to told us went well, and what to fix</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn editor-only" id="fb-sync-btn" onclick="importFormResponses()" title="Pull the latest responses from the feedback form">Sync form</button>
-        <button class="btn editor-only" onclick="openConnectForm()" title="Connect the Google Form that collects this feedback">Form setup</button>
+        <button class="btn editor-only" id="fb-sync-btn" onclick="importFormResponses()" title="Pull the latest teacher responses">Sync form</button>
+        <button class="btn editor-only" onclick="openConnectForm()" title="Connect the Google Form teachers fill in after a presentation">Teacher form</button>
         <button class="btn btn-primary editor-only" onclick="openAddFeedback()">+ Log feedback</button>
       </div>
     </div>
@@ -3833,8 +3850,10 @@
       <div><label>Date</label><input type="date" id="fb-date"></div>
       <div><label>Audience</label><input type="text" id="fb-audience" placeholder="e.g. Grade 4 &amp; 5"></div>
     </div>
-    <div class="form-row"><div>
-      <label>Overall rating</label>
+    <div class="form-row form-2col">
+      <div><label for="fb-size">How many students</label>
+        <input type="number" id="fb-size" min="0" step="1" placeholder="e.g. 28"></div>
+      <div><label for="fb-rating">Overall rating</label>
       <select id="fb-rating">
         <option value="5">⭐⭐⭐⭐⭐ Amazing</option>
         <option value="4">⭐⭐⭐⭐ Great</option>
@@ -3842,7 +3861,8 @@
         <option value="2">⭐⭐ Fair</option>
         <option value="1">⭐ Needs work</option>
       </select>
-    </div></div>
+      </div>
+    </div>
     <div class="form-row"><div>
       <label><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg>What went well</label>
       <textarea id="fb-wentwell" placeholder="Engagement, delivery, content quality..."></textarea>
@@ -3866,13 +3886,14 @@
 <div class="modal-overlay" id="modal-form-connect">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Feedback form setup</span>
+      <span class="modal-title">Teacher feedback form</span>
       <button class="modal-close" onclick="closeModal('modal-form-connect')">&times;</button>
     </div>
 
-    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">Teachers fill in a Google Form after each presentation. Paste the link
-    to that form&rsquo;s <strong>response spreadsheet</strong> and every answer appears on this
-    page automatically &mdash; no copying anything across by hand.</p>
+    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">After we present in a class,
+    that class&rsquo;s teacher fills in a short Google Form. Paste the link to the form&rsquo;s
+    <strong>response spreadsheet</strong> and every answer appears on this page automatically
+    &mdash; ratings, student counts and quotes, with nothing copied across by hand.</p>
 
     <div class="form-row"><div>
       <label for="fc-url">Response spreadsheet link *</label>
@@ -3884,20 +3905,27 @@
     </div></div>
 
     <div class="setup-steps">
-      <div class="setup-steps-head">First time? Three steps.</div>
+      <div class="setup-steps-head">First time? Four steps.</div>
       <ol>
         <li>At <strong>forms.new</strong>, create a form and add the eight questions below.
           <button class="setup-copy" onclick="copyFormQuestions()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy the eight questions</button></li>
+            Copy the questions and the wording</button></li>
+        <li>In the form&rsquo;s <strong>Settings &rarr; Responses</strong>, set
+          <strong>Collect email addresses</strong> to <em>Do not collect</em>, and turn off
+          <strong>Restrict to users in your school</strong> and
+          <strong>Limit to 1 response</strong>. Both of those force a Google sign-in, which
+          records who answered.</li>
         <li>In the form&rsquo;s <strong>Responses</strong> tab, click the Sheets icon &rarr;
           <strong>Create a new spreadsheet</strong>.</li>
         <li>In that spreadsheet: <strong>Share &rarr; Anyone with the link &rarr; Viewer</strong>,
           then copy its link into the box above.</li>
       </ol>
-      <p class="form-hint" style="margin-top:10px;line-height:1.7">The spreadsheet becomes readable to anyone
-      holding its link, so the form deliberately asks for no names or emails &mdash; only how the
-      presentation went.</p>
+      <p class="form-hint" style="margin-top:10px;line-height:1.7">The spreadsheet is readable by
+      anyone holding its link. The form never asks for an email, and asks for a name in one
+      <em>optional</em> question that tells the teacher plainly their name may be quoted on this
+      site, in the year-end report, and in members&rsquo; applications. Leaving it blank still
+      submits the feedback.</p>
     </div>
 
     <div class="modal-footer">
@@ -10704,8 +10732,16 @@ function deleteMember(id) {
 //  club that hands over every June is the difference between working and not working.
 //
 //  Trade-off, stated plainly: "anyone with the link can view" makes the response Sheet
-//  readable by URL. So the form must NOT collect names or emails. Presentation feedback is
-//  not sensitive; a teacher's contact details would be.
+//  readable by URL. So the form never asks for an email, and never for a student's name.
+//  It does ask for the TEACHER's name in one optional question whose own wording is the
+//  consent: it says the name may be quoted on the site, in the year-end report and in
+//  members' applications before the teacher types anything. That is a deliberate reversal
+//  of this file's earlier rule, taken because a named teacher quote is real evidence and an
+//  anonymous one is not, and because the teacher decides per response by leaving it blank.
+//
+//  The consent wording lives only in Google Forms, which never reaches the sheet. So the
+//  setup modal repeats it: if a future president rebuilds the form, the name column keeps
+//  working while the disclosure silently disappears. Keep those two in step.
 //  The sheet id lives in club state, not in this file. Next year's president can connect a
 //  new form from the UI in ten seconds; if it lived in the source they would need someone
 //  who can edit and redeploy the site, which is exactly the dependency that kills handovers.
@@ -10755,7 +10791,7 @@ async function saveFormConnection() {
 }
 
 function disconnectFormSheet() {
-  if (!confirm('Disconnect the response sheet? Responses already imported stay here.')) return;
+  if (!confirm('Disconnect the response sheet? Teacher feedback already imported stays here.')) return;
   state.feedbackSheetId = '';
   state.feedbackSheetTab = '';
   saveState(); closeModal('modal-form-connect'); renderFeedback();
@@ -10795,6 +10831,8 @@ function _mapFeedbackHeaders(headers) {
   headers.forEach(function (h, i) {
     var k = String(h).toLowerCase();
     if (/timestamp|submitted/.test(k) && idx.stamp == null) idx.stamp = i;
+    else if (/your name|teacher name|name and role/.test(k) && idx.teacher == null) idx.teacher = i;
+    else if (/invite|us back|book us|have us back/.test(k) && idx.rebook == null) idx.rebook = i;
     else if (/which presentation|presentation|topic|lesson/.test(k) && idx.title == null) idx.title = i;
     else if (/how many|number of students|audience size|attend/.test(k) && idx.size == null) idx.size = i;
     else if (/school|class|grade|where/.test(k) && idx.audience == null) idx.audience = i;
@@ -10852,11 +10890,13 @@ async function importFormResponses(opts) {
         presentationTitle: get('title') || 'Presentation feedback',
         date: _isoDate(get('date') || stamp),
         audience: get('audience'),
-        audienceSize: parseInt(get('size').replace(/[^0-9]/g, ''), 10) || 0,
+        audienceSize: parseInt((get('size').match(/\d+/) || ['0'])[0], 10) || 0,
         rating: parseInt((get('rating').match(/[1-5]/) || [0])[0], 10) || 0,
         wentWell: get('wentWell'),
         improve: get('improve'),
         questions: get('questions'),
+        teacher: get('teacher'),
+        rebook: get('rebook'),
         source: 'form',
         formKey: formKey
       };
@@ -10892,22 +10932,89 @@ function maybeSyncFeedback() {
 // The exact questions to put in the Google Form. Kept beside _mapFeedbackHeaders() on purpose:
 // these strings are what that function's keyword matchers are written against, so if anyone
 // edits one they can see immediately which matcher they need to keep satisfying.
+//
+// The mapping, question title -> field, walking the else-if chain in its real order:
+//   "Your name and role..."          -> teacher   via /name and role/
+//   "Would you have us back..."      -> rebook    via /have us back/
+//   "Which presentation did you..."  -> title     via /which presentation/
+//   "Roughly how many students..."   -> size      via /how many/
+//   "Which class was this for?"      -> audience  via /class/
+//   "Overall, how did it go?"        -> rating    via /overall/
+//   "What worked well?..."           -> wentWell  via /worked/
+//   "What could we do better..."     -> improve   via /better/
+//
+// Two of these are load-bearing on WORDING rather than meaning. Rewording Q7 to the more
+// natural "What would you change?" matches nothing and is silently discarded. And the
+// teacher and rebook matchers sit ABOVE audience because a rewording that mentions a class
+// ("Your name and the class you teach") would otherwise be eaten by /school|class|grade/
+// and print a teacher's name into the card's meta line.
 var FEEDBACK_FORM_QUESTIONS = [
-  'Which presentation did you see?  (short answer)',
-  'What school and class was it for?  (short answer, e.g. "Westview SS, Grade 9 Health")',
-  'What date was the presentation?  (date)',
-  'How many students were in the room?  (short answer, number)',
-  'Overall, how did it go?  (linear scale 1-5)',
-  'What went well?  (paragraph)',
-  'What could we improve or do differently?  (paragraph)',
-  'What questions did students ask?  (paragraph)'
+  'Paste each numbered line as a question TITLE. The indented lines under it go in that',
+  'question’s DESCRIPTION field (in Forms: the question’s ⋮ menu → Show → Description).',
+  'Only titles reach the spreadsheet header, so descriptions can say anything.',
+  '',
+  '1. Which presentation did you see?   [multiple choice, REQUIRED, turn on “Other”]',
+  '     Options: Mental Health / Depression / Vaping / Nutrition / Physical Activity /',
+  '     Sleep / Stress / Bullying / CPR & First Aid / Body Image / Other',
+  '',
+  '2. Which class was this for?   [short answer, REQUIRED]',
+  '     e.g. “Grade 9 Health, period 3”. If we came to you from another school, add it',
+  '     — e.g. “Grade 11 Bio, Westview SS”.',
+  '',
+  '3. Roughly how many students were in the room?   [short answer, REQUIRED]',
+  '     An estimate is fine — a number, not a range.',
+  '     Set Response validation → Number → Is number.',
+  '',
+  '4. Overall, how did it go?   [linear scale 1 to 5, REQUIRED]',
+  '     Label 1 “Not a fit for my class”, label 5 “Please come back”.',
+  '     Must be 1–5, never 1–10.',
+  '',
+  '5. Would you have us back for this unit next year?   [multiple choice, REQUIRED]',
+  '     Options: Yes — same presentation, same spot in the unit /',
+  '     Yes — but I’d want a different topic /',
+  '     Yes — but shorter, or a different format / Probably not',
+  '',
+  '6. What worked well? (A sentence we could quote would mean a lot.)   [paragraph, REQUIRED]',
+  '     One or two sentences is plenty. The most useful thing you can tell us is something',
+  '     specific you saw or heard — a question a student asked, a moment the room went',
+  '     quiet, something a student said on the way out. “Good job” is kind, but we',
+  '     can’t learn from it.',
+  '',
+  '7. What could we do better next time?   [paragraph, NOT required]',
+  '     Blunt is welcome — we would rather hear it than repeat it.',
+  '',
+  '8. Your name and role, if you’re happy for us to quote you (optional)   [short answer, NOT required]',
+  '     Optional. If you fill this in, we may quote you by name on our club website, in our',
+  '     year-end report, and in club members’ university and scholarship applications.',
+  '     Our response sheet is shared view-only with anyone holding its link, so please treat',
+  '     anything you type in this form as public. Leave this blank and your answers stay',
+  '     anonymous — they still count.',
+  '',
+  'FORM TITLE:  Together For Health — Teacher Feedback',
+  '',
+  'FORM DESCRIPTION:',
+  'Together For Health just presented in your class — thank you for the period. This takes',
+  'about a minute, and it is how we decide what to change before the next class.',
+  '',
+  'Most questions are one tap. Please don’t include any student’s name in your answers.',
+  '',
+  'Where your answers go: they land in a spreadsheet shared view-only with anyone holding',
+  'its link, and they appear on our club website. Please treat anything you type here as',
+  'public. We never ask for your email. The last question asks for your name, and is',
+  'optional — read the note on it before you fill it in.',
+  '',
+  'FORM SETTINGS — do these before you share the link:',
+  'Settings → Responses → “Collect email addresses” = Do not collect.',
+  'Turn OFF “Restrict to users in your school” and “Limit to 1 response”',
+  '(both force a Google sign-in, which records who answered).',
+  'Leave “Edit after submit” ON — an edited response updates its card in place.'
 ];
 
 function copyFormQuestions() {
   var text = FEEDBACK_FORM_QUESTIONS.join('\n\n');
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(
-      function () { showToast('Questions copied — paste them into your form.'); },
+      function () { showToast('Copied — paste it into your form.'); },
       function () { showToast('Copy failed', 'error'); });
   } else {
     showToast('Copy failed', 'error');
@@ -10932,9 +11039,10 @@ function _renderFeedbackChrome(sorted) {
   if (nudge) {
     nudge.innerHTML = !connected ? (
       '<div class="fb-connect">'
-      + '<div class="fb-connect-text">Let teachers submit this themselves. Connect a Google Form '
-      + 'and every response lands here automatically, with the ratings and student counts totalled.</div>'
-      + '<button class="btn btn-primary" onclick="openConnectForm()">Set up the form</button>'
+      + '<div class="fb-connect-text">Let the teachers whose classes we present to give this '
+      + 'feedback themselves. Connect a Google Form and every response lands here '
+      + 'automatically, with the ratings and student counts totalled.</div>'
+      + '<button class="btn btn-primary" onclick="openConnectForm()">Set up the teacher form</button>'
       + '</div>'
     ) : '';
   }
@@ -10945,15 +11053,30 @@ function _renderFeedbackChrome(sorted) {
   const rated = sorted.filter(f => f.rating > 0);
   const avg = rated.length ? (rated.reduce((t,f) => t + f.rating, 0) / rated.length) : 0;
   const reached = sorted.reduce((t,f) => t + (parseInt(f.audienceSize,10) || 0), 0);
-  const fromForm = sorted.filter(f => f.source === 'form').length;
+  const asked = sorted.filter(f => String(f.rebook || '').trim());
+  const wouldRebook = asked.filter(f => _rebookYes(f.rebook)).length;
   const stat = (num, lbl) => '<div class="fb-stat"><span class="fb-stat-num">' + num + '</span>'
     + '<span class="fb-stat-lbl">' + lbl + '</span></div>';
   summaryEl.innerHTML = '<div class="fb-summary">'
     + stat(sorted.length, sorted.length === 1 ? 'response' : 'responses')
     + (avg ? stat(avg.toFixed(1), 'average rating') : '')
     + (reached ? stat(reached, 'students reached') : '')
-    + (fromForm ? stat(fromForm, 'from the form') : '')
+    + (asked.length ? stat(wouldRebook + '/' + asked.length, 'would have us back') : '')
     + '</div>';
+}
+
+// "Would you have us back?" is the only answer on the form that measures behaviour rather
+// than sentiment: "11 of 12 teachers would have us back" says more than any rating average.
+// The chip shows the short verdict; the full option text lives in the tooltip, because
+// "Yes - but shorter, or a different format" is the useful part and it is too long to render.
+function _rebookYes(v) { return /^yes/i.test(String(v || '').trim()); }
+
+function _rebookChip(v) {
+  var raw = String(v || '').trim();
+  if (!raw) return '';
+  var yes = _rebookYes(raw);
+  return '<span class="fb-rebook ' + (yes ? 'is-yes' : 'is-no') + '" title="' + escHtml(raw) + '">'
+    + (yes ? 'Would have us back' : 'Would not rebook') + '</span>';
 }
 
 function renderFeedback() {
@@ -10979,6 +11102,27 @@ function renderFeedback() {
     const stars = r ? '<span class="fb-stars" role="img" aria-label="' + r + ' out of 5">'
       + [1,2,3,4,5].map(i => star(i <= r)).join('') + '</span>' : '';
     const isForm = f.source === 'form';
+    // Panels are built, not hard-coded, so an unanswered optional question leaves no dead
+    // cell. The count goes on as a CLASS: an inline grid-template-columns would beat the
+    // mobile rule regardless of its media query.
+    const icon = {
+      well: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg>',
+      improve: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      questions: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    };
+    const panel = (cls, key, label, text) => '<div class="feedback-section">'
+      + '<div class="feedback-section-label ' + cls + '">' + icon[key] + label + '</div>'
+      + '<div class="feedback-section-text">' + escHtml(text) + '</div></div>';
+    const panels = [];
+    // The quote already carries "what went well"; this panel only exists as its fallback.
+    if (!f.wentWell) panels.push('<div class="feedback-section">'
+      + '<div class="feedback-section-label went-well">' + icon.well + 'Went well</div>'
+      + '<div class="feedback-section-text"><span class="fb-none">Nothing recorded</span></div></div>');
+    if ((f.improve || '').trim()) panels.push(panel('improve', 'improve', 'Improve', f.improve.trim()));
+    if ((f.questions || '').trim()) panels.push(panel('questions', 'questions', 'Questions asked', f.questions.trim()));
+    const panelsHtml = panels.length
+      ? '<div class="feedback-sections cols-' + Math.min(panels.length, 3) + '">' + panels.join('') + '</div>'
+      : '';
     const metaBits = [
       f.date ? fmtMeetingDate(f.date) : '',
       f.audience ? escHtml(f.audience) : '',
@@ -10988,7 +11132,7 @@ function renderFeedback() {
       <div class="feedback-header">
         <div style="min-width:0">
           <div class="feedback-title">${escHtml(f.presentationTitle)}
-            ${isForm ? '<span class="fb-badge" title="Submitted through the feedback form">Host feedback</span>' : ''}
+            ${isForm ? '<span class="fb-badge" title="Submitted by the teacher whose class we presented to">Teacher feedback</span>' : ''}${_rebookChip(f.rebook)}
           </div>
           <div class="feedback-meta">${metaBits}${stars ? ' ' + stars : ''}</div>
         </div>
@@ -10997,21 +11141,11 @@ function renderFeedback() {
           <button class="btn btn-ghost btn-danger" onclick="deleteFeedback('${f.id}')">Delete</button>
         </div>
       </div>
-      ${f.wentWell ? `<blockquote class="fb-quote">${escHtml(f.wentWell)}</blockquote>` : ''}
-      <div class="feedback-sections">
-        ${f.wentWell ? '' : `<div class="feedback-section">
-          <div class="feedback-section-label went-well"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg>Went well</div>
-          <div class="feedback-section-text">${escHtml(f.wentWell||'').trim() || '<span class="fb-none">Nothing recorded</span>'}</div>
-        </div>`}
-        <div class="feedback-section">
-          <div class="feedback-section-label improve"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Improve</div>
-          <div class="feedback-section-text">${escHtml(f.improve||'').trim() || '<span class="fb-none">Nothing recorded</span>'}</div>
-        </div>
-        <div class="feedback-section">
-          <div class="feedback-section-label questions"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Questions asked</div>
-          <div class="feedback-section-text">${escHtml(f.questions||'').trim() || '<span class="fb-none">None noted</span>'}</div>
-        </div>
-      </div>
+      ${f.wentWell ? `<blockquote class="fb-quote">${escHtml(f.wentWell)}</blockquote>` + (
+          f.teacher ? `<div class="fb-cite">&mdash; ${escHtml(f.teacher)}</div>`
+        : (isForm && f.audience ? `<div class="fb-cite">&mdash; Teacher, ${escHtml(f.audience)}</div>` : '')
+        ) : ''}
+      ${panelsHtml}
     </div>`;
   }).join('');
 }
@@ -11023,6 +11157,7 @@ function openAddFeedback() {
   document.getElementById('fb-title').value = '';
   document.getElementById('fb-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
   document.getElementById('fb-audience').value = '';
+  document.getElementById('fb-size').value = '';
   document.getElementById('fb-rating').value = '5';
   document.getElementById('fb-wentwell').value = '';
   document.getElementById('fb-improve').value = '';
@@ -11038,6 +11173,7 @@ function editFeedback(id) {
   document.getElementById('fb-title').value = f.presentationTitle;
   document.getElementById('fb-date').value = f.date;
   document.getElementById('fb-audience').value = f.audience || '';
+  document.getElementById('fb-size').value = f.audienceSize || '';
   document.getElementById('fb-rating').value = f.rating || 5;
   document.getElementById('fb-wentwell').value = f.wentWell || '';
   document.getElementById('fb-improve').value = f.improve || '';
@@ -11052,6 +11188,7 @@ function saveFeedback() {
     presentationTitle: title,
     date:      document.getElementById('fb-date').value,
     audience:  document.getElementById('fb-audience').value.trim(),
+    audienceSize: parseInt(document.getElementById('fb-size').value, 10) || 0,
     rating:    parseInt(document.getElementById('fb-rating').value) || 0,
     wentWell:  document.getElementById('fb-wentwell').value.trim(),
     improve:   document.getElementById('fb-improve').value.trim(),
