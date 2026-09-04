@@ -6,10 +6,18 @@
 <title>Together For Health — Club Hub</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#C4788A">
+<!-- The standard replacement for apple-mobile-web-app-capable, which Chrome now warns
+     about. Both are kept: iOS Safari still reads the apple- prefixed one. -->
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Together For Health">
 <link rel="apple-touch-icon" href="icon.svg">
+<!-- Declaring the SVG as the icon stops the browser probing for /favicon.ico and logging
+     a 404 on every load. Note iOS does NOT accept SVG for apple-touch-icon above, so the
+     home-screen icon there still falls back to a page screenshot until a raster PNG
+     exists — a known gap, not fixed by this line. -->
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
