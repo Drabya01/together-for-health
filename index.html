@@ -11709,14 +11709,14 @@ function scheduleReminders() {
   } catch(e) {}
 })();
 
-// Auto-pull from cloud on load, then refresh the active tab if state was updated
+// Cloud sync is owned by firebase-sync.js now, which boots from onAuthStateChanged.
+//
+// This used to inject ./sync-local.js on every load — a gitignored file that wrote a live
+// GitHub write token into localStorage on local dev, and 404'd noisily in production on
+// every single page view. Both halves of that are gone: Firestore needs no token, so
+// there is nothing for local dev to inject and nothing to leak into a test session.
 window.addEventListener('load', function() {
-  // Try loading sync-local.js (sets token on local dev; always 404 on GitHub Pages — silent)
-  var s = document.createElement('script');
-  s.src = './sync-local.js';
-  s.onerror = function() { startCloudSync(); };
-  s.onload = function() { startCloudSync(); };
-  document.head.appendChild(s);
+  if (typeof startCloudSync === 'function') startCloudSync();
 });
 
 function startCloudSync() {
