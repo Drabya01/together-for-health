@@ -9158,17 +9158,34 @@ function renderMembers() {
             + escHtml(userRole.name) + '</span>';
         }
 
+        // Shared button styles. min-height:32px because the previous 5px-padding buttons were
+        // roughly 21px tall — well under the 24px WCAG 2.5.8 minimum, and fiddly on a phone.
+        var _btnBase   = 'min-height:32px;padding:6px 11px;border-radius:7px;font-size:12.5px;cursor:pointer;font-family:inherit;';
+        var _btnPrimary = 'style="' + _btnBase + 'background:var(--accent);color:white;border:none;font-weight:600;"';
+        var _btnOutline = 'style="' + _btnBase + 'background:none;color:var(--accent);border:1px solid var(--accent);font-weight:600;"';
+        var _btnQuiet   = 'style="' + _btnBase + 'background:none;color:var(--text-muted);border:1px solid var(--border);"';
+        var _btnDanger  = 'style="' + _btnBase + 'background:none;color:#b91c1c;border:1px solid #fca5a5;font-weight:600;"';
+        var _delBtn = ' <button onclick="removeUserCompletely(\'' + u.id + '\')" ' + _btnQuiet
+          + ' title="Permanently delete this account record and clear it from this list. They would fill in the join form again if they ever wanted back in.">Delete account</button>';
+
         var actions = '';
         if (u.status === 'pending') {
-          actions = '<button onclick="showApproveModal(\'' + u.id + '\')" style="padding:5px 10px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Approve</button>'
-            + ' <button onclick="rejectUser(\'' + u.id + '\')" style="padding:5px 8px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Reject</button>';
+          // Delete is offered here too: a request you neither want to approve nor keep
+          // staring at (a typo signup, a duplicate account) had no way to be cleared.
+          actions = '<button onclick="showApproveModal(\'' + u.id + '\')" ' + _btnPrimary + '>Approve</button>'
+            + ' <button onclick="rejectUser(\'' + u.id + '\')" ' + _btnQuiet + '>Reject</button>'
+            + _delBtn;
         } else if (u.status === 'rejected') {
-          actions = '<button onclick="showApproveModal(\'' + u.id + '\')" style="padding:5px 10px;background:none;color:var(--accent);border:1px solid var(--accent);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Re-approve</button>';
+          // Previously Re-approve was the ONLY action on a rejected person, so a rejected
+          // or duplicate signup was stuck in this list permanently with no way to remove it.
+          actions = '<button onclick="showApproveModal(\'' + u.id + '\')" ' + _btnOutline + '>Re-approve</button>'
+            + _delBtn;
         } else {
           // "Remove" is the everyday action (a kick they can come back from), so give it the
-          // clearer label and the larger target. Permanent deletion is deliberately quieter.
-          actions = '<button onclick="revokeUser(\'' + u.id + '\')" style="min-height:32px;padding:6px 12px;background:none;color:#b91c1c;border:1px solid #fca5a5;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;" title="Remove from the club. They can be let back in with one click.">Remove</button>'
-            + ' <button onclick="removeUserCompletely(\'' + u.id + '\')" style="min-height:32px;padding:6px 9px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:11.5px;cursor:pointer;font-family:inherit;" title="Permanently delete their account record. They would have to fill in the join form again.">Delete account</button>';
+          // clearer label and the stronger styling. Permanent deletion stays quieter.
+          actions = '<button onclick="revokeUser(\'' + u.id + '\')" ' + _btnDanger
+            + ' title="Remove from the club. They keep their profile and can be let back in with one click.">Remove</button>'
+            + _delBtn;
         }
 
         var metaLine = [u.email ? escHtml(u.email) : '', u.grade ? 'Grade ' + escHtml(u.grade) : ''].filter(Boolean).join(' · ');
