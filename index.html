@@ -4040,6 +4040,13 @@ async function syncFromGist() {
     if ((cloudVer > 0 || cloudTs > 0) && cloudIsNewer) {
       // Preserve any local users not yet in cloud (e.g. pending member on this device)
       var localUsers = (state.users || []).slice();
+      // ...and the roster, for the same reason. Object.assign replaces state.members wholesale, so
+      // a device whose approvals were never published (no token, or a token that got dropped after
+      // a 401) silently lost its entire roster the moment it pulled a staler cloud copy — and the
+      // app auto-pulls on every load, so it happened without anyone touching a sync button.
+      // Resurrecting a member someone deleted elsewhere is visible and re-fixable; silently losing
+      // the roster is not. Identity collections get merged, not overwritten.
+      var localMembers = (state.members || []).slice();
       var localBackup = localStorage.getItem(STORE_KEY);
       if (localBackup) localStorage.setItem(STORE_KEY + '_presync_bk', localBackup);
       Object.assign(state, cloudState);
@@ -4066,6 +4073,15 @@ async function syncFromGist() {
       ['meetings','members','feedback','posts','announcements','goals','contacts','resources',
        'transactions','activities','emailTemplates','teachers','consents','partnerships',
        'fundraisers','grants','eventBudgets'].forEach(function(k) { if (!state[k]) state[k] = []; });
+      // Merge the local roster back in (see localMembers above). Match on the same identity keys
+      // as users: googleId only when both sides have one, else email, else id.
+      localMembers.forEach(function(lm) {
+        var _lmlc = (lm.email || '').toLowerCase();
+        var hit = (lm.googleId && state.members.find(function(cm) { return cm.googleId && cm.googleId === lm.googleId; }))
+               || (_lmlc && state.members.find(function(cm) { return (cm.email || '').toLowerCase() === _lmlc; }))
+               || (lm.id && state.members.find(function(cm) { return cm.id === lm.id; }));
+        if (!hit) state.members.push(lm);
+      });
       state.meetings.forEach(function(m) { if (!m.attendance) m.attendance = {}; if (!m.actionItems) m.actionItems = []; });
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
       initRoles();
@@ -4097,8 +4113,11 @@ async function pushToGist() {
     try {
       var _peekId = getSyncGistId();
       if (_peekId) {
+        // Authenticate the pre-read: unauthenticated GitHub allows only 60 requests/hour per IP,
+        // which a whole school shares. A rate-limited peek would fall back to local+1 and risk
+        // moving the cloud version backwards, which is the exact thing this read exists to prevent.
         const peek = await fetch('https://api.github.com/gists/' + _peekId, {
-          headers: { 'Accept': 'application/vnd.github.v3+json' }
+          headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token }
         });
         if (peek.ok) {
           const pj = await peek.json();
@@ -4123,12 +4142,29 @@ async function pushToGist() {
       updateSyncIndicator('synced');
     }
     var gistId = getSyncGistId();
-    // Try PATCH if we have an ID; fall through to create if missing/forbidden
     if (gistId) {
       const patch = await fetch('https://api.github.com/gists/' + gistId, { method: 'PATCH', headers: headers, body: fileBody });
       if (patch.ok) { _commitPushed(); return true; }
       if (patch.status === 401) { localStorage.removeItem('tfh_sync_token'); updateSyncIndicator('offline'); return false; }
-      // 403/404 = don't own this gist — fall through and create a new one
+      // Only a genuine "you cannot write this gist" (403/404) justifies creating another one. The
+      // old code fell through on ANY failure, so a transient 500 or a flaky connection silently
+      // forked the club database: this device started writing to a brand-new gist while every
+      // member's device kept reading the canonical one, and the two never converged again.
+      var _ownGistId = localStorage.getItem('tfh_gist_id') || '';
+      if (patch.status !== 403 && patch.status !== 404) {
+        updateSyncIndicator('error');
+        return false;
+      }
+      // Even on 403/404, never fork away from the club's canonical gist — that id is baked into
+      // every deployed copy of the app, so a new gist would be invisible to all members. This is
+      // a token problem, and it needs to be reported as one.
+      if (!_ownGistId || _ownGistId === TFH_GIST_ID || gistId === TFH_GIST_ID) {
+        updateSyncIndicator('error');
+        showToast('This GitHub token cannot write the club’s sync file. Make sure the token has the "gist" scope and belongs to the account that owns the club gist.', 'error');
+        return false;
+      }
+      // Otherwise: this device points at some other gist it does not own. Creating a fresh one is
+      // the reasonable recovery, and the club fallback still covers reads.
     }
     // Create a new private Gist owned by this account
     const create = await fetch('https://api.github.com/gists', {
