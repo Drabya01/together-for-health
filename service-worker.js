@@ -1,4 +1,4 @@
-const CACHE = 'tfh-v25';
+const CACHE = 'tfh-v26';
 const ASSETS = ['./', './index.html', './firebase-sync.js', './admin-editor.js', './admin-editor.css', './manifest.json', './icon.svg', './icon-maskable.svg'];
 
 self.addEventListener('install', e => {
@@ -18,10 +18,24 @@ self.addEventListener('fetch', e => {
   // decided the cloud was not newer, and left an already-approved member stuck on the pending
   // screen. It also meant the club's whole dataset was written durably into Cache Storage.
   if (url.origin !== self.location.origin) return;
-  // Lesson decks change often and are large — always serve the freshest copy
-  // (network-first), falling back to cache only when offline. This prevents
-  // members from getting a stale deck after it's been updated.
-  if (url.pathname.indexOf('/decks/') !== -1) {
+  // Network-first for everything that IS the app: the page itself, and its scripts and
+  // styles. Falls back to cache when offline, so the PWA still works on a bus.
+  //
+  // These used to be stale-while-revalidate, which meant a returning user ran the
+  // PREVIOUS version of the app on every visit and only picked up a fix on the visit
+  // after. That is why bumping CACHE by hand was required on every single deploy, and
+  // why a just-shipped fix appeared not to work: the browser was still executing the old
+  // index.html and the old firebase-sync.js. For an app whose logic lives in two files
+  // that change often, serving them stale is the wrong trade.
+  const isAppShell =
+    e.request.mode === 'navigate' ||
+    e.request.destination === 'script' ||
+    e.request.destination === 'style' ||
+    url.pathname.indexOf('/decks/') !== -1 ||
+    /\.(html|js|css)$/.test(url.pathname) ||
+    url.pathname === '/' || url.pathname.endsWith('/');
+
+  if (isAppShell) {
     e.respondWith(
       fetch(e.request).then(res => {
         if (res && res.status === 200) {
@@ -29,11 +43,12 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match(e.request))
+      }).catch(() => caches.match(e.request).then(c => c || Response.error()))
     );
     return;
   }
-  // Everything else: stale-while-revalidate
+
+  // Static assets that rarely change (icons, manifest, images): cache-first is fine.
   e.respondWith(
     caches.match(e.request).then(cached => {
       const network = fetch(e.request).then(res => {

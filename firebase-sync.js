@@ -577,16 +577,36 @@
   // could never persist it — the tour replayed on every single refresh. Persist it to the
   // user's own document instead. Wrapped rather than replaced so the visual teardown in
   // index.html's finishTour() still runs.
+  function _tourKey(uid) { return 'tfh_onboarded_' + uid; }
+
   var _origFinishTour = window.finishTour;
   window.finishTour = function () {
     var u = auth.currentUser;
     if (u) {
       if (window.currentUser) window.currentUser.onboarded = true;
+      // Local flag first: it is synchronous, survives a slow or failed network write, and
+      // is what actually guarantees the tour does not reappear on the very next refresh.
+      try { localStorage.setItem(_tourKey(u.uid), '1'); } catch (e) {}
+      // Then the durable copy, so the tour stays dismissed on this person's other devices.
       db.collection(USERS).doc(u.uid).update({ onboarded: true }).catch(function (e) {
         console.warn('[tfh] could not persist onboarded flag:', e && e.code);
       });
     }
     if (typeof _origFinishTour === 'function') return _origFinishTour.apply(this, arguments);
+  };
+
+  // _shouldTour() in index.html only consults currentUser.onboarded, which is populated
+  // from the Firestore document and so is empty until that document round-trips. Gate the
+  // tour on the local flag as well, so a refresh never replays a tour already dismissed.
+  var _origMaybeStartTour = window.maybeStartTour;
+  window.maybeStartTour = function () {
+    var u = auth.currentUser;
+    if (u) {
+      var seen = false;
+      try { seen = localStorage.getItem(_tourKey(u.uid)) === '1'; } catch (e) {}
+      if (seen || (window.currentUser && window.currentUser.onboarded)) return;
+    }
+    if (typeof _origMaybeStartTour === 'function') return _origMaybeStartTour.apply(this, arguments);
   };
 
   // ── sync panel ────────────────────────────────────────────────────────────
