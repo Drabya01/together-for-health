@@ -2049,30 +2049,7 @@
   .auth-divider::before, .auth-divider::after {
     content: ''; flex: 1; height: 1px; background: var(--border);
   }
-  .auth-pin-toggle {
-    background: none; border: none; cursor: pointer;
-    font-size: 12px; color: var(--text-muted); font-family: inherit;
-    padding: 0; text-decoration: underline;
-  }
-  .auth-pin-toggle:hover { color: var(--accent); }
-  #auth-pin-section { display: none; margin-top: 12px; }
-  #auth-pin-section.visible { display: block; }
-  #auth-pin-input {
-    width: 100%; padding: 12px 16px; border: 2px solid var(--border);
-    border-radius: 10px; font-size: 16px; font-family: inherit;
-    background: var(--bg); color: var(--text); margin-bottom: 12px;
-    text-align: center; letter-spacing: 3px; transition: border-color 0.15s;
-    box-sizing: border-box;
-  }
-  #auth-pin-input:focus { outline: none; border-color: var(--accent); }
-  #auth-pin-input.lock-shake { animation: lockShake 0.4s ease; border-color: #ef4444; }
-  #auth-pin-btn {
-    width: 100%; padding: 12px; background: var(--accent); color: white;
-    border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
-    cursor: pointer; font-family: inherit; transition: background 0.12s;
-  }
-  #auth-pin-btn:hover { background: var(--accent-mid); }
-  #auth-pin-error { color: #ef4444; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  /* PIN sign-in styles removed along with the PIN backdoor. */
   .auth-linktree { margin-top: 20px; font-size: 12px; color: var(--text-muted); }
   .auth-linktree a { color: var(--accent); text-decoration: none; font-weight: 500; }
   .auth-linktree a:hover { text-decoration: underline; }
@@ -4843,7 +4820,9 @@ state.announcements.forEach(a => {
 // Onboarding flag
 if (state._onboarded === undefined) state._onboarded = false;
 // Site lock PIN (default same as editor PIN)
-if (!state._sitePin) state._sitePin = 'tfh2026';
+// state._sitePin is gone: it defaulted to the same published literal 'tfh2026', and because
+// saveState() serialises all of state, the club password was republished in plaintext to the
+// shared document every time it changed. Access is Google sign-in plus admin approval now.
 if (!state.users) state.users = [];
 // Sync version + timestamp — protect existing data from being overwritten by empty gist
 if (!state._syncVersion) state._syncVersion = 0;
@@ -10570,7 +10549,7 @@ var _obSteps = [];
 var _obBusy = false;
 
 function _shouldTour() {
-  if (!currentUser || currentUser.id === '_pin_admin') return false;
+  if (!currentUser) return false;
   return !currentUser.onboarded;
 }
 
@@ -11359,7 +11338,6 @@ function updateTabVisibility() {
 
 function signOut() {
   localStorage.removeItem('tfh_google_session');
-  sessionStorage.removeItem('tfh_pin_access');
   if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
     try { google.accounts.id.disableAutoSelect(); } catch(e) {}
   }
@@ -11554,34 +11532,19 @@ function revokeUser(userId) {
   showToast(user.name + "'s access has been revoked. They can re-apply.", 'info');
 }
 
-function toggleAuthPin() {
-  var sec = document.getElementById('auth-pin-section');
-  if (sec) sec.classList.toggle('visible');
-  var inp = document.getElementById('auth-pin-input');
-  if (inp && sec && sec.classList.contains('visible')) setTimeout(function() { inp.focus(); }, 50);
-}
-
-function authPinKeydown(e) {
-  if (e.key === 'Enter') submitAuthPin();
-}
-
-function submitAuthPin() {
-  var input = document.getElementById('auth-pin-input');
-  var val = (input ? input.value : '').trim();
-  var errEl = document.getElementById('auth-pin-error');
-  var EDITOR_PIN_VAL = 'tfh2026';
-  var sitePin = (state._sitePin || 'tfh2026');
-  if (val === sitePin || val === EDITOR_PIN_VAL) {
-    currentUser = { id: '_pin_admin', googleId: '_pin', email: 'golussaud@gmail.com', name: 'Admin', photo: '',
-      role: 'President', permissionTier: 'admin', roleId: 'role_president', status: 'approved' };
-    sessionStorage.setItem('tfh_pin_access', '1');
-    showApp();
-  } else {
-    if (errEl) errEl.textContent = 'Incorrect PIN. Try again.';
-    if (input) { input.classList.add('lock-shake'); input.value = ''; }
-    setTimeout(function() { if (input) { input.classList.remove('lock-shake'); input.focus(); } }, 450);
-  }
-}
+// The "Admin PIN sign-in" path used to live here and has been deleted outright.
+//
+// It compared the typed value against a hardcoded 'tfh2026' — plainly readable in the
+// page source of a public site — and on a match fabricated a currentUser with
+// email golussaud@gmail.com, permissionTier 'admin' and roleId 'role_president', then
+// called showApp(). So anyone who opened view-source had full President access, and
+// changeSitePassword() could not revoke it because the literal was a separate fallback.
+//
+// It was also broken by the move to Firestore: the fake user has no Firebase credential,
+// so every read and write is refused by the security rules. It granted a hollow, dataless
+// shell of the app while still bypassing the front door.
+//
+// Access is now exactly one thing: sign in with Google, and have an admin approve you.
 
 // Read approve/reject URL params written by email magic links
 (function() {
@@ -11615,27 +11578,15 @@ document.addEventListener('DOMContentLoaded', function() {
   })();
 
   initRoles();
-  if (sessionStorage.getItem('tfh_pin_access')) {
-    currentUser = { id: '_pin_admin', googleId: '_pin', email: 'golussaud@gmail.com', name: 'Admin', photo: '',
-      role: 'President', permissionTier: 'admin', roleId: 'role_president', status: 'approved' };
-    showApp();
-    return;
-  }
-  // If GIS already loaded from cache, init now; otherwise onload attr handles it
-  if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-    initGoogleAuth();
-  }
+  // The tfh_pin_access session resume was deleted with the PIN itself — it rebuilt the same
+  // fabricated President user on every load, so one PIN entry granted access indefinitely.
+  //
+  // The Google Identity Services bootstrap that also lived here is gone too: firebase-sync.js
+  // owns sign-in now and starts from onAuthStateChanged, which restores a cached session
+  // with no network at all.
 });
 
-function changeSitePassword() {
-  if (!hasPermission('MANAGE_ROLES')) { showToast('No permission', 'error'); return; }
-  var newPin = prompt('Enter a new club access password (members will use this to log in):');
-  if (!newPin || !newPin.trim()) return;
-  if (newPin.trim().length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
-  state._sitePin = newPin.trim();
-  saveState();
-  showToast('Club password updated! Share it with your members.');
-}
+// changeSitePassword() removed with the site PIN. Nothing referenced it.
 
 // ====== PUSH NOTIFICATIONS ======
 var _reminderTimeouts = [];
@@ -12055,14 +12006,6 @@ function deleteRole(roleId) {
     <div class="auth-title">Together For Health</div>
     <div class="auth-sub">2026–2027 Health Club Hub<br>Sign in to continue.</div>
     <div id="google-signin-btn"></div>
-    <div class="auth-divider">or</div>
-    <button class="auth-pin-toggle" onclick="toggleAuthPin()">Admin PIN sign-in</button>
-    <div id="auth-pin-section">
-      <input type="password" id="auth-pin-input" placeholder="Enter PIN" autocomplete="off"
-             onkeydown="authPinKeydown(event)">
-      <button id="auth-pin-btn" onclick="submitAuthPin()">Enter</button>
-      <div id="auth-pin-error"></div>
-    </div>
     <div class="auth-linktree">
       Follow us on <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener">Linktree</a>
     </div>

@@ -11,12 +11,12 @@
    ─ Saved edits persist in localStorage (tfh_overrides_v1) and
      are re-applied on every page load automatically.
 
-   ▼ Change EDITOR_PIN below to whatever you want.
+   Access is gated by the EDITOR_MODE permission, checked server-side against the
+   signed-in user's role. There is deliberately no PIN.
 ═══════════════════════════════════════════════════════════════ */
 
 'use strict';
 
-var EDITOR_PIN    = 'tfh2026';   // ← change this to your preferred PIN
 var OVERRIDES_KEY = 'tfh_overrides_v1';
 
 var _editorActive   = false;
@@ -152,20 +152,19 @@ function _findByKey(key) {
 /* ─────────────────────────────────────────────────────────────
    EDITOR MODE ON / OFF
 ───────────────────────────────────────────────────────────── */
-window.adminEditorToggle  = function() { _editorActive ? _editorOff(false) : _askPin(); };
+window.adminEditorToggle  = function() { _editorActive ? _editorOff(false) : _requireEditorPermission(); };
 window.adminEditorIsActive = function() { return _editorActive; };
 
-function _askPin() {
+// Was _askPin(). The PIN it checked was a third copy of the same 'tfh2026' literal, served
+// publicly in this file, and it added nothing: the permission check below already decides
+// access, and it is the check that actually matters because roleId lives in Firestore under
+// rules the client cannot edit. A published password in front of a real permission gate is
+// pure theatre, so it is gone.
+function _requireEditorPermission() {
   if (typeof window.hasPermission === 'function' && !window.hasPermission('EDITOR_MODE')) {
     if (typeof window.showToast === 'function') {
       window.showToast('You need the Editor Mode permission to do this.', 'error');
     }
-    return;
-  }
-  var entered = prompt('Enter editor PIN:');
-  if (entered === null) return;
-  if (String(entered).trim() !== String(EDITOR_PIN)) {
-    alert('Incorrect PIN.');
     return;
   }
   _editorOn();
