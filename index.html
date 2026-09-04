@@ -2596,7 +2596,7 @@
     <!-- Header -->
     <div class="dash-hdr">
       <div>
-        <div class="dash-hdr-title">Together For Health</div>
+        <h1 class="dash-hdr-title">Together For Health</h1>
         <a href="https://linktr.ee/togetherforhealthMDHS" target="_blank" rel="noopener" class="dash-hdr-link">
           linktr.ee/togetherforhealthMDHS ↗
         </a>
@@ -2651,7 +2651,7 @@
   <div id="page-calendar" class="page">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; gap:12px; flex-wrap:wrap;">
       <div>
-        <p class="page-title">Calendar</p>
+        <h1 class="page-title">Calendar</h1>
         <p class="page-sub">Click any date to add or view events</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddEvent()">+ Add event</button>
@@ -2692,7 +2692,7 @@
   <div id="page-plans" class="page">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; gap:12px; flex-wrap:wrap;">
       <div>
-        <p class="page-title">Plans</p>
+        <h1 class="page-title">Plans</h1>
         <p class="page-sub">Write goals, roadmaps, timelines, or step-by-step breakdowns</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddPlan()">+ New plan</button>
@@ -2705,7 +2705,7 @@
   <div id="page-ideas" class="page">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; gap:12px; flex-wrap:wrap;">
       <div>
-        <p class="page-title">Ideas</p>
+        <h1 class="page-title">Ideas</h1>
         <p class="page-sub">Log topic ideas, audiences, formats, partnerships, anything</p>
       </div>
       <button class="btn btn-primary" onclick="openAddIdea()">+ New idea</button>
@@ -2718,7 +2718,7 @@
   <div id="page-presentations" class="page">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; gap:12px; flex-wrap:wrap;">
       <div>
-        <p class="page-title">Presentations</p>
+        <h1 class="page-title">Presentations</h1>
         <p class="page-sub">Every deck the club has shared, all in one place</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -2735,9 +2735,9 @@
     <div class="pres-toolbar">
       <div class="pres-search">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" id="pres-search-input" placeholder="Search by title, topic, or person…" oninput="setPresSearch(this.value)">
+        <input type="text" id="pres-search-input" placeholder="Search by title, topic, or person…" oninput="setPresSearch(this.value)" aria-label="Search presentations">
       </div>
-      <select class="pres-sort" id="pres-sort-select" onchange="setPresSort(this.value)">
+      <select class="pres-sort" id="pres-sort-select" onchange="setPresSort(this.value)" aria-label="Sort presentations by">
         <option value="recent">Most recent</option>
         <option value="title">Title A–Z</option>
         <option value="opened">Most opened</option>
@@ -2748,7 +2748,7 @@
 
   <!-- MARKETING -->
   <div id="page-marketing" class="page">
-    <p class="page-title">Marketing</p>
+    <h1 class="page-title">Marketing</h1>
     <p class="page-sub">Copy-paste templates, poster briefs, brand guide, and content calendar</p>
 
     <div style="margin-bottom:28px">
@@ -2850,7 +2850,7 @@
   <div id="page-meetings" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Meetings</p>
+        <h1 class="page-title">Meetings</h1>
         <p class="page-sub">Log what was discussed, decided, and who attended</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddMeeting()">+ New meeting</button>
@@ -2862,7 +2862,7 @@
   <div id="page-members" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Members</p>
+        <h1 class="page-title">Members</h1>
         <p class="page-sub">Club roster — names, roles, and contact info</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -2900,7 +2900,7 @@
   <div id="page-feedback" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Feedback</p>
+        <h1 class="page-title">Feedback</h1>
         <p class="page-sub">Track what went well and what to improve after each presentation</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddFeedback()">+ Log feedback</button>
@@ -2912,7 +2912,7 @@
   <div id="page-social" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Social Media</p>
+        <h1 class="page-title">Social Media</h1>
         <p class="page-sub">Plan captions, schedule posts, and track what's been published</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddPost()">+ New post</button>
@@ -2969,7 +2969,7 @@
   <div id="page-goals" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Goals</p>
+        <h1 class="page-title">Goals</h1>
         <p class="page-sub">Track progress toward your club's key targets</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddGoal()">+ New goal</button>
@@ -2985,7 +2985,7 @@
   <div id="page-contacts" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Contacts</p>
+        <h1 class="page-title">Contacts</h1>
         <p class="page-sub">Schools, teachers, principals, and coordinators you work with</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddContact()">+ Add contact</button>
@@ -2997,7 +2997,7 @@
   <div id="page-resources" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Resources</p>
+        <h1 class="page-title">Resources</h1>
         <p class="page-sub">Articles, videos, statistics, and tools your team finds useful</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddResource()">+ Add resource</button>
@@ -3010,7 +3010,7 @@
   <div id="page-budget" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Budget</p>
+        <h1 class="page-title">Budget</h1>
         <p class="page-sub">Track income and expenses for club activities</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddTransaction()">+ Add transaction</button>
@@ -3033,7 +3033,7 @@
   <div id="page-activities" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Activities</p>
+        <h1 class="page-title">Activities</h1>
         <p class="page-sub">A library of health activities and exercises for presentations</p>
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddActivity()">+ Add activity</button>
@@ -3046,7 +3046,7 @@
   <div id="page-attendance" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Attendance</p>
+        <h1 class="page-title">Attendance</h1>
         <p class="page-sub">Track who showed up to each meeting</p>
       </div>
     </div>
@@ -3059,7 +3059,7 @@
   <div id="page-outreach" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Outreach</p>
+        <h1 class="page-title">Outreach</h1>
         <p class="page-sub">Teacher contacts, media consent, and partnership log</p>
       </div>
     </div>
@@ -3134,7 +3134,7 @@
   <div id="page-fundraising" class="page">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
-        <p class="page-title">Fundraising</p>
+        <h1 class="page-title">Fundraising</h1>
         <p class="page-sub">Campaign tracker and grant applications</p>
       </div>
     </div>
@@ -3248,7 +3248,7 @@
   <div id="globalSearchCard">
     <div id="globalSearchInputWrap">
       <span style="font-size:18px;color:var(--text-muted)">🔍</span>
-      <input type="text" id="globalSearchInput" placeholder="Search events, goals, ideas, plans…" autocomplete="off" oninput="gsOnInput()" onkeydown="gsOnKeydown(event)">
+      <input type="text" id="globalSearchInput" placeholder="Search events, goals, ideas, plans…" autocomplete="off" oninput="gsOnInput()" onkeydown="gsOnKeydown(event)" aria-label="Search the whole app">
     </div>
     <div id="globalSearchHint">Press Esc or click outside to close</div>
     <div id="globalSearchResults"></div>
@@ -3390,7 +3390,7 @@
           <option value="implementing">Implementing</option>
           <option value="done">Done</option>
         </select>
-        <select id="idea-status-visible">
+        <select id="idea-status-visible" aria-label="Change idea status">
           <option value="new">New</option>
           <option value="considering">Considering</option>
           <option value="implementing">Implementing</option>
@@ -3498,7 +3498,7 @@
 
       <!-- Topic text input -->
       <div class="pg-field" style="margin-top:10px;">
-        <input type="text" id="pg-topic" placeholder="Or type a custom topic…" autocomplete="off" oninput="pgClearChips()" />
+        <input type="text" id="pg-topic" placeholder="Or type a custom topic…" autocomplete="off" oninput="pgClearChips()" / aria-label="Presentation topic">
       </div>
 
       <!-- Grade level -->
@@ -3513,8 +3513,8 @@
 
       <!-- Hidden PPTX fields (still used if fallback is triggered) -->
       <div style="display:none">
-        <input type="text" id="pg-presenter" />
-        <input type="text" id="pg-school" />
+        <input type="text" id="pg-presenter" / aria-label="Presenter name">
+        <input type="text" id="pg-school" / aria-label="School name">
       </div>
 
       <!-- Status bar -->
@@ -5085,7 +5085,75 @@ let editingId = null;
 let calYear, calMonth;
 
 // ====== TOAST ======
+// ── Label wiring ───────────────────────────────────────────────────────────────────────
+//
+//  142 of 157 form controls had no accessible name: 140 <label> elements carried no `for`
+//  attribute, so nothing connected them to their field. Every one of those controls DOES
+//  have an id, and the label is almost always its immediate sibling — the association was
+//  simply never written down. Screen-reader users heard "edit text, blank" instead of
+//  "Title", and clicking a label did not focus its field.
+//
+//  Done at runtime rather than by editing 140 places in the markup: one rule applied
+//  consistently beats 140 chances to mistype an id, it also covers forms built by JS, and
+//  it keeps working as fields are added. Runs on load and whenever a modal opens, since
+//  most of these live inside the 27 modals.
+function wireLabels(root) {
+  var scope = root || document;
+  var wired = 0;
+  Array.prototype.forEach.call(scope.querySelectorAll('label:not([for])'), function (label) {
+    // A label that wraps its own control is already associated — leave it alone.
+    if (label.querySelector('input,select,textarea')) return;
+    var parent = label.parentElement;
+    if (!parent) return;
+    var ctl = null;
+    Array.prototype.forEach.call(parent.querySelectorAll('input,select,textarea'), function (c) {
+      if (ctl || c.type === 'hidden') return;
+      // Only consider controls that come AFTER this label, so two label/field pairs in one
+      // wrapper do not both resolve to the first field.
+      if (!(label.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING)) return;
+      // Don't steal a control some other label already claims.
+      if (c.id) {
+        var sel = 'label[for="' + (window.CSS && CSS.escape ? CSS.escape(c.id) : c.id) + '"]';
+        if (document.querySelector(sel)) return;
+      }
+      ctl = c;
+    });
+    if (!ctl) return;
+    if (!ctl.id) ctl.id = 'fld_' + (wired + 1) + '_' + parent.children.length;
+    label.setAttribute('for', ctl.id);
+    wired++;
+  });
+  return wired;
+}
+
+// Visually-hidden mirror of the toast, so screen readers hear what sighted users see.
+// showToast() was the only feedback for dozens of operations and said nothing at all to a
+// screen reader: saves, errors and permission refusals were silent.
+function _toastLiveRegion() {
+  var el = document.getElementById('tfh-toast-live');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'tfh-toast-live';
+    el.setAttribute('role', 'status');
+    // polite, not assertive: assertive would talk over the user for a routine "Saved".
+    el.setAttribute('aria-live', 'polite');
+    el.setAttribute('aria-atomic', 'true');
+    // Not display:none and not [hidden] — either removes it from the accessibility tree
+    // and it would announce nothing. This is the standard visually-hidden clip.
+    el.style.cssText = 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;' +
+      'overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
 function showToast(msg, type = 'success', duration = 1800) {
+  try {
+    var _live = _toastLiveRegion();
+    // Clear first: re-setting identical text is not seen as a change and is not spoken.
+    _live.textContent = '';
+    setTimeout(function () { _live.textContent = String(msg || ''); }, 60);
+  } catch (e) {}
   const container = document.getElementById('tfh-toast-container');
   const toast = document.createElement('div');
   toast.className = 'tfh-toast ' + type;
@@ -5269,6 +5337,8 @@ function openModal(id) {
   var ov = document.getElementById(id);
   if (!ov) return;
   var dlg = ov.querySelector('.modal') || ov;
+  // Associate any label/field pairs in this dialog before focus lands in it.
+  try { wireLabels(dlg); } catch (e) {}
   dlg.setAttribute('role', 'dialog');
   dlg.setAttribute('aria-modal', 'true');
   // Name the dialog from its own heading so a screen reader announces what opened.
@@ -9655,6 +9725,13 @@ function seedDefaultEvents() {
 }
 
 function seedNewFeatures() {
+  // One-time only. This used to seed whenever a collection was EMPTY, which made the
+  // defaults undeletable: removing the last announcement, goal or email template brought
+  // the seeded one straight back on the next load, with no indication why. Deleting
+  // something and having it reappear reads as the delete button being broken.
+  if (state.seededDefaultsV1) return;
+  state.seededDefaultsV1 = true;
+
   // Announcements
   if (!state.announcements.length) {
     state.announcements.push({
@@ -12382,6 +12459,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })();
 
+  try { wireLabels(document); } catch (e) {}
   initRoles();
   // The tfh_pin_access session resume was deleted with the PIN itself — it rebuilt the same
   // fabricated President user on every load, so one PIN entry granted access indefinitely.
