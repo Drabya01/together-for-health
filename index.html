@@ -4235,13 +4235,13 @@ var CANVA_TOKEN_URL    = 'https://api.canva.com/rest/v1/oauth/token';
 var CANVA_API_BASE     = 'https://api.canva.com/rest/v1';
 
 // ── Email notifications (fill in after EmailJS setup at emailjs.com) ──
-// ADMIN_NOTIFY_EMAIL should become the club-owned address once it exists, so new-member
-// notifications keep arriving after the current president graduates.
+// ADMIN_NOTIFY_EMAIL is the club-owned address, so new-member notifications keep arriving
+// after the current president graduates rather than following her out the door.
 var EMAILJS_PUBLIC_KEY  = '8DUpv_hT5Ck2EWVSH';
 var EMAILJS_SERVICE_ID  = 'service_mmz4bct';
 var EMAILJS_TEMPLATE_ID          = 'template_z0grn3o';
 var EMAILJS_APPROVED_TEMPLATE_ID = 'template_2kjc25a';
-var ADMIN_NOTIFY_EMAIL           = 'golussaud@gmail.com';
+var ADMIN_NOTIFY_EMAIL           = 'togetherforhealthmdhs@gmail.com';
 
 function getSyncToken() { return localStorage.getItem('tfh_sync_token') || ''; }
 // Reading a Gist needs no credentials, so ANY device can pull club state — and therefore its own
