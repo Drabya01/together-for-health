@@ -105,7 +105,7 @@
   // deliveries is open because the member who stood up in front of the class is the one
   // who knows it happened; making it staff-only would mean the record is only as complete
   // as the president's memory.
-  var OPEN_KEYS = ['ideas', 'feedback', 'hours', 'claims', 'deliveries'];
+  var OPEN_KEYS = ['ideas', 'feedback', 'hours', 'claims', 'deliveries', 'annSeen'];
 
   var _userUnsub = null, _clubUnsub = null, _rosterUnsub = null, _openUnsub = null;
   var _writeTimer = null, _pendingWrite = false, _applyingRemote = false, _suppressWrite = false;
