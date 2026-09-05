@@ -325,6 +325,15 @@
     } finally {
       _applyingRemote = false;
     }
+    // The snapshot has just replaced the seeded collections with whatever the cloud holds.
+    // If this build ships newer content than the cloud has, re-seed now and push it up --
+    // otherwise the local seed that ran at parse time was silently thrown away, and its
+    // flag stayed set, so it never ran again on this device.
+    try {
+      if (typeof reseedAfterCloudSync === 'function' && reseedAfterCloudSync()) {
+        _flushClubWrite();         // sets _lastClubJson from the payload it sends
+      }
+    } catch (e) {}
     return true;
   }
 

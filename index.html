@@ -4553,12 +4553,13 @@ var CLUB_DECKS = [
 ];
 function seedClubDecksIfNeeded() {
   if (typeof state === 'undefined' || !state) return false;
-  if (state.seededDecksV1) return false;
+  // Presence-only: a deck row the club retitled or re-linked stays as they left it.
   if (!Array.isArray(state.presentations)) state.presentations = [];
   var now = Date.now();
   var added = false;
   CLUB_DECKS.forEach(function(d, i) {
     var url = 'decks/' + d.file;
+    if (_seedDeleted('deck-' + d.key)) return;
     if (!state.presentations.some(function(p){ return p.url === url; })) {
       state.presentations.push({
         id: 'deck-' + d.key, title: d.title, url: url, topic: d.topic,
@@ -4569,12 +4570,38 @@ function seedClubDecksIfNeeded() {
       added = true;
     }
   });
-  state.seededDecksV1 = true;
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+
+  if (added) { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {} }
   return added;
 }
 
 // ── Club activity library: seed the Activities tab (idempotent by id, survives sync) ──
+// Seeded content is reconciled against what this build ships, rather than gated behind a
+// flag. A flag — boolean or version — lives in state, and a Firestore snapshot that does
+// not contain that key leaves it untouched while replacing the content it was guarding. The
+// device then believes it is seeded, shows the old copy, and never corrects itself.
+//
+// Deletion is respected: a seeded id the club removed goes in state.deletedSeedIds and is
+// never re-added, which is what the flags were really protecting.
+function _seedDeleted(id) {
+  return Array.isArray(state.deletedSeedIds) && state.deletedSeedIds.indexOf(id) !== -1;
+}
+
+function _rememberSeedDeletion(id) {
+  if (!/^(act|res|deck)-/.test(String(id || ''))) return;   // club-authored ids need no record
+  if (!Array.isArray(state.deletedSeedIds)) state.deletedSeedIds = [];
+  if (state.deletedSeedIds.indexOf(id) === -1) state.deletedSeedIds.push(id);
+}
+
+// True when the stored row differs from the shipped one on any field we seed.
+function _seedRowDiffers(stored, shipped, fields) {
+  if (!stored) return true;
+  for (var i = 0; i < fields.length; i++) {
+    if (String(stored[fields[i]] || '') !== String(shipped[fields[i]] || '')) return true;
+  }
+  return false;
+}
+
 var CLUB_ACTIVITIES = [
   { id:'act-mh-46', title:`Feelings Thermometer`, topic:`Mental Health`, ageGroup:`Grade 4-6`, duration:`20 min`, tags:`Hands-on, SEL`,
     summary:`Read out a scenario and each kid colors their thermometer up to how big that feeling gets. Two kids will color the same card completely differently, which is the part worth stopping on. Some will put everything at the top; leave it, don't correct it.`,
@@ -4904,26 +4931,69 @@ var CLUB_ACTIVITIES = [
     steps:`Get admin approval, the stage and the mic booked at least two weeks out. This is the part that kills the event when you leave it late.\nRecruit three staff in person and name the exact forfeit. A written yes, not a hallway maybe.\nPut a student team up against them so the room has a side.\nRead the statement, both teams answer, then reveal with the source on the back of the card.\nOne sentence of explanation per answer. The moment you lecture, the room leaves.\nNo food forfeits unless you've cleared allergies with the office. A foam hat is safer than a jellybean.`,
     takeaway:`Two teachers got the caffeine one wrong, and one of them argued with the card.` }
 ];
+// Called by firebase-sync.js immediately after a club snapshot is applied. Seeding before
+// that point writes into state that the snapshot is about to overwrite.
+//
+// Terminates: a seed that changes something bumps its version and pushes; the echoed
+// snapshot carries that version back, every guard returns false, and no further push
+// happens.
+function _dropDeletedSeeds() {
+  if (!Array.isArray(state.deletedSeedIds) || !state.deletedSeedIds.length) return false;
+  var gone = state.deletedSeedIds, changed = false;
+  ['activities', 'resources', 'presentations'].forEach(function (key) {
+    if (!Array.isArray(state[key])) return;
+    var kept = state[key].filter(function (x) { return !x || gone.indexOf(x.id) === -1; });
+    if (kept.length !== state[key].length) { state[key] = kept; changed = true; }
+  });
+  return changed;
+}
+
+function reseedAfterCloudSync() {
+  var changed = _dropDeletedSeeds();
+  try { if (seedClubDecksIfNeeded())  changed = true; } catch (e) {}
+  try { if (seedActivitiesIfNeeded()) changed = true; } catch (e) {}
+  try { if (seedResourcesIfNeeded())  changed = true; } catch (e) {}
+  if (changed) {
+    var ab = document.querySelector('.nav-item--active');
+    var tab = ab ? ab.dataset.tab : '';
+    try {
+      if (tab === 'presentations') { renderPres(); renderDeliveries(); }
+      if (tab === 'activities') renderActivities();
+      if (tab === 'resources') renderResources();
+    } catch (e) {}
+  }
+  return changed;
+}
+
+var ACTIVITY_SEED_FIELDS = ['title','topic','ageGroup','duration','tags','summary','materials','steps','takeaway'];
+
 function seedActivitiesIfNeeded() {
   if (typeof state === 'undefined' || !state) return false;
   if (!Array.isArray(state.activities)) state.activities = [];
   // Align any older age-band labels with the rest of the site
   var bandMap = { 'Grade 3-5':'Grade 4-6', 'Grade 6-8':'Grade 7-9', 'Grade 9-12':'Grade 10-12' };
   state.activities.forEach(function(a){ if (a && bandMap[a.ageGroup]) a.ageGroup = bandMap[a.ageGroup]; });
-  if (state.seededActivitiesV4) return false;
-  // Replace the previous seed (act-*) wholesale. V4 rewrote all 37 summaries and
-  // takeaways out of AI voice and added 26 activities, including the Club Skills and
-  // School Events groups. Anything the club authored itself has a uid, not an act- id,
-  // so it survives. A club EDIT to a seeded card does not — that is the same trade V3
-  // made, and the new copy is the point of the release.
-  state.activities = state.activities.filter(function(a){ return !/^act-/.test(a.id); });
-  CLUB_ACTIVITIES.forEach(function(c){
-    state.activities.push({ id:c.id, title:c.title, topic:c.topic, ageGroup:c.ageGroup, duration:c.duration, tags:c.tags, summary:c.summary, materials:c.materials, steps:c.steps, takeaway:c.takeaway });
+
+  // Drop rows from a much older seed that used a different id scheme and had no summary.
+  var stale = state.activities.filter(function (a) { return a && a.id && /^act-/.test(a.id) && !a.summary && a.desc; });
+  var changed = stale.length > 0;
+  if (changed) state.activities = state.activities.filter(function (a) { return stale.indexOf(a) === -1; });
+
+  CLUB_ACTIVITIES.forEach(function (c) {
+    if (_seedDeleted(c.id)) return;
+    var existing = state.activities.find(function (a) { return a && a.id === c.id; });
+    if (!_seedRowDiffers(existing, c, ACTIVITY_SEED_FIELDS)) return;
+    var row = { id: c.id };
+    ACTIVITY_SEED_FIELDS.forEach(function (f) { row[f] = c[f]; });
+    if (existing) state.activities = state.activities.map(function (a) { return a.id === c.id ? row : a; });
+    else state.activities.push(row);
+    changed = true;
   });
-  state.seededActivitiesV4 = true;
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
-  return true;
+
+  if (changed) { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+  return changed;
 }
+
 
 // ── Curated resource library: seed the Resources tab (idempotent by id, survives sync) ──
 // Every link and phone number was verified. Tags double as the filter chips.
@@ -4985,18 +5055,25 @@ var CLUB_RESOURCES = [
   { id:'res-ccsa', title:`Centre on Substance Use`, url:`https://www.ccsa.ca`, type:`Statistic`, tags:`For Educators, Vaping`, starred:false, notes:`Substance research` },
   { id:'res-statcan', title:`Statistics Canada`, url:`https://www.statcan.gc.ca`, type:`Statistic`, tags:`For Educators, Mental Health`, starred:false, notes:`Youth health data` }
 ];
+var RESOURCE_SEED_FIELDS = ['title','url','type','tags','notes'];
+
 function seedResourcesIfNeeded() {
   if (typeof state === 'undefined' || !state) return false;
   if (!Array.isArray(state.resources)) state.resources = [];
-  if (state.seededResourcesV2) return false;
-  // Replace the earlier seed (res-*) with the short-description versions
-  state.resources = state.resources.filter(function(x){ return !/^res-/.test(x.id); });
-  CLUB_RESOURCES.forEach(function(r){
-    state.resources.push({ id:r.id, title:r.title, url:r.url, type:r.type, tags:r.tags, notes:r.notes, starred: !!r.starred });
+  var changed = false;
+  CLUB_RESOURCES.forEach(function (r) {
+    if (_seedDeleted(r.id)) return;
+    var existing = state.resources.find(function (x) { return x && x.id === r.id; });
+    if (!_seedRowDiffers(existing, r, RESOURCE_SEED_FIELDS)) return;
+    // `starred` is the club's to set, so an existing row keeps whatever they chose.
+    var row = { id: r.id, starred: existing ? !!existing.starred : !!r.starred };
+    RESOURCE_SEED_FIELDS.forEach(function (f) { row[f] = r[f]; });
+    if (existing) state.resources = state.resources.map(function (x) { return x.id === r.id ? row : x; });
+    else state.resources.push(row);
+    changed = true;
   });
-  state.seededResourcesV2 = true;
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
-  return true;
+  if (changed) { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+  return changed;
 }
 
 let state = loadState();
@@ -6861,6 +6938,7 @@ function deletePres(id, ev) {
   if (ev) ev.stopPropagation();
   if (!confirm('Delete this link?')) return;
   state.presentations = state.presentations.filter(x => x.id !== id);
+  _rememberSeedDeletion(id);
   saveState();
   renderPres();
 }
@@ -8093,6 +8171,7 @@ function copyResourceLink(id) {
 function deleteResource(id) {
   if (!confirm('Delete this resource?')) return;
   state.resources = state.resources.filter(x => x.id !== id);
+  _rememberSeedDeletion(id);
   saveState(); renderResources();
 }
 
@@ -8348,6 +8427,9 @@ function saveActivity() {
 function deleteActivity(id) {
   if (!confirm('Delete this activity?')) return false;
   state.activities = state.activities.filter(x => x.id !== id);
+  // Without this the row comes back on the next cloud snapshot, since the seed reconciles
+  // against shipped content rather than a flag.
+  _rememberSeedDeletion(id);
   saveState(); renderActivities();
   return true;
 }
