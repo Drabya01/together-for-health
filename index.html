@@ -2536,7 +2536,7 @@
           <span class="nav-item-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="10" rx="1"/><path d="M8 11v3M5 14h6"/></svg></span>
           <span class="nav-item-label">Presentations</span>
         </button>
-        <button class="nav-item" onclick="switchTab('goals')" data-tab="goals">
+        <button class="nav-item editor-only-tab" onclick="switchTab('goals')" data-tab="goals">
           <span class="nav-item-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="3.5"/><circle cx="8" cy="8" r="1" fill="currentColor" stroke="none"/></svg></span>
           <span class="nav-item-label">Goals</span>
         </button>
@@ -2544,7 +2544,7 @@
           <span class="nav-item-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><rect x="1" y="2" width="14" height="10" rx="1"/><path d="M5 15l3-3 3 3M5 7h6M5 9.5h4"/></svg></span>
           <span class="nav-item-label">Meetings</span>
         </button>
-        <button class="nav-item" onclick="switchTab('attendance')" data-tab="attendance">
+        <button class="nav-item editor-only-tab" onclick="switchTab('attendance')" data-tab="attendance">
           <span class="nav-item-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2 4h9M2 8h7M2 12h5"/><path d="M11 9l2 2 3-3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="nav-item-label">Attendance</span>
         </button>
@@ -2719,7 +2719,7 @@
       <div class="dash-panel">
         <div class="dash-panel-hdr">
           <span>Goals</span>
-          <a href="#" onclick="switchTab('goals');return false;">All goals →</a>
+          <a href="#" class="editor-only" onclick="switchTab('goals');return false;">All goals →</a>
         </div>
         <div id="dash-goals-list"></div>
       </div>
@@ -5381,7 +5381,13 @@ const today = new Date();
 calYear = today.getFullYear();
 calMonth = today.getMonth();
 
-let selectedDate = null;
+// Today, not null: the day panel is the only place shifts used to appear, and it rendered
+// nothing at all until a member happened to tap a date cell.
+let selectedDate = (function () {
+  var t = new Date();
+  return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0')
+       + '-' + String(t.getDate()).padStart(2, '0');
+})();
 
 // ====== TABS ======
 function switchTab(name) {
@@ -5915,11 +5921,13 @@ function renderDash() {
     upcomingList.innerHTML = upcomingEvts.map(e => {
       const [,m,d] = e.date.split('-').map(Number);
       const evColor = (EVENT_COLORS && EVENT_COLORS[e.type]) || { bg:'var(--tint-neutral)', text:'var(--text-muted)' };
+      // Sign-up goes here because this is the list a member reads. It used to live only
+      // in the day panel, four taps deep behind the month grid.
       return `<div class="dash-event-row">
         <span class="dash-event-date">${MONTHS[m-1].slice(0,3)} ${d}</span>
         <span class="dash-event-title">${escHtml(e.title)}</span>
         <span class="ev-type-badge" style="background:${evColor.bg};color:${evColor.text};font-size:10px;padding:1px 7px;flex-shrink:0;">${escHtml(e.type||'Other')}</span>
-      </div>`;
+      </div>${_slotsHtml(e)}`;
     }).join('');
   }
 
@@ -6130,8 +6138,12 @@ function renderUpcoming() {
         <span class="ev-type-badge" style="background:${evColor.bg};color:${evColor.text}">${escHtml(evType)}</span>
       </div>
       <div class="upcoming-item-date">${label}${ev.time ? ' · ' + ev.time : ''}</div>
+      ${_slotsHtml(ev)}
     `;
-    item.onclick = () => {
+    item.onclick = (e) => {
+      // The sign-up buttons live inside this row now, so a tap on one must not also
+      // navigate the calendar out from under the click.
+      if (e.target.closest('.ev-slots')) return;
       calYear = y; calMonth = m - 1;
       selectedDate = ev.date;
       renderCal();
@@ -11085,6 +11097,7 @@ function _buildTourSteps() {
     icon:'presentations', badge:'Presentations', title:'Presentations',
     desc:'Track presentations the club has done at schools.' });
 
+  if (canEdit) {
   s.push({ type:'feature', tab:'goals', spotlight:'[data-tab="goals"]',
     icon:'goals', badge:'Goals', title:'Goals',
     desc:'Club goals for the year. Add them and check them off as you go.' });
@@ -11096,6 +11109,7 @@ function _buildTourSteps() {
   s.push({ type:'feature', tab:'attendance', spotlight:'[data-tab="attendance"]',
     icon:'attendance', badge:'Attendance', title:'Attendance',
     desc:'See who came to each meeting. Good for tracking participation over time.' });
+  }
 
   s.push({ type:'feature', tab:'activities', spotlight:'[data-tab="activities"]',
     icon:'activities', badge:'Activities', title:'Activities',
@@ -11642,6 +11656,12 @@ var DEFAULT_ROLES = [
 ];
 
 var TAB_VIEW_PERMS = {
+  // Goals and Attendance offer a member no action at all. The dashboard already shows goal
+  // progress, so the tab was a duplicate with no buttons; Attendance shows every other
+  // member's record, which is not a member's business. Meetings and Resources stay visible
+  // even though they are read-only, because their content IS for the member.
+  goals:       'MANAGE_GOALS',
+  attendance:  'MANAGE_ATTENDANCE',
   plans:       'MANAGE_PLANS',
   members:     'VIEW_MEMBERS',
   budget:      'VIEW_BUDGET',

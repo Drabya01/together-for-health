@@ -1,4 +1,4 @@
-const CACHE = 'tfh-v67';
+const CACHE = 'tfh-v68';
 const ASSETS = ['./', './index.html', './firebase-sync.js', './admin-editor.js', './admin-editor.css', './manifest.json', './icon.svg', './icon-maskable.svg'];
 
 self.addEventListener('install', e => {
