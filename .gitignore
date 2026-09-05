@@ -1,2 +1,5 @@
 
 sync-local.js
+
+# Personal Claude Code settings (launch.json IS committed - it documents the dev server)
+.claude/settings.local.json
