@@ -2307,6 +2307,23 @@
     @page { margin: 14mm; }
   }
 
+  /* ── Delivery log ───────────────────────────────── */
+  .dl-row {
+    display:flex; gap:14px; align-items:flex-start;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:14px 16px; margin-bottom:10px;
+  }
+  .dl-main { flex:1; min-width:0; }
+  .dl-topic { font-family:var(--font-display); font-size:var(--fs-md); }
+  .dl-meta { font-size:var(--fs-sm); color:var(--text-muted); margin-top:2px; }
+  .dl-who { font-size:var(--fs-sm); color:var(--text-muted); margin-top:4px; }
+  .dl-notes { font-size:var(--fs-base); color:var(--text); margin-top:7px; white-space:pre-line; }
+  .dl-acts { display:flex; gap:6px; flex-shrink:0; }
+  @media (max-width: 700px) {
+    .dl-row { flex-direction:column; gap:10px; }
+    .dl-acts { width:100%; }
+  }
+
   /* ── Presenter script ───────────────────────────── */
   .link-script {
     position:absolute; left:11px; bottom:11px; z-index:3;
@@ -2730,9 +2747,22 @@
         <h1 class="page-title">Presentations</h1>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-primary editor-only" onclick="openAddPres()">+ Add link</button>
+        <button class="btn btn-primary" onclick="openLogDelivery()">+ Log a presentation</button>
+        <button class="btn editor-only" onclick="openAddPres()">+ Add link</button>
       </div>
     </div>
+
+    <div id="delivery-summary"></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+      <div>
+        <div class="section-label" style="margin-bottom:2px">Delivery log</div>
+        <div style="font-size:12.5px;color:var(--text-hint);max-width:560px;">Every lesson the club has actually
+        given. This is where &ldquo;presentations delivered&rdquo; and &ldquo;students reached&rdquo; come from, so
+        log a class even if no teacher replies.</div>
+      </div>
+    </div>
+    <div id="delivery-list" style="margin-bottom:34px"></div>
+
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
       <div>
         <div class="section-label" style="margin-bottom:2px">Team link board</div>
@@ -3444,6 +3474,40 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-pres')">Cancel</button>
       <button class="btn btn-primary" onclick="savePresLink()">Save link</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG A DELIVERY MODAL -->
+<div class="modal-overlay" id="modal-delivery">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="dl-modal-title">Log a presentation</span>
+      <button class="modal-close" onclick="closeModal('modal-delivery')">&times;</button>
+    </div>
+    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">One row per class you presented to.
+    If two classes saw it back to back, log them separately &mdash; that is two presentations.</p>
+    <div class="form-row form-3col">
+      <div><label for="dl-topic">Topic *</label>
+        <input type="text" id="dl-topic" list="dl-topic-list" placeholder="e.g. Sleep" autocomplete="off">
+        <datalist id="dl-topic-list"></datalist></div>
+      <div><label for="dl-date">Date *</label><input type="date" id="dl-date"></div>
+      <div><label for="dl-students">How many students</label>
+        <input type="number" id="dl-students" min="0" step="1" placeholder="e.g. 28"></div>
+    </div>
+    <div class="form-row form-2col">
+      <div><label for="dl-school">School and class</label>
+        <input type="text" id="dl-school" placeholder="e.g. Grade 9 Health, period 3" autocomplete="off"></div>
+      <div><label for="dl-presenters">Who presented</label>
+        <input type="text" id="dl-presenters" placeholder="e.g. Aisha and Jordan" autocomplete="off"></div>
+    </div>
+    <div class="form-row"><div>
+      <label for="dl-notes">Anything worth remembering <span class="form-hint" style="display:inline;margin:0;font-weight:400">(optional)</span></label>
+      <textarea id="dl-notes" placeholder="How it went, what to change, who to thank..."></textarea>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-delivery')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDelivery()">Save</button>
     </div>
   </div>
 </div>
@@ -4188,7 +4252,7 @@ function loadState() {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
-  return { events: [], plans: [], ideas: [], presentations: [], checks: {}, meetings: [], members: [], feedback: [], posts: [], announcements: [], goals: [], contacts: [], resources: [], transactions: [], activities: [], emailTemplates: [], hours: [] };
+  return { events: [], plans: [], ideas: [], presentations: [], checks: {}, meetings: [], members: [], feedback: [], posts: [], announcements: [], goals: [], contacts: [], resources: [], transactions: [], activities: [], emailTemplates: [], hours: [], deliveries: [] };
 }
 
 // ====== CLOUD SYNC ======
@@ -5067,6 +5131,7 @@ function switchTab(name) {
   if (name === 'meetings') renderMeetings();
   if (name === 'members') renderMembers();
   if (name === 'feedback') { renderFeedback(); maybeSyncFeedback(); }
+  if (name === 'presentations') { renderDeliveries(); }
   if (name === 'social') renderSocial();
   if (name === 'goals') renderGoals();
   if (name === 'hours') renderHours();
@@ -5221,25 +5286,102 @@ function _isDeckEntry(p) {
          String(p.url || '').indexOf('decks/') === 0;
 }
 
+// "Presentations delivered" used to count rows on the Team LINK BOARD that were not seeded
+// decks — so pasting a Google Slides URL incremented the club's headline achievement, and
+// actually standing up in front of a class did not. It now counts deliveries: an actual
+// record of a lesson given to an actual room.
 function countDeliveredPresentations() {
-  return (state.presentations || []).filter(function (p) { return !_isDeckEntry(p); }).length;
+  return (state.deliveries || []).length;
 }
 
 function _clubHoursTotal() {
   return (state.hours || []).reduce(function (t, h) { return t + (parseFloat(h.hours) || 0); }, 0);
 }
 
-// The one definition of "students reached". Both the goal auto-tracker and the Feedback
-// summary strip call this, so the two cannot drift apart.
+// The one definition of "students reached", and it reads from the delivery record so there
+// is exactly one place a headcount can live.
 //
-// It used to read digits out of the free-text `audience` field and add them up, which meant
-// "Grade 9 Health, period 3" was counted as 12 students and "Grade 11 Bio, Westview SS" as
-// 11. A row with no recorded headcount now contributes 0, which is honest: the number only
-// counts presentations where somebody actually said how many students were in the room.
+// Two earlier versions were both wrong. The first read digits out of the free-text audience
+// field and summed them, so "Grade 9 Health, period 3" counted as 12 students. The second
+// summed the teacher-feedback headcounts, which was true but partial — it could only ever
+// count presentations a teacher had replied about. Deliveries cover both: a teacher response
+// creates one automatically, and a presentation nobody replied to gets logged by hand.
+//
+// A delivery with no headcount contributes 0, which is honest.
 function calcStudentsReached() {
-  return (state.feedback || []).reduce(function (total, f) {
-    return total + (parseInt(f.audienceSize, 10) || 0);
+  return (state.deliveries || []).reduce(function (total, d) {
+    return total + (parseInt(d.students, 10) || 0);
   }, 0);
+}
+
+function _deliveriesSorted() {
+  return (state.deliveries || []).slice().sort(function (a, b) {
+    return String(b.date || '').localeCompare(String(a.date || ''));
+  });
+}
+
+function _schoolsReached() {
+  var set = {};
+  (state.deliveries || []).forEach(function (d) {
+    var k = String(d.school || '').trim().toLowerCase();
+    if (k) set[k] = 1;
+  });
+  return Object.keys(set).length;
+}
+
+// A teacher filling in the feedback form is itself proof a presentation happened, and the
+// form already asks the date, the class, the topic and the headcount. So an imported
+// response creates its delivery too, keyed on the same formKey so re-syncing never
+// duplicates. Presentations no teacher replied about are the ones logged by hand.
+function _deliveryFromFeedback(f, sourceKey) {
+  return {
+    id: uid(),
+    date: f.date || '',
+    school: f.audience || '',
+    topic: f.presentationTitle || '',
+    students: parseInt(f.audienceSize, 10) || 0,
+    presenters: '',
+    notes: '',
+    sourceKey: sourceKey
+  };
+}
+
+function _upsertDeliveryFor(f, sourceKey) {
+  if (!Array.isArray(state.deliveries)) state.deliveries = [];
+  var existing = state.deliveries.find(function (d) { return d.sourceKey === sourceKey; });
+  var fresh = _deliveryFromFeedback(f, sourceKey);
+  if (existing) {
+    // Once someone has opened this row and saved it, their version wins. Otherwise a later
+    // re-sync silently reverts a corrected headcount, which is a write that looks saved and
+    // is not. Untouched rows still track the sheet, so fixing a typo in the form propagates.
+    if (existing.manualEdit) {
+      if (!existing.date) existing.date = fresh.date;
+      if (!existing.school) existing.school = fresh.school;
+      if (!existing.topic) existing.topic = fresh.topic;
+      if (!existing.students) existing.students = fresh.students;
+      return false;
+    }
+    existing.date = fresh.date || existing.date;
+    existing.school = fresh.school || existing.school;
+    existing.topic = fresh.topic || existing.topic;
+    if (fresh.students) existing.students = fresh.students;
+    return false;
+  }
+  state.deliveries.push(fresh);
+  return true;
+}
+
+// One-time catch-up so the record does not start empty and discard what the club already
+// did. Every feedback entry that carries a date becomes a delivery, once.
+function backfillDeliveriesFromFeedback() {
+  if (!Array.isArray(state.deliveries)) state.deliveries = [];
+  var added = 0;
+  (state.feedback || []).forEach(function (f) {
+    if (!f.date) return;
+    var key = f.formKey ? ('form:' + f.formKey) : ('fb:' + f.id);
+    if (_upsertDeliveryFor(f, key)) added++;
+  });
+  return added;
 }
 
 function renderDash() {
@@ -6037,6 +6179,145 @@ function setPresSort(v) { presSort = v; renderPres(); }
 // the server threw away. Copy and Present stay: they read, they do not write.
 function _presCanEdit() {
   return typeof hasStaffAccess === 'function' ? hasStaffAccess() : false;
+}
+
+// ── Delivery record ──────────────────────────────────────────────────────────────────
+// The club's actual work: which lesson, to which class, on what day, to how many students.
+// Until this existed, "presentations delivered" counted rows on a link board and "students
+// reached" was derived from whatever proxy was to hand.
+var editingDeliveryId = null;
+
+function renderDeliveries() {
+  var list = document.getElementById('delivery-list');
+  var sum = document.getElementById('delivery-summary');
+  if (!list) return;
+
+  var rows = _deliveriesSorted();
+
+  if (sum) {
+    var students = calcStudentsReached();
+    var schools = _schoolsReached();
+    var stat = function (n, l) {
+      return '<div class="fb-stat"><span class="fb-stat-num">' + n + '</span>'
+        + '<span class="fb-stat-lbl">' + l + '</span></div>';
+    };
+    sum.innerHTML = rows.length ? ('<div class="fb-summary">'
+      + stat(rows.length, rows.length === 1 ? 'presentation delivered' : 'presentations delivered')
+      + (students ? stat(students, 'students reached') : '')
+      + (schools ? stat(schools, schools === 1 ? 'class or school' : 'classes and schools') : '')
+      + '</div>') : '';
+  }
+
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty-state">'
+      + '<div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></div>'
+      + '<div class="empty-state-text">No presentations logged yet. Log one after each class and the '
+      + 'numbers above look after themselves.</div></div>';
+    return;
+  }
+
+  list.innerHTML = rows.map(function (d) {
+    var meta = [
+      d.date ? fmtMeetingDate(d.date) : '',
+      d.school ? escHtml(d.school) : '',
+      d.students ? (d.students + (d.students === 1 ? ' student' : ' students')) : ''
+    ].filter(Boolean).join(' &middot; ');
+    var fromForm = String(d.sourceKey || '').indexOf('form:') === 0;
+    return '<div class="dl-row">'
+      + '<div class="dl-main">'
+        + '<div class="dl-topic">' + escHtml(d.topic || 'Presentation')
+          + (fromForm ? '<span class="fb-badge" title="Created from a teacher\'s form response">from feedback</span>' : '')
+        + '</div>'
+        + '<div class="dl-meta">' + (meta || 'No details recorded') + '</div>'
+        + (d.presenters ? '<div class="dl-who">' + escHtml(d.presenters) + '</div>' : '')
+        + (d.notes ? '<div class="dl-notes">' + escHtml(d.notes) + '</div>' : '')
+      + '</div>'
+      + '<div class="dl-acts">'
+        + '<button class="btn btn-ghost" onclick="editDelivery(\'' + d.id + '\')">Edit</button>'
+        + '<button class="btn btn-ghost btn-danger" onclick="deleteDelivery(\'' + d.id + '\')">Delete</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function _fillDeliveryTopics() {
+  var dl = document.getElementById('dl-topic-list');
+  if (!dl) return;
+  var seen = {}, out = [];
+  (typeof CLUB_DECKS !== 'undefined' ? CLUB_DECKS : []).forEach(function (d) {
+    if (!seen[d.title]) { seen[d.title] = 1; out.push(d.title); }
+  });
+  (state.deliveries || []).forEach(function (d) {
+    if (d.topic && !seen[d.topic]) { seen[d.topic] = 1; out.push(d.topic); }
+  });
+  dl.innerHTML = out.map(function (t) { return '<option value="' + escHtml(t) + '"></option>'; }).join('');
+}
+
+function openLogDelivery() {
+  editingDeliveryId = null;
+  document.getElementById('dl-modal-title').textContent = 'Log a presentation';
+  document.getElementById('dl-topic').value = '';
+  document.getElementById('dl-date').value = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
+  document.getElementById('dl-students').value = '';
+  document.getElementById('dl-school').value = '';
+  document.getElementById('dl-presenters').value =
+    (window.currentUser && window.currentUser.name) ? window.currentUser.name : '';
+  document.getElementById('dl-notes').value = '';
+  _fillDeliveryTopics();
+  openModal('modal-delivery');
+}
+
+function editDelivery(id) {
+  var d = (state.deliveries || []).find(function (x) { return x.id === id; });
+  if (!d) return;
+  editingDeliveryId = id;
+  document.getElementById('dl-modal-title').textContent = 'Edit presentation';
+  document.getElementById('dl-topic').value = d.topic || '';
+  document.getElementById('dl-date').value = d.date || '';
+  document.getElementById('dl-students').value = d.students || '';
+  document.getElementById('dl-school').value = d.school || '';
+  document.getElementById('dl-presenters').value = d.presenters || '';
+  document.getElementById('dl-notes').value = d.notes || '';
+  _fillDeliveryTopics();
+  openModal('modal-delivery');
+}
+
+function saveDelivery() {
+  if (!validateFields(['dl-topic', 'dl-date'])) return;
+  if (!Array.isArray(state.deliveries)) state.deliveries = [];
+  var prev = editingDeliveryId
+    ? (state.deliveries || []).find(function (x) { return x.id === editingDeliveryId; })
+    : null;
+  var d = {
+    id: editingDeliveryId || uid(),
+    topic: document.getElementById('dl-topic').value.trim(),
+    date: document.getElementById('dl-date').value,
+    students: parseInt(document.getElementById('dl-students').value, 10) || 0,
+    school: document.getElementById('dl-school').value.trim(),
+    presenters: document.getElementById('dl-presenters').value.trim(),
+    notes: document.getElementById('dl-notes').value.trim(),
+    // Keep the link back to the teacher response, so a re-sync updates this row rather
+    // than adding a second one beside it -- but mark it edited, so the re-sync leaves the
+    // fields alone rather than overwriting what was just typed.
+    sourceKey: prev ? prev.sourceKey : undefined,
+    manualEdit: true
+  };
+  state.deliveries = editingDeliveryId
+    ? state.deliveries.map(function (x) { return x.id === editingDeliveryId ? d : x; })
+    : state.deliveries.concat([d]);
+  saveState();
+  closeModal('modal-delivery');
+  showToast(editingDeliveryId ? 'Presentation updated.' : 'Logged. Nice work.', 'success');
+  renderDeliveries();
+  renderDash();
+}
+
+function deleteDelivery(id) {
+  if (!confirm('Delete this presentation from the record?')) return;
+  state.deliveries = (state.deliveries || []).filter(function (x) { return x.id !== id; });
+  saveState();
+  renderDeliveries();
+  renderDash();
 }
 
 function renderPres() {
@@ -8226,6 +8507,16 @@ var ANN_TYPES = {
 var _socialFilter = 'all'; // must be declared before renderSocial() is called below
 seedDefaultEvents();
 seedNewFeatures();
+
+// One-time catch-up for the delivery record, which arrived after the club had already been
+// presenting. Every feedback entry with a date becomes a delivery so the record does not
+// start at zero and discard work that actually happened. Flagged rather than emptiness-
+// guarded, for the same reason seedNewFeatures() is: a president who deletes a delivery
+// should not find it back on the next load.
+if (!state.deliveriesBackfilledV1) {
+  state.deliveriesBackfilledV1 = true;
+  try { backfillDeliveriesFromFeedback(); } catch (e) {}
+}
 renderDash();
 renderMarketing();
 renderEmailTemplates();
@@ -8807,8 +9098,10 @@ async function importFormResponses(opts) {
       var existing = state.feedback.find(function (f) { return f.formKey === formKey; });
       if (existing) { Object.assign(existing, rec); updated++; }
       else { rec.id = uid(); state.feedback.push(rec); added++; }
+      // A teacher answering the form is the club's best evidence the lesson happened.
+      _upsertDeliveryFor(existing || rec, 'form:' + formKey);
     });
-    if (added || updated) { saveState(); renderFeedback(); }
+    if (added || updated) { saveState(); renderFeedback(); renderDeliveries(); renderDash(); }
     if (!opts.quiet) {
       showToast(added || updated
         ? ('Synced \u2014 ' + added + ' new, ' + updated + ' updated.')
@@ -8955,7 +9248,9 @@ function _renderFeedbackChrome(sorted) {
   if (!sorted.length) { summaryEl.innerHTML = ''; return; }
   const rated = sorted.filter(f => f.rating > 0);
   const avg = rated.length ? (rated.reduce((t,f) => t + f.rating, 0) / rated.length) : 0;
-  const reached = calcStudentsReached();
+  // Not students reached: that belongs to the delivery record now, and showing it here too
+  // invited the two to drift. Feedback reports what only feedback knows.
+  const classes = new Set(sorted.map(f => (f.date || '') + '|' + (f.audience || ''))).size;
   const asked = sorted.filter(f => String(f.rebook || '').trim());
   const wouldRebook = asked.filter(f => _rebookYes(f.rebook)).length;
   const stat = (num, lbl) => '<div class="fb-stat"><span class="fb-stat-num">' + num + '</span>'
@@ -8963,7 +9258,7 @@ function _renderFeedbackChrome(sorted) {
   summaryEl.innerHTML = '<div class="fb-summary">'
     + stat(sorted.length, sorted.length === 1 ? 'response' : 'responses')
     + (avg ? stat(avg.toFixed(1), 'average rating') : '')
-    + (reached ? stat(reached, 'students reached') : '')
+    + (classes ? stat(classes, classes === 1 ? 'class heard from' : 'classes heard from') : '')
     + (asked.length ? stat(wouldRebook + '/' + asked.length, 'would have us back') : '')
     + '</div>';
 }
