@@ -430,7 +430,7 @@
 
   h1, h2, h3,
   .page-title, .section-title, .modal-title, .sidebar-brand, .dash-hdr-title,
-  .stat-hero-num, .hours-ring-num, .auth-title, .ob-title {
+  .stat-hero-num, .hours-ring-num, .auth-title {
     font-family: var(--font-display);
     font-optical-sizing: auto;
     letter-spacing: -0.011em;   /* Fraunces sets a touch wide at display sizes */
@@ -1984,10 +1984,10 @@
   @media print {
     #sidebar, #top-header, #tfh-toast-container,
     .editor-only, .editor-only-block, .admin-editor-toolbar,
-    .admin-editor-saved-panel, #onboarding-overlay, #auth-overlay, #member-onboard-overlay, #pending-overlay,
+    .admin-editor-saved-panel, #auth-overlay, #member-onboard-overlay, #pending-overlay,
     #globalSearchOverlay,
     .modal-overlay, .tab-header .btn, .tab-header .btn-primary,
-    .btn-ghost, .ob-btn-primary, .ob-btn-skip,
+    .btn-ghost, .ob-btn-primary,
     .dash-announcements-actions, .header-action-btn { display: none !important; }
     html, body { height: auto !important; overflow: visible !important; }
     #app-shell { display: block !important; overflow: visible !important; }
@@ -2029,8 +2029,8 @@
      slightly so the taller text does not change control heights much. */
   @media (pointer: coarse) {
     input, textarea, select,
-    .ob-input, .mob-form-input, .mob-form-select, .mob-form-textarea,
-    .pg-field input, .pg-field select, .status-select, .res-search input, .pres-search input {
+    .mob-form-input, .mob-form-select, .mob-form-textarea,
+    .status-select, .res-search input, .pres-search input {
       font-size: 16px !important;
       padding-top: 9px; padding-bottom: 9px;
     }
@@ -10423,9 +10423,6 @@ function _obConfetti() {
   }
 }
 
-function skipOnboarding() { finishTour(); }
-function closeOnboarding() { finishTour(); }
-function obFinish() { finishTour(); }
 
 // ====== EMAIL NOTIFICATIONS ======
 // Applicant identity encoded into the approve/reject magic links (see sendApprovalEmail).
@@ -11596,138 +11593,13 @@ function deleteRole(roleId) {
   <div id="ob-card"><div id="ob-card-inner"></div></div>
 </div>
 
-<!-- legacy onboarding placeholder (replaced by tour above) -->
-<div id="onboarding-overlay" style="display:none;">
-  <div id="onboarding-card" style="display:none;">
-    <div id="onboarding-progress"></div>
-    <div id="ob-step-1" class="ob-step ob-step-active">
-      <div class="ob-emoji">👋</div>
-      <h2 class="ob-title">Welcome to Together For Health!</h2>
-      <p class="ob-sub">Let's set up your club workspace in about 2 minutes.</p>
-      <div class="ob-fields">
-        <div class="ob-field-group">
-          <label class="ob-label">Your school name</label>
-          <input id="ob-school" class="ob-input" type="text" placeholder="e.g. Westview High School" autocomplete="off">
-        </div>
-        <div class="ob-field-row">
-          <div class="ob-field-group">
-            <label class="ob-label">Your name</label>
-            <input id="ob-name" class="ob-input" type="text" placeholder="e.g. Aisha Khan" autocomplete="off">
-          </div>
-          <div class="ob-field-group">
-            <label class="ob-label">Your role</label>
-            <select id="ob-role" class="ob-input">
-              <option value="President">President</option>
-              <option value="Vice President">Vice President</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Treasurer">Treasurer</option>
-              <option value="Marketing Executive">Marketing Executive</option>
-              <option value="Outreach Coordinator">Outreach Coordinator</option>
-              <option value="Member">Member</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="ob-actions">
-        <button class="ob-btn-skip" onclick="skipOnboarding()">Skip setup</button>
-        <button class="ob-btn-primary" onclick="obNext(1)">Let's go <span style="margin-left:4px;">→</span></button>
-      </div>
-    </div>
-
-    <!-- Step 2: Team members -->
-    <div id="ob-step-2" class="ob-step">
-      <div class="ob-emoji">👥</div>
-      <h2 class="ob-title">Who's on your team?</h2>
-      <p class="ob-sub">Add your club members. They'll be tracked in the Members panel. You can always add more later.</p>
-      <div id="ob-members-list" class="ob-added-list"></div>
-      <div class="ob-member-form" id="ob-member-form">
-        <div class="ob-field-row">
-          <div class="ob-field-group" style="flex:2">
-            <label class="ob-label">Full name</label>
-            <input id="ob-m-name" class="ob-input" type="text" placeholder="e.g. Jordan Lee" autocomplete="off">
-          </div>
-          <div class="ob-field-group">
-            <label class="ob-label">Role</label>
-            <select id="ob-m-role" class="ob-input">
-              <option value="President">President</option>
-              <option value="Vice President">Vice President</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Treasurer">Treasurer</option>
-              <option value="Marketing Executive">Marketing Executive</option>
-              <option value="Outreach Coordinator">Outreach Coordinator</option>
-              <option value="Member">Member</option>
-            </select>
-          </div>
-        </div>
-        <div class="ob-field-row">
-          <div class="ob-field-group">
-            <label class="ob-label">Email <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-            <input id="ob-m-email" class="ob-input" type="email" placeholder="email@school.ca" autocomplete="off">
-          </div>
-          <div class="ob-field-group">
-            <label class="ob-label">Phone <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-            <input id="ob-m-phone" class="ob-input" type="tel" placeholder="555-1234" autocomplete="off">
-          </div>
-        </div>
-        <button class="ob-btn-add" onclick="obAddMember()">+ Add member</button>
-      </div>
-      <div class="ob-actions">
-        <button class="ob-btn-skip" onclick="obNext(2)" style="color:var(--text-muted);">Skip for now</button>
-        <button class="ob-btn-primary" onclick="obNext(2)">Next →</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Schools -->
-    <div id="ob-step-3" class="ob-step">
-      <div class="ob-emoji">🏫</div>
-      <h2 class="ob-title">Which schools do you work with?</h2>
-      <p class="ob-sub">Add schools where you give presentations. We'll keep track of contacts so nothing falls through the cracks.</p>
-      <div id="ob-schools-list" class="ob-added-list"></div>
-      <div class="ob-school-form" id="ob-school-form">
-        <div class="ob-field-row">
-          <div class="ob-field-group" style="flex:2">
-            <label class="ob-label">School name</label>
-            <input id="ob-s-name" class="ob-input" type="text" placeholder="e.g. Westview Elementary" autocomplete="off">
-          </div>
-          <div class="ob-field-group">
-            <label class="ob-label">Contact role</label>
-            <select id="ob-s-role" class="ob-input">
-              <option value="Teacher">Teacher</option>
-              <option value="Vice Principal">Vice Principal</option>
-              <option value="Principal">Principal</option>
-              <option value="Coordinator">Coordinator</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-        <div class="ob-field-row">
-          <div class="ob-field-group">
-            <label class="ob-label">Contact name <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-            <input id="ob-s-contact" class="ob-input" type="text" placeholder="Ms. Smith" autocomplete="off">
-          </div>
-          <div class="ob-field-group">
-            <label class="ob-label">Contact email <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-            <input id="ob-s-email" class="ob-input" type="email" placeholder="smith@school.ca" autocomplete="off">
-          </div>
-        </div>
-        <button class="ob-btn-add" onclick="obAddSchool()">+ Add school</button>
-      </div>
-      <div class="ob-actions">
-        <button class="ob-btn-skip" onclick="obFinish()" style="color:var(--text-muted);">Skip for now</button>
-        <button class="ob-btn-primary" onclick="obFinish()">Finish setup ✓</button>
-      </div>
-    </div>
-
-    <!-- Step 4: Done -->
-    <div id="ob-step-4" class="ob-step ob-step-done">
-      <div class="ob-emoji ob-emoji-big">🎉</div>
-      <h2 class="ob-title">You're all set!</h2>
-      <p class="ob-sub" id="ob-done-summary">Your workspace is ready.</p>
-      <div id="ob-done-stats" class="ob-done-stats"></div>
-      <button class="ob-btn-primary ob-btn-full" onclick="closeOnboarding()" style="margin-top:24px;">Go to Dashboard →</button>
-    </div>
-  </div>
-</div>
+  <!-- The first-run setup wizard lived here: four panes collecting school, team members
+       and partner schools. It was superseded by the guided tour above (#ob-overlay) and left
+       behind as a display:none placeholder. Nothing ever showed it, which is why nobody
+       noticed that five of its buttons called obNext(), obAddMember() and obAddSchool() --
+       three functions that were never written. Deleted rather than implemented: the tour
+       already covers first-run, and the Members and Outreach tabs already collect this data
+       properly, with validation and Firestore writes the wizard never had. -->
 
 <!-- ROLES MANAGER MODAL -->
 <div class="modal-overlay" id="modal-roles">
