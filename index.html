@@ -65,6 +65,8 @@
     --tint-danger: #fee2e2;
     --tint-info: #dbeafe;
     --tint-neutral: #f3f4f6;
+    --tint-highlight: #fef08a;      /* search-match background */
+    --surface-hover: #f5faf7;       /* row/cell hover above --surface */
     --radius: 10px;
     --radius-sm: 6px;
 
@@ -139,11 +141,12 @@
     --tint-danger: #2b1414;
     --tint-info: #10243a;
     --tint-neutral: #232320;
+    --tint-highlight: #4a3c0a;      /* search-match background */
+    --surface-hover: #262623;       /* row/cell hover above --surface */
     color-scheme: dark;
   }
   body.dark-mode .admin-editor-toolbar,
   body.dark-mode .admin-editor-saved-panel { background: #0a0a09; }
-  body.dark-mode .admin-editor-cell { outline-color: #f59e0b88 !important; }
 
   body {
     font-family: var(--font-body);
@@ -507,7 +510,7 @@
   .btn-ghost:hover { background: var(--bg); color: var(--text); }
 
   .btn-danger { color: var(--danger-text); }   /* was #c0392b: 3.14:1 in dark */
-  .btn-danger:hover { background: #fdf2f2; border-color: #e8a0a0; }
+  .btn-danger:hover { background: var(--tint-danger); border-color: var(--danger-text); }
 
   /* INPUTS */
   input[type="text"], input[type="url"], input[type="date"], input[type="time"],
@@ -924,7 +927,7 @@
     position: relative;
   }
 
-  .cal-cell:hover { background: #f5faf7; }
+  .cal-cell:hover { background: var(--surface-hover); }
   .cal-cell.other-month { background: var(--bg); }
   .cal-cell.other-month .cal-date-num { color: var(--text-hint); }
   .cal-cell.today .cal-date-num {
@@ -1230,7 +1233,7 @@
     background: var(--bg);
   }
 
-  .template-header:hover { background: #FCEEF2; }
+  .template-header:hover { background: var(--accent-light); }
 
   .template-title { font-size: 14px; font-weight: 600; }
 
@@ -1433,7 +1436,7 @@
   .tfh-toast.show { opacity:1; transform:translateY(0); }
   .tfh-toast.success { border-left:3px solid #22c55e; color:var(--ok-text); }
   .tfh-toast.info { border-left:3px solid var(--accent); color:var(--accent-mid); }
-  .tfh-toast.celebration { border-left:3px solid #f59e0b; color:#b45309; }
+  .tfh-toast.celebration { border-left:3px solid var(--warn-text); color: var(--warn-text); }
 
   /* ── Tab badges ── */
   .nav-tab-badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; border-radius:8px; background:var(--accent-btn);color:var(--on-accent); font-size:11px; font-weight:700; padding:0 4px; margin-left:5px; line-height:1; }
@@ -1705,7 +1708,7 @@
   .gs-result-text { flex: 1; min-width: 0; }
   .gs-result-title { font-size: 14px; font-weight: 600; color: var(--text); }
   .gs-result-preview { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .gs-result-preview mark { background: #fef08a; color: var(--text); border-radius: 4px; padding: 0 2px; }
+  .gs-result-preview mark { background: var(--tint-highlight); color: var(--text); border-radius: 4px; padding: 0 2px; }
   #globalSearchNoResults {
     padding: 32px 20px;
     text-align: center;
@@ -1764,7 +1767,7 @@
   .ann-card-footer { display:flex; align-items:center; gap:8px; padding:8px 14px 10px; border-top:1px solid var(--border); flex-wrap:wrap; }
   .ann-react-btn { display:inline-flex; align-items:center; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:3px 10px; font-size:12px; cursor:pointer; transition: background-color, border-color, color, box-shadow, transform, opacity var(--dur-base); font-family:inherit; color:var(--text-muted); }
   .ann-react-btn:hover { border-color: var(--accent-aa); color: var(--accent-aa); }
-  .ann-react-btn--active { background:#fdf2f4; border-color: var(--accent-aa); color: var(--accent-aa); font-weight:600; }
+  .ann-react-btn--active { background: var(--accent-light); border-color: var(--accent-aa); color: var(--accent-aa); font-weight:600; }
   .ann-seen { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:3px; }
   .ann-admin-btns { display:flex; gap:4px; margin-left:auto; }
   .nav-item { position:relative; }
@@ -2156,7 +2159,7 @@
     width: 72px; height: 72px; border-radius: 999px;
     background: var(--accent); display: flex;
     align-items: center; justify-content: center;
-    margin: 0 auto 20px; color: white;
+    margin: 0 auto 20px; color: var(--on-accent);
     font-size: 28px; font-weight: 800; letter-spacing: -1px;
   }
   .auth-title {
@@ -2223,7 +2226,7 @@
   .user-initials {
     width: 24px; height: 24px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: white;
+    font-size: 11px; font-weight: 700; color: #ffffff;   /* paired with the fixed fills in updateUserBadge */
   }
   #userDropdown {
     position: absolute; top: calc(100% + 6px); right: 0;
@@ -2583,7 +2586,7 @@
   .roles-editor-empty { color: var(--text-muted); text-align: center; margin-top: 100px; font-size: 14px; }
   .role-edit-header { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
   .role-name-input { flex: 1; font-size: 20px; font-weight: 700; border: none; background: transparent; outline: none; color: var(--text); border-bottom: 2px solid transparent; padding-bottom: 2px; transition: border-color var(--dur-base); }
-  .role-name-input:focus { border-bottom-color: var(--brand, #e4789a); }
+  .role-name-input:focus { border-bottom-color: var(--accent-aa); }
   .role-color-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0; }
   .role-color-swatch input[type=color] { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); border: none; cursor: pointer; opacity: 0; }
   .perm-category { display: flex; flex-direction: column; }
@@ -2594,9 +2597,9 @@
   .perm-row-desc { font-size: 11px; color: var(--text-muted); }
   .perm-toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
   .perm-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-  .perm-toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; cursor: pointer; transition: background var(--dur-base); }
-  .perm-toggle input:checked + .perm-toggle-track { background: var(--brand, #e4789a); }
-  .perm-toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform var(--dur-base); box-shadow: var(--shadow-sm); }
+  .perm-toggle-track { position: absolute; inset: 0; background: var(--text-hint); border-radius: 999px; cursor: pointer; transition: background var(--dur-base); }
+  .perm-toggle input:checked + .perm-toggle-track { background: var(--accent-btn); }
+  .perm-toggle-track::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: var(--on-accent); border-radius: 50%; transition: transform var(--dur-base); box-shadow: var(--shadow-sm); }
   .perm-toggle input:checked + .perm-toggle-track::before { transform: translateX(16px); }
   .perm-toggle input:disabled + .perm-toggle-track { opacity: 0.5; cursor: default; }
   .roles-editor-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); margin-top: auto; gap: 8px; flex-wrap: wrap; }
@@ -6151,7 +6154,7 @@ function deleteEvent(id) {
 // ====== PLANS ======
 const PLAN_STATUS_COLORS = {
   'draft':       { bg: 'var(--tint-neutral)', text: 'var(--text-muted)' },
-  'in-progress': { bg: 'var(--tint-warn)', text: '#d97706' },
+  'in-progress': { bg: 'var(--tint-warn)', text: 'var(--warn-text)' },
   'done':        { bg: '#d1fae5', text: '#065f46' },
 };
 const PLAN_STATUS_LABELS = { 'draft': 'Draft', 'in-progress': 'In Progress', 'done': 'Done' };
@@ -9205,7 +9208,7 @@ function _hoursRowHtml(h, execView) {
   var canManage = typeof hasPermission === 'function' && hasPermission('MANAGE_HOURS');
   var acts = '';
   if (execView && canManage && !isConfirmed) {
-    acts += '<button onclick="confirmHoursEntry(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color: var(--ok-text);border:1px solid #86efac;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Confirm</button> ';
+    acts += '<button onclick="confirmHoursEntry(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color: var(--ok-text);border:1px solid var(--ok-text);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Confirm</button> ';
   }
   if (execView && canManage && isConfirmed) {
     acts += '<button onclick="unconfirmHoursEntry(\'' + h.id + '\')" style="min-height:32px;padding:5px 10px;background:none;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;">Unconfirm</button> ';
@@ -10308,7 +10311,7 @@ var ANN_TYPES = {
   meeting:  { label:'Meeting',  emoji:'🗓',  color:'#a05070', bg:'#fdf2f4' },
   event:    { label:'Event',    emoji:'🎉', color:'#c2410c', bg:'#fff7ed' },
   reminder: { label:'Reminder', emoji:'🔔', color:'#0e7490', bg:'#ecfeff' },
-  urgent:   { label:'Urgent',   emoji:'🚨', color:'#dc2626', bg:'#fef2f2' },
+  urgent:   { label:'Urgent',   emoji:'🚨', color:'#b91c1c', bg:'#fef2f2' },   /* was #dc2626 at 4.41:1 */
 };
 var _socialFilter = 'all'; // must be declared before renderSocial() is called below
 seedDefaultEvents();
@@ -10536,7 +10539,7 @@ function renderMembers() {
               }).join('')
             + '</select>';
         } else {
-          tierControl = '<span class="role-badge" style="background:' + userRole.color + '22;color:' + userRole.color + ';border:1px solid ' + userRole.color + '55;">'
+          tierControl = '<span class="role-badge" style="background:' + userRole.color + '22;color: var(--text);border:1px solid ' + userRole.color + '55;">'
             + '<span style="width:7px;height:7px;border-radius:50%;background:' + userRole.color + ';flex-shrink:0;display:inline-block;"></span>'
             + escHtml(userRole.name) + '</span>';
         }
@@ -11787,7 +11790,7 @@ function renderPartnerships() {
     let renewalHtml = '';
     if (p.renewalDate) {
       const daysLeft = Math.ceil((new Date(p.renewalDate) - new Date(today)) / 86400000);
-      const rColor = daysLeft <= 0 ? 'var(--danger-text)' : daysLeft <= 30 ? '#d97706' : 'var(--ok-text)';
+      const rColor = daysLeft <= 0 ? 'var(--danger-text)' : daysLeft <= 30 ? 'var(--warn-text)' : 'var(--ok-text)';
       renewalHtml = `<div style="font-size:12px;margin-top:4px;color:${rColor};font-weight:600;">Renewal: ${fmtMeetingDate(p.renewalDate)}</div>`;
     }
     return `<div class="contact-card">
@@ -12028,7 +12031,7 @@ function renderGrants() {
     if (g.deadline) {
       const daysLeft = Math.ceil((new Date(g.deadline) - new Date(todayStr)) / 86400000);
       const isPastOrSoon = g.status !== 'submitted' && g.status !== 'awarded' && g.status !== 'rejected';
-      const dColor = (isPastOrSoon && daysLeft < 0) ? 'var(--danger-text)' : (isPastOrSoon && daysLeft <= 14) ? '#d97706' : 'inherit';
+      const dColor = (isPastOrSoon && daysLeft < 0) ? 'var(--danger-text)' : (isPastOrSoon && daysLeft <= 14) ? 'var(--warn-text)' : 'inherit';
       deadlineHtml = `<span style="color:${dColor};font-weight:${dColor !== 'inherit' ? '600' : '400'}">${fmtMeetingDate(g.deadline)}</span>`;
     }
     return `<tr style="border-bottom:1px solid var(--border);">
@@ -12292,7 +12295,7 @@ function renderParticipation() {
       <td style="padding:8px 12px;font-weight:500;">${escHtml(m.name)}</td>
       <td style="padding:8px 12px;text-align:center;">${attended}</td>
       <td style="padding:8px 12px;text-align:center;">${totalMeetings}</td>
-      <td style="padding:8px 12px;text-align:center;font-weight:600;color:${pct >= 50 ? 'var(--ok-text)' : pct >= 25 ? '#d97706' : 'var(--danger-text)'};">${pct}%</td>
+      <td style="padding:8px 12px;text-align:center;font-weight:600;color:${pct >= 50 ? 'var(--ok-text)' : pct >= 25 ? 'var(--warn-text)' : 'var(--danger-text)'};">${pct}%</td>
       <td style="padding:8px 12px;color:var(--text-muted);">${lastPresent ? fmtMeetingDate(lastPresent) : '—'}</td>
       <td style="padding:8px 12px;"><span class="badge" style="background:${sc.bg};color:${sc.text};">${status}</span></td>
     </tr>`;
@@ -13131,7 +13134,11 @@ function updateHeaderUserBadge() {
   var actions = document.getElementById('top-header-actions');
   if (actions) actions.insertBefore(wrap, actions.firstChild);
   var initials = (currentUser.name || 'U').split(' ').map(function(w) { return w[0] || ''; }).slice(0,2).join('').toUpperCase();
-  var tierColor = currentUser.permissionTier === 'admin' ? 'var(--accent)' : currentUser.permissionTier === 'officer' ? '#6366f1' : '#9ca3af';
+  // Fixed dark fills, not tokens: .user-initials pairs them with a hard-coded white, and a
+  // token that flips light in dark mode would put white on a pale chip. #9F5568 is
+  // --accent-btn's light value, so an admin's badge is unchanged in light mode.
+  var tierColor = currentUser.permissionTier === 'admin' ? '#9F5568'
+                : currentUser.permissionTier === 'officer' ? '#4338ca' : '#565656';
   wrap.innerHTML = '<button id="userBadge" class="header-action-btn" onclick="toggleUserDropdown()" title="' + escHtml(currentUser.name) + ' (' + escHtml(currentUser.permissionTier) + ')">'
     + (currentUser.photo
         ? '<img src="' + escHtml(currentUser.photo) + '" style="width:24px;height:24px;border-radius:50%;display:block;" onerror="this.style.display=\'none\'">'

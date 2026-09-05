@@ -9,23 +9,23 @@
 }
 .admin-editor-nav-btn--active {
   background: #fef3c7 !important;
-  color: #d97706 !important;
+  color: #92400e !important;        /* #d97706 was 2.97:1 on this fill */
   border-color: #fcd34d !important;
 }
 .admin-editor-nav-btn--active:hover {
   background: #fde68a !important;
-  color: #b45309 !important;
+  color: #78350f !important;        /* #b45309 was 3.61:1 on this fill */
 }
 
 /* ── Body in editor mode ─────────────────────── */
 .admin-editor-mode {
-  outline: 3px solid #f59e0b;
+  outline: 3px solid var(--warn-text);
   outline-offset: -3px;
 }
 
 /* ── Editable cells ──────────────────────────── */
 .admin-editor-cell {
-  outline: 1.5px dashed #f59e0b !important;
+  outline: 1.5px dashed var(--warn-text) !important;
   outline-offset: 2px;
   border-radius: 3px;
   cursor: text !important;
@@ -35,15 +35,15 @@
 }
 .admin-editor-cell:hover {
   background: rgba(245, 158, 11, 0.07) !important;
-  outline-color: #d97706 !important;
+  outline-color: var(--warn-text) !important;
 }
 .admin-editor-cell--active {
-  outline: 2px solid #d97706 !important;
+  outline: 2px solid var(--warn-text) !important;
   background: rgba(245, 158, 11, 0.1) !important;
   z-index: 1;
 }
 .admin-editor-cell--changed {
-  outline: 2px solid #10b981 !important;
+  outline: 2px solid var(--ok-text) !important;
   background: rgba(16, 185, 129, 0.07) !important;
 }
 .admin-editor-cell--changed::after {
@@ -52,7 +52,7 @@
   top: -6px;
   right: -6px;
   font-size: 9px;
-  color: #10b981;
+  color: var(--ok-text);
   line-height: 1;
   pointer-events: none;
 }
@@ -92,7 +92,7 @@
 
 .aet-icon { font-size: 15px; }
 .aet-label { font-weight: 600; color: #f59e0b; margin-right: 2px; }
-.aet-tip   { color: #78716c; font-size: 12px; border-right: 1px solid #374151; padding-right: 10px; }
+.aet-tip   { color: #a8a29e; font-size: 12px; border-right: 1px solid #374151; padding-right: 10px; }
 .aet-count { color: #a8a29e; font-size: 12px; min-width: 70px; }
 
 .aet-btn {
@@ -106,7 +106,7 @@
   font-family: inherit;
 }
 .aet-btn:hover  { opacity: 0.85; }
-.aet-btn--save   { background: #10b981; color: #fff; }
+.aet-btn--save   { background: #15803d; color: #fff; }   /* white on #10b981 was 2.47:1 */
 .aet-btn--revert { background: #374151; color: #d1d5db; }
 .aet-btn--saved  { background: #1d4ed8; color: #fff; }
 .aet-btn--exit   { background: #374151; color: #d1d5db; }
@@ -156,7 +156,7 @@
   border: none; border-radius: 6px; padding: 4px 9px;
   font-size: 11px; cursor: pointer; font-family: inherit;
 }
-.aesp-revert-btn:hover { background: #dc2626; color: #fff; }
+.aesp-revert-btn:hover { background: #b91c1c; color: #fff; }   /* #dc2626 was 4.41:1 */
 
 /* ── Toast ───────────────────────────────────── */
 .admin-editor-toast {
