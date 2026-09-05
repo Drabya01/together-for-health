@@ -2756,9 +2756,8 @@
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
       <div>
         <div class="section-label" style="margin-bottom:2px">Delivery log</div>
-        <div style="font-size:12.5px;color:var(--text-hint);max-width:560px;">Every lesson the club has actually
-        given. This is where &ldquo;presentations delivered&rdquo; and &ldquo;students reached&rdquo; come from, so
-        log a class even if no teacher replies.</div>
+        <div style="font-size:12.5px;color:var(--text-hint);max-width:560px;">Every class the club has
+        presented to. Log one even if no teacher replies.</div>
       </div>
     </div>
     <div id="delivery-list" style="margin-bottom:34px"></div>
@@ -2766,7 +2765,7 @@
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
       <div>
         <div class="section-label" style="margin-bottom:2px">Team link board</div>
-        <div style="font-size:12.5px;color:var(--text-hint);max-width:520px;">Slides, Canva designs, videos and PDFs the club has shared. Paste any link and a preview appears automatically.</div>
+        <div style="font-size:12.5px;color:var(--text-hint);max-width:520px;">Slides, Canva, videos and PDFs. Paste a link and a preview appears.</div>
       </div>
       <span class="pres-count" id="pres-count"></span>
     </div>
@@ -2936,7 +2935,7 @@
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;">
       <div>
         <h1 class="page-title">Feedback</h1>
-        <p class="page-sub">What the teachers we present to told us went well, and what to fix</p>
+        <p class="page-sub">Teacher feedback after each presentation</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn editor-only" id="fb-sync-btn" onclick="importFormResponses()" title="Pull the latest teacher responses">Sync form</button>
@@ -2989,18 +2988,16 @@
          be worse than not building it. -->
     <div class="hours-notice">
       <strong>This is your own record, not an official one.</strong>
-      Your school makes the final decision on which hours count. Use this to keep track and to fill
-      in your board's Community Involvement form, which still needs a signature from whoever
-      supervised you. Hours generally have to be outside your scheduled class time, and ordinary
-      in-school club meetings usually don't count &mdash; so log the events, outreach and volunteering
-      you actually do, not attendance at our meetings.
+      Your school decides which hours count. Use this to fill in your board's Community Involvement
+      form, which still needs a signature from whoever supervised you. Hours usually have to be
+      outside class time. Regular club meetings usually don't count.
     </div>
 
     <div id="hours-mine"></div>
 
     <div id="hours-admin-section" style="display:none">
       <h2 class="hours-section-head">Everyone's hours</h2>
-      <p class="page-sub" style="margin:-6px 0 14px;">Confirm entries you can vouch for. Confirming is not certification &mdash; it records that an exec saw it.</p>
+      <p class="page-sub" style="margin:-6px 0 14px;">Confirm entries you can vouch for. This records that an exec saw it. It is not certification.</p>
       <div id="hours-everyone"></div>
     </div>
   </div>
@@ -3335,14 +3332,14 @@
     <div class="form-row"><div>
       <label>Reminder (optional)</label>
       <input type="datetime-local" id="ev-reminder">
-      <p class="form-hint">Get a browser notification at this time — works while the app is open or running in a tab.</p>
+      <p class="form-hint">Browser notification at this time. Only works while the app is open in a tab.</p>
     </div></div>
     <div class="form-row"><div>
       <label>Shifts members can sign up for (optional)</label>
       <div id="ev-slots-builder"></div>
       <button type="button" class="btn" onclick="addEventSlotRow()" style="margin-top:8px;min-height:38px;">+ Add a shift</button>
-      <p class="form-hint">e.g. &ldquo;Setup 3&ndash;4pm&rdquo;, &ldquo;Booth 4&ndash;6pm&rdquo;. Members claim these themselves, so you stop
-      organising coverage over text message. Leave empty if the event needs no sign-ups.</p>
+      <p class="form-hint">e.g. &ldquo;Setup 3&ndash;4pm&rdquo;, &ldquo;Booth 4&ndash;6pm&rdquo;. Members claim their own. Leave empty if nobody
+      needs to sign up.</p>
     </div></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-event')">Cancel</button>
@@ -3485,8 +3482,8 @@
       <span class="modal-title" id="dl-modal-title">Log a presentation</span>
       <button class="modal-close" onclick="closeModal('modal-delivery')">&times;</button>
     </div>
-    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">One row per class you presented to.
-    If two classes saw it back to back, log them separately &mdash; that is two presentations.</p>
+    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">One row per class. Two classes back to
+    back is two rows.</p>
     <div class="form-row form-3col">
       <div><label for="dl-topic">Topic *</label>
         <input type="text" id="dl-topic" list="dl-topic-list" placeholder="e.g. Sleep" autocomplete="off">
@@ -3645,10 +3642,8 @@
       <button class="modal-close" onclick="closeModal('modal-form-connect')">&times;</button>
     </div>
 
-    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">After we present in a class,
-    that class&rsquo;s teacher fills in a short Google Form. Paste the link to the form&rsquo;s
-    <strong>response spreadsheet</strong> and every answer appears on this page automatically
-    &mdash; ratings, student counts and quotes, with nothing copied across by hand.</p>
+    <p class="form-hint" style="margin:0 0 4px;line-height:1.7">Teachers fill in a short Google Form
+    after a presentation. Paste the link to that form&rsquo;s <strong>response spreadsheet</strong> below.</p>
 
     <div class="form-row"><div>
       <label for="fc-url">Response spreadsheet link *</label>
@@ -3676,11 +3671,10 @@
         <li>In that spreadsheet: <strong>Share &rarr; Anyone with the link &rarr; Viewer</strong>,
           then copy its link into the box above.</li>
       </ol>
-      <p class="form-hint" style="margin-top:10px;line-height:1.7">The spreadsheet is readable by
-      anyone holding its link. The form never asks for an email, and asks for a name in one
-      <em>optional</em> question that tells the teacher plainly their name may be quoted on this
-      site, in the year-end report, and in members&rsquo; applications. Leaving it blank still
-      submits the feedback.</p>
+      <p class="form-hint" style="margin-top:10px;line-height:1.7">Anyone with the link can read the
+      spreadsheet. The form never asks for an email. It asks for a name in one optional question,
+      which says the name may be quoted on this site and in members&rsquo; applications. Teachers can
+      leave it blank.</p>
     </div>
 
     <div class="modal-footer">
@@ -5967,7 +5961,7 @@ function renderPlans() {
   if (!state.plans.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div>
-      <div class="empty-state-text">No plans yet. Click "+ New plan" to write your first one.</div>
+      <div class="empty-state-text">No plans yet. Press + New plan.</div>
     </div>`;
     return;
   }
@@ -6140,7 +6134,7 @@ function renderIdeas() {
   if (!state.ideas.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><line x1="9" y1="21" x2="15" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M12 2a7 7 0 0 1 5 11.9V17H7v-3.1A7 7 0 0 1 12 2z"/></svg></div>
-      <div class="empty-state-text">No ideas yet. Click "+ New idea" to capture your first one.</div>
+      <div class="empty-state-text">No ideas yet. Press + New idea.</div>
     </div>`;
     return;
   }
@@ -6347,8 +6341,7 @@ function renderDeliveries() {
   if (!rows.length) {
     list.innerHTML = '<div class="empty-state">'
       + '<div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></div>'
-      + '<div class="empty-state-text">No presentations logged yet. Log one after each class and the '
-      + 'numbers above look after themselves.</div></div>';
+      + '<div class="empty-state-text">Nothing logged yet. Add one after your next class.</div></div>';
     return;
   }
 
@@ -6466,7 +6459,7 @@ function renderPres() {
   if (!all.length) {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">'
       + '<div class="empty-state-icon">🔗</div>'
-      + '<div class="empty-state-text">No links yet. Share a Google Slides, Canva, YouTube or PDF link and it\'ll appear here with a preview.</div>'
+      + '<div class="empty-state-text">No links yet. Paste a Slides, Canva, YouTube or PDF link.</div>'
       + (_presCanEdit() ? '<button class="btn btn-primary" style="margin-top:14px" onclick="openAddPres()">+ Add your first link</button>' : '')
       + '</div>';
     return;
@@ -7461,7 +7454,7 @@ function renderHours() {
         + '</div>'
       + '<div class="hours-big-sub">' + (done
           ? 'Print your log and get it signed for your school.'
-          : 'Log anything you volunteer for — every bit counts toward the 40.')
+          : 'Log anything you volunteer for, not just club events.')
         + '</div>'
       + '<div class="hours-stat-row">'
       + '<div><div class="hours-stat-label">Logged</div><div class="hours-stat-val">' + _hoursFmt(total) + ' h</div></div>'
@@ -7489,7 +7482,7 @@ function renderHours() {
     mine.innerHTML = rows.length
       ? '<div class="card">' + rows.map(_hoursRowHtml).join('') + '</div>'
       : '<div class="card"><div class="empty-state"><div class="empty-state-text">'
-        + 'No hours logged yet. Press <strong>+ Log hours</strong> after your next event or volunteer shift.'
+        + 'No hours yet. Press <strong>+ Log hours</strong> after your next shift.'
         + '</div></div></div>';
   }
 
@@ -7753,7 +7746,7 @@ function renderGoals() {
   });
 
   if (!state.goals.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="empty-state-text">No goals yet. Click "+ New goal" to set your first target.</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="empty-state-text">No goals yet. Press + New goal.</div></div>`;
     if (completedSection) completedSection.style.display = 'none';
     return;
   }
@@ -7871,7 +7864,7 @@ function renderContacts() {
   const grid = document.getElementById('contacts-grid');
   if (!grid) return;
   if (!state.contacts.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="empty-state-text">No contacts yet. Add teachers, principals, and coordinators you work with.</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="empty-state-text">No contacts yet. Add the teachers and principals you work with.</div></div>`;
     return;
   }
   grid.innerHTML = '';
@@ -7995,7 +7988,7 @@ function renderResourceDirectory() {
   grid.style.display = 'block';
   var all = state.resources || [];
   if (!all.length) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No resources yet. Add articles, videos, or tools your team finds useful.</div></div>';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">No resources yet. Add an article, video or tool.</div></div>';
     return;
   }
   var canEdit = (typeof hasPermission === 'function') && hasPermission('MANAGE_RESOURCES');
@@ -8138,7 +8131,7 @@ function renderBudget() {
 
   // Transactions list
   if (!txs.length) {
-    txList.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6"/></svg></div><div class="empty-state-text">No transactions yet. Add income or expenses with "+ Add transaction".</div></div>`;
+    txList.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6"/></svg></div><div class="empty-state-text">No transactions yet. Press + Add transaction.</div></div>`;
     return;
   }
   txList.innerHTML = txs.map(t => {
@@ -8245,7 +8238,7 @@ function renderActivities() {
   }
 
   if (!state.activities.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg></div><div class="empty-state-text">No activities yet. Add interactive exercises for your presentations.</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg></div><div class="empty-state-text">No activities yet. Add one for your presentations.</div></div>`;
     return;
   }
   if (!filtered.length) {
@@ -8468,11 +8461,11 @@ function renderAttendance() {
     return;
   }
   if (!meetings.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><div class="empty-state-text">No meetings logged yet. Add meetings to track attendance.</div></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></div><div class="empty-state-text">No meetings yet. Add one to track attendance.</div></div>`;
     return;
   }
   if (!members.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members added yet. Add members to track attendance.</div></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members yet. Add some to track attendance.</div></div>`;
     return;
   }
 
@@ -8675,7 +8668,7 @@ function renderMeetings() {
   const list = document.getElementById('meetings-list');
   if (!list) return;
   if (!state.meetings.length) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-state-text">No meetings logged yet. Click "+ New meeting" to add your first one.</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-state-text">No meetings yet. Press + New meeting.</div></div>`;
     return;
   }
   const sorted = [...state.meetings].sort((a,b) => b.date.localeCompare(a.date));
@@ -8943,7 +8936,7 @@ function renderMembers() {
   const grid = document.getElementById('members-grid');
   if (!grid) return;
   if (!state.members.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members added yet. Add your team to get started.</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div class="empty-state-text">No members yet. Add your team.</div></div>`;
     return;
   }
   const isEditor = hasStaffAccess();
@@ -9371,9 +9364,8 @@ function _renderFeedbackChrome(sorted) {
   if (nudge) {
     nudge.innerHTML = !connected ? (
       '<div class="fb-connect">'
-      + '<div class="fb-connect-text">Let the teachers whose classes we present to give this '
-      + 'feedback themselves. Connect a Google Form and every response lands here '
-      + 'automatically, with the ratings and student counts totalled.</div>'
+      + '<div class="fb-connect-text">Connect a Google Form and teacher responses show up here '
+      + 'on their own.</div>'
       + '<button class="btn btn-primary" onclick="openConnectForm()">Set up the teacher form</button>'
       + '</div>'
     ) : '';
@@ -9418,7 +9410,7 @@ function renderFeedback() {
   if (!list) return;
   if (!state.feedback.length) {
     _renderFeedbackChrome([]);
-    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="empty-state-text">No feedback logged yet. Add notes after each presentation.</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="empty-state-text">No feedback yet. Add notes after a presentation.</div></div>`;
     return;
   }
   const sorted = [...state.feedback].sort((a,b) => (b.date||'').localeCompare(a.date||''));
@@ -10456,7 +10448,7 @@ function renderEventBudgets() {
   if (!container) return;
   const eventBudgets = state.eventBudgets || [];
   if (!eventBudgets.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg></div><div class="empty-state-text">No event budgets yet. Click "+ New Event Budget" to create one.</div></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);opacity:0.45"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg></div><div class="empty-state-text">No event budgets yet. Press + New Event Budget.</div></div>`;
     return;
   }
   container.innerHTML = eventBudgets.map(eb => {
