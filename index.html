@@ -1191,22 +1191,6 @@
   .slide-title-preview { font-size:13px; font-weight:700; color:var(--text); margin-bottom:5px; }
   .slide-bullets { font-size:12px; color:var(--text-muted); line-height:1.7; padding-left:16px; margin:0; }
 
-  .pres-link {
-    font-size: 13px;
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 6px;
-    padding: 4px 10px;
-    border: 1px solid rgba(26,127,78,0.3);
-    border-radius: var(--radius-sm);
-    background: var(--accent-light);
-  }
-
-  .pres-link:hover { background: #cce8da; }
 
   .pres-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
 
@@ -2314,7 +2298,7 @@
 
   /* De-accented links keep their affordance through hover and a quiet underline, rather
      than by being pink at rest. */
-  .pres-link:hover, .res-tel:hover, .member-contact a:hover, .contact-info a:hover,
+  .res-tel:hover, .member-contact a:hover, .contact-info a:hover,
   .res-line a:hover { color: var(--accent-aa); }
   .member-contact a, .contact-info a, .res-tel { text-decoration-color: var(--border-strong); }
 
@@ -4734,7 +4718,7 @@ async function pushToGist() {
 // The dot's state is carried as a KEY on the element, never as a colour string. The old
 // code wrote a hex into el.style.color and recovered the state by comparing that value back
 // against '#10b981' -- which could never match, because the CSSOM normalises an assigned hex
-// to 'rgb(16, 185, 129)'. Anything needing the state now asks getSyncState().
+// to 'rgb(16, 185, 129)'. Anything needing the state reads el.dataset.syncState.
 //
 // Each state carries a distinct GLYPH as well as a colour: synced and error were both a
 // filled circle, so the difference between "your data is safe" and "your data is not
@@ -4760,11 +4744,6 @@ function updateSyncIndicator(status) {
   el.setAttribute('aria-label', s.title);
 }
 
-function getSyncState() {
-  var el = document.getElementById('tfh-sync-dot');
-  return (el && el.dataset.syncState) || 'offline';
-}
-
 function generateSyncSetupUrl() {
   var token = getSyncToken();
   if (!token) return;
@@ -4779,189 +4758,22 @@ function generateSyncSetupUrl() {
   });
 }
 
-// Truthful sync panel. The old version hardcoded a green "Sync connected" dot whenever a token
-// string existed — without ever checking that the token was valid, had gist scope, or that this
-// device's data had actually reached the cloud — and it hid the paste field entirely once any token
-// was present, so there was no way to replace a dead one. That combination is how an admin can be
-// shown "connected" while every approval silently stays on their own machine.
-function openSyncModal() {
-  var body = document.getElementById('sync-modal-body');
-  if (!body) return;
-  body.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0;">Checking sync status…</p>';
-  openModal('modal-sync');
-  renderSyncPanel();
-}
-
-async function renderSyncPanel() {
-  var body = document.getElementById('sync-modal-body');
-  if (!body) return;
-  var token = getSyncToken();
-  var gistId = getSyncGistId();
-  var local = { users: (state.users || []).length, members: (state.members || []).length, version: state._syncVersion || 0 };
-  var cloud = null, tokenState = token ? 'checking' : 'none';
-
-  // What is actually in the cloud right now? (reads need no credentials)
-  try {
-    if (gistId) {
-      var r = await fetch('https://api.github.com/gists/' + gistId, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
-      if (r.ok) {
-        var j = await r.json();
-        var f = j.files && j.files[TFH_GIST_FILE];
-        if (f && f.content) {
-          var cs = JSON.parse(f.content);
-          cloud = { users: (cs.users || []).length, members: (cs.members || []).length, version: cs._syncVersion || 0 };
-        }
-      }
-    }
-  } catch (e) {}
-
-  // Does the token genuinely work for writing?
-  if (token) {
-    try {
-      var vr = await fetch('https://api.github.com/gists/' + gistId, {
-        headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token }
-      });
-      if (vr.status === 401) tokenState = 'invalid';
-      else if (vr.ok) {
-        var scopes = vr.headers.get('x-oauth-scopes');
-        tokenState = (scopes === null || /gist/.test(scopes)) ? 'ok' : 'noscope';
-      } else tokenState = 'error';
-    } catch (e) { tokenState = 'offline'; }
-  }
-
-  var unpublished = cloud && (local.users > cloud.users || local.members > cloud.members);
-  var esc = function(s) { return escHtml(String(s)); };
-  var row = function(colour, label, detail) {
-    return '<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);">'
-      + '<span style="width:9px;height:9px;border-radius:50%;background:' + colour + ';flex-shrink:0;"></span>'
-      + '<span style="font-size:13px;font-weight:600;color:var(--text);">' + label + '</span>'
-      + '<span style="font-size:12px;color:var(--text-muted);margin-left:auto;text-align:right;">' + detail + '</span></div>';
-  };
-  var tokenRow = {
-    none:     ['#ef4444', 'No token on this device', 'approvals cannot be published'],
-    ok:       ['#10b981', 'Token works', 'can publish'],
-    invalid:  ['#ef4444', 'Token rejected by GitHub', 'expired or revoked — replace it'],
-    noscope:  ['#ef4444', 'Token missing “gist” scope', 'regenerate with gist checked'],
-    error:    ['#f59e0b', 'Could not verify token', 'try again'],
-    offline:  ['#f59e0b', 'Offline', 'cannot reach GitHub'],
-    checking: ['#f59e0b', 'Checking…', '']
-  }[tokenState];
-
-  var html = '<div style="margin-bottom:16px;">'
-    + row(tokenRow[0], tokenRow[1], tokenRow[2])
-    + row('#64748b', 'On this device', local.users + ' account' + (local.users === 1 ? '' : 's') + ' · ' + local.members + ' roster · v' + local.version)
-    + (cloud
-        ? row(unpublished ? '#ef4444' : '#10b981', 'In the cloud',
-              cloud.users + ' account' + (cloud.users === 1 ? '' : 's') + ' · ' + cloud.members + ' roster · v' + cloud.version)
-        : row('#f59e0b', 'In the cloud', 'could not read'))
-    + '</div>';
-
-  if (unpublished) {
-    html += '<div style="padding:11px 13px;border-radius:9px;background:#fef2f2;border:1px solid #fca5a5;margin-bottom:14px;">'
-      + '<div style="font-size:12.5px;color:var(--danger-text);line-height:1.55;font-weight:600;margin-bottom:3px;">This device has people the cloud does not.</div>'
-      + '<div style="font-size:12px;color:var(--danger-text);line-height:1.55;">They are approved here but no one else can see them. '
-      + (tokenState === 'ok' ? 'Press <strong>Publish now</strong>.' : 'Add a working token below, then publish.') + '</div></div>';
-  }
-
-  if (tokenState === 'ok') {
-    html += '<button onclick="publishThisDevice()" style="width:100%;padding:11px;background:var(--accent-btn);color:var(--on-accent);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:9px;">'
-         + (unpublished ? 'Publish now — fix this' : 'Publish this device’s data') + '</button>'
-      + '<button onclick="forceSyncNow()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:9px;">Pull latest from cloud</button>'
-      + '<button onclick="generateSyncSetupUrl();closeModal(\'modal-sync\');" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:16px;">Copy device setup link</button>';
-  }
-
-  // The paste field is ALWAYS available, whatever the current token state.
-  html += '<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:5px;">'
-       + (token ? 'Replace the token' : 'Paste a GitHub token (needs “gist” scope)') + '</label>'
-    + '<input id="sync-token-input" type="password" placeholder="ghp_…" autocomplete="off" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;margin-bottom:9px;" />'
-    + '<button onclick="saveSyncToken()" style="width:100%;padding:10px;background:' + (tokenState === 'ok' ? 'none' : 'var(--accent)') + ';color:' + (tokenState === 'ok' ? 'var(--text)' : 'white') + ';border:' + (tokenState === 'ok' ? '1px solid var(--border)' : 'none') + ';border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px;">Save token &amp; publish</button>'
-    + '<p style="font-size:11.5px;color:var(--text-muted);line-height:1.55;margin:0 0 12px;">github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic) → tick <strong>gist</strong> only.</p>';
-
-  if (token) {
-    html += '<button onclick="clearSyncToken()" style="width:100%;padding:9px;background:none;color: var(--danger-text);border:1px solid #fca5a5;border-radius:8px;font-size:12.5px;cursor:pointer;font-family:inherit;">Disconnect sync on this device</button>';
-  }
-  body.innerHTML = html;
-}
-
-// _openSyncModal_legacy() lived here: an unreferenced duplicate of openSyncModal(), kept
-// after the Firestore migration and called by nothing. It recovered its status label by
-// comparing document.getElementById('tfh-sync-dot').style.color against the string
-// '#10b981', which the CSSOM had already rewritten to 'rgb(16, 185, 129)', so the label was
-// permanently stuck on "Active". Deleted rather than recoloured.
-function saveSyncToken() {
-  var input = document.getElementById('sync-token-input');
-  // Strip whitespace and any quotes picked up by copy/paste — a stray space makes GitHub reject an
-  // otherwise valid token, which previously surfaced as a generic "push failed".
-  var val = input ? String(input.value || '').trim().replace(/^["'\s]+|["'\s]+$/g, '') : '';
-  if (!val) { showToast('Paste your token first', 'error'); return; }
-  localStorage.setItem('tfh_sync_token', val);
-  updateSyncIndicator('syncing');
-  showToast('Saving and publishing…', 'info');
-  pushToGist().then(function(ok) {
-    if (ok) showToast('Connected. This device’s data is now in the cloud.', 'success');
-    else { showToast('Token saved, but publishing failed — see the status above.', 'error'); updateSyncIndicator('error'); }
-    // Stay open and re-render, so the cloud counts visibly update instead of the modal
-    // vanishing and leaving no way to tell whether it worked.
-    renderSyncPanel();
-  }).catch(function() {
-    showToast('Token saved, but publishing failed.', 'error');
-    renderSyncPanel();
-  });
-}
-
-function clearSyncToken() {
-  if (!confirm('Disconnect cloud sync on this device? Your local data stays intact.')) return;
-  localStorage.removeItem('tfh_sync_token');
-  closeModal('modal-sync');
-  updateSyncIndicator('offline');
-  showToast('Sync disconnected on this device.', 'info');
-}
-
-function forceSyncNow() {
-  closeModal('modal-sync');
-  updateSyncIndicator('syncing');
-  syncFromGist().then(function(result) {
-    if (result === 'updated') {
-      var activeBtn = document.querySelector('.nav-item--active');
-      switchTab(activeBtn ? activeBtn.dataset.tab : 'dashboard');
-      showToast('Pulled latest from cloud.', 'success');
-    } else if (result === 'current') {
-      pushToGist().then(function(ok) {
-        if (ok) showToast('Already up to date — pushed local state.', 'success');
-        else showToast('Could not push this device’s changes to the cloud.', 'error');
-      });
-    } else {
-      showToast('Could not reach the club sync.', 'error');
-    }
-  });
-}
-
-// Publish THIS device's data upward, without pulling first.
+// The GitHub-Gist sync panel lived here: openSyncModal(), renderSyncPanel(),
+// saveSyncToken(), clearSyncToken(), forceSyncNow() and publishThisDevice(), roughly 190
+// lines. All of it was unreachable after the Firestore migration -- firebase-sync.js assigns
+// over window.openSyncModal once index.html's inline script has finished, so the sidebar's
+// "Cloud sync" button has been opening the Firestore panel (firebase-sync.js:921) for as long
+// as that file has existed. renderSyncPanel and saveSyncToken called only each other; the
+// other three were reachable only from the markup renderSyncPanel generated, and each is
+// itself reassigned in firebase-sync.js.
 //
-// "Sync now" pulls when the cloud looks newer, which is wrong in one important case: this device
-// holds the real roster but its version counter is behind the cloud (it was offline for a while,
-// or the Gist was restored/edited out of band). Pulling then discards local work that was never
-// published. This is the deliberate, user-directed escape hatch for that — the monotonic version
-// guard in pushToGist() makes sure the result is accepted by every device afterwards.
-function publishThisDevice() {
-  if (!getSyncToken()) {
-    showToast('Connect cloud sync first — paste a GitHub token with gist scope.', 'error');
-    return;
-  }
-  var u = (state.users || []).length, m = (state.members || []).length;
-  if (!confirm('Publish this device\'s data to the cloud, replacing what is there?\n\n' +
-               'This device has ' + u + ' account' + (u === 1 ? '' : 's') + ' and ' +
-               m + ' roster entr' + (m === 1 ? 'y' : 'ies') + '.\n\n' +
-               'Use this when THIS device has the correct data.')) return;
-  closeModal('modal-sync');
-  showToast('Publishing this device’s data…', 'info');
-  pushToGist().then(function(ok) {
-    if (ok) showToast('Published. Approved members can now sign in on their own devices.', 'success');
-    else showToast('Publish failed — check your connection and that the token has gist scope.', 'error');
-  }).catch(function() {
-    showToast('Publish failed — check your connection.', 'error');
-  });
-}
+// A colour audit confirmed four contrast failures inside it (a #fef2f2 panel under
+// var(--danger-text) at 1.74:1 in dark mode, plus white-on-var(--accent) at 2.70:1 and a
+// four-value status palette). Deleted rather than recoloured: repairing code that cannot run
+// leaves the next maintainer believing there are two live sync panels to keep in step.
+//
+// The #modal-sync markup stays -- firebase-sync.js renders into its #sync-modal-body.
+// updateSyncIndicator() above also stays; firebase-sync.js calls it on every state change.
 
 function saveState() {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
