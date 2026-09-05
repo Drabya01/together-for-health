@@ -924,14 +924,14 @@
     var u = auth.currentUser;
     body.innerHTML =
       '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--accent-light);border-radius:10px;margin-bottom:16px;">' +
-      '<span style="width:10px;height:10px;border-radius:50%;background:' + (u ? '#10b981' : '#ef4444') + ';flex-shrink:0;"></span>' +
+      '<span style="width:10px;height:10px;border-radius:50%;background:' + (u ? 'var(--ok-text)' : 'var(--danger-text)') + ';flex-shrink:0;"></span>' +
       '<span style="font-size:14px;font-weight:600;color:var(--text);">' + (u ? 'Signed in and syncing' : 'Not signed in') + '</span></div>' +
       '<p style="font-size:13px;color:var(--text-muted);line-height:1.65;margin:0 0 14px;">' +
       'Everything saves to the club database automatically, on every device, the moment you change it. ' +
       'There is no token to paste and no setup link to share — members just sign in with Google and you approve them.</p>' +
       (u ? '<p style="font-size:12.5px;color:var(--text-muted);margin:0 0 16px;">Signed in as <strong>' +
             escHtml(u.email || '') + '</strong></p>' : '') +
-      '<button onclick="signOut()" style="width:100%;min-height:44px;padding:10px;background:none;color:#ef4444;border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Sign out</button>';
+      '<button onclick="signOut()" style="width:100%;min-height:44px;padding:10px;background:none;color:var(--danger-text);border:1px solid var(--danger-text);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Sign out</button>';
     if (typeof openModal === 'function') openModal('modal-sync');
   };
 

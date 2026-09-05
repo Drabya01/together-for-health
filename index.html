@@ -2787,7 +2787,7 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="11" height="11" style="margin-left:auto;opacity:0.5"><path d="M4 4h8v8M12 4L4 12"/></svg>
       </a>
       <button class="sidebar-footer-btn editor-only" onclick="openSyncModal()" title="Set up cloud sync across devices" style="font-weight:600;">
-        <span id="tfh-sync-dot" style="font-size:10px;color:var(--text-hint);" title="Local only">○</span>
+        <span id="tfh-sync-dot" role="img" data-sync-state="offline" style="font-size:10px;color:var(--text-hint);" title="Local only (not syncing)" aria-label="Local only (not syncing)">○</span>
         Cloud sync
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12" style="margin-left:auto;opacity:0.5;"><path d="M1 9a7 7 0 1 1 14 0"/><path d="M4 10l3-3 3 3"/><path d="M7 7v6"/></svg>
       </button>
@@ -4728,19 +4728,38 @@ async function pushToGist() {
   } catch(e) { updateSyncIndicator('error'); return false; }
 }
 
+// The dot's state is carried as a KEY on the element, never as a colour string. The old
+// code wrote a hex into el.style.color and recovered the state by comparing that value back
+// against '#10b981' -- which could never match, because the CSSOM normalises an assigned hex
+// to 'rgb(16, 185, 129)'. Anything needing the state now asks getSyncState().
+//
+// Each state carries a distinct GLYPH as well as a colour: synced and error were both a
+// filled circle, so the difference between "your data is safe" and "your data is not
+// leaving this machine" was carried by colour alone.
+var SYNC_STATES = {
+  synced:  { token: 'var(--ok-text)',     char: '●', title: 'Synced across devices' },
+  syncing: { token: 'var(--warn-text)',   char: '◌', title: 'Syncing…' },
+  error:   { token: 'var(--danger-text)', char: '▲', title: 'Sync error — check connection' },
+  offline: { token: 'var(--text-hint)',   char: '○', title: 'Local only (not syncing)' }
+};
+
 function updateSyncIndicator(status) {
   var el = document.getElementById('tfh-sync-dot');
   if (!el) return;
-  var map = {
-    synced:  { color: '#10b981', title: 'Synced across devices', char: '●' },
-    syncing: { color: '#f59e0b', title: 'Syncing...', char: '◌' },
-    error:   { color: '#ef4444', title: 'Sync error — check connection', char: '●' },
-    offline: { color: 'var(--text-hint)', title: 'Local only (no sync token)', char: '○' }
-  };
-  var s = map[status] || map.offline;
-  el.style.color = s.color;
-  el.title = s.title;
+  var key = SYNC_STATES[status] ? status : 'offline';
+  var s = SYNC_STATES[key];
+  el.dataset.syncState = key;
+  el.style.color = s.token;
   el.textContent = s.char;
+  el.title = s.title;
+  // The title alone is not reachable by touch or by a screen reader on a bare span.
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', s.title);
+}
+
+function getSyncState() {
+  var el = document.getElementById('tfh-sync-dot');
+  return (el && el.dataset.syncState) || 'offline';
 }
 
 function generateSyncSetupUrl() {
@@ -4861,40 +4880,11 @@ async function renderSyncPanel() {
   body.innerHTML = html;
 }
 
-function _openSyncModal_legacy() {
-  var token = getSyncToken();
-  var body = document.getElementById('sync-modal-body');
-  if (!body) return;
-  if (!token) {
-    body.innerHTML = '<p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">Cloud sync keeps all members\' data in sync across devices. You need a GitHub Personal Access Token with <strong>gist</strong> scope.</p>'
-      + '<ol style="font-size:13px;color:var(--text-muted);margin:0 0 18px;padding-left:18px;line-height:2;">'
-      + '<li>Go to <strong>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</strong></li>'
-      + '<li>Click <strong>Generate new token (classic)</strong></li>'
-      + '<li>Name it "TFH Sync", check the <strong>gist</strong> box only, generate</li>'
-      + '<li>Copy the token and paste it below</li>'
-      + '</ol>'
-      + '<label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Your GitHub token</label>'
-      + '<input id="sync-token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;margin-bottom:12px;" />'
-      + '<button onclick="saveSyncToken()" style="width:100%;padding:10px;background:var(--accent-btn);color:var(--on-accent);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Connect sync</button>';
-  } else {
-    var dot = document.getElementById('tfh-sync-dot');
-    var colour = dot ? dot.style.color : '';
-    var label = colour === '#10b981' ? 'Synced' : colour === '#ef4444' ? 'Error — check token' : 'Active';
-    body.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--accent-light);border-radius:10px;margin-bottom:18px;">'
-      + '<span style="width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0;display:inline-block;"></span>'
-      + '<span style="font-size:14px;font-weight:600;color:var(--text);">Sync connected</span>'
-      + '<span style="font-size:12px;color:var(--text-muted);margin-left:auto;">' + label + '</span>'
-      + '</div>'
-      + '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">To add another device, copy the setup link and open it in that browser. It stores the token automatically.</p>'
-      + '<button onclick="generateSyncSetupUrl();closeModal(\'modal-sync\');" style="width:100%;padding:10px;background:var(--accent-btn);color:var(--on-accent);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;">Copy device setup link</button>'
-      + '<button onclick="forceSyncNow()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:10px;">Sync now</button>'
-      + '<button onclick="publishThisDevice()" style="width:100%;padding:10px;background:none;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:10px;">Publish this device&rsquo;s data</button>'
-      + '<p style="font-size:11.5px;color:var(--text-muted);margin:-4px 0 14px;line-height:1.5;">Use <strong>Publish</strong> when this device has the correct roster and members still cannot sign in.</p>'
-      + '<button onclick="clearSyncToken()" style="width:100%;padding:10px;background:none;color: var(--danger-text);border:1px solid #fca5a5;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Disconnect sync on this device</button>';
-  }
-  openModal('modal-sync');
-}
-
+// _openSyncModal_legacy() lived here: an unreferenced duplicate of openSyncModal(), kept
+// after the Firestore migration and called by nothing. It recovered its status label by
+// comparing document.getElementById('tfh-sync-dot').style.color against the string
+// '#10b981', which the CSSOM had already rewritten to 'rgb(16, 185, 129)', so the label was
+// permanently stuck on "Active". Deleted rather than recoloured.
 function saveSyncToken() {
   var input = document.getElementById('sync-token-input');
   // Strip whitespace and any quotes picked up by copy/paste — a stray space makes GitHub reject an
@@ -5904,7 +5894,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const CAT_LABELS = { presentation:'Presentation', meeting:'Club meeting', deadline:'Deadline', task:'Task', general:'General' };
 const EVENT_COLORS = {
-  'Meeting':      { bg: 'var(--tint-info)', text: '#1d4ed8', dot: '#3b82f6' },
+  'Meeting':      { bg: 'var(--tint-info)', text: 'var(--info-text)', dot: '#3b82f6' },
   'Presentation': { bg: '#d1fae5', text: '#065f46', dot: '#10b981' },
   'Deadline':     { bg: 'var(--tint-danger)', text: 'var(--danger-text)', dot: '#ef4444' },
   'Social':       { bg: '#ede9fe', text: '#5b21b6', dot: '#8b5cf6' },
