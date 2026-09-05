@@ -2307,6 +2307,48 @@
     @page { margin: 14mm; }
   }
 
+  /* ── "You're up" ────────────────────────────────── */
+  /* Deliberately not a card: the dashboard already has cards, and a boxed panel with an
+     icon is the shape every generated dashboard reaches for. This is a typographic block
+     that leads with the day, the way you would say it out loud. */
+  .mine { margin: 0 0 30px; }
+  .mine-next { padding: 0 0 4px; }
+  .mine-day {
+    font-family: var(--font-display); font-size: var(--fs-hero); line-height: 1;
+    letter-spacing: -0.025em; color: var(--text);
+  }
+  .mine-what {
+    font-family: var(--font-display); font-size: var(--fs-xl); line-height: 1.25;
+    margin-top: 4px; color: var(--text);
+  }
+  .mine-meta { font-size: var(--fs-base); color: var(--text-muted); margin-top: 5px; }
+  .mine-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
+  /* 44px, matching the My Hours buttons. These get tapped one-handed, standing up, in the
+     thirty seconds before a class starts. */
+  .mine .btn { min-height: 44px; }
+
+  /* One row per nudge, each its own line with the action pushed right. */
+  .mine-row {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 13px 0 0; margin-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: var(--fs-base); color: var(--text);
+  }
+  .mine-row > span { flex: 1; min-width: 190px; }
+  .mine-row--quiet { color: var(--text-muted); }
+  .mine-row--quiet strong { color: var(--text); }
+  /* The first row carries no rule when it opens the block. */
+  .mine > .mine-row:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+
+  @media (max-width: 700px) {
+    .mine { margin-bottom: 24px; }
+    .mine-day { font-size: var(--fs-2xl); }
+    .mine-what { font-size: var(--fs-lg); }
+    .mine-acts .btn { flex: 1; justify-content: center; }
+    .mine-row { align-items: flex-start; }
+    .mine-row .btn { width: 100%; justify-content: center; }
+  }
+
   /* ── Delivery log ───────────────────────────────── */
   .dl-row {
     display:flex; gap:14px; align-items:flex-start;
@@ -2639,6 +2681,10 @@
       </div>
       <button class="btn btn-primary editor-only" onclick="openAddAnnouncement()">+ Announcement</button>
     </div>
+
+    <!-- What the signed-in person is actually on the hook for. Above the announcements
+         because it is the only thing on this page that is about them. -->
+    <div id="dash-mine"></div>
 
     <!-- Announcements -->
     <div id="dash-announcements" class="announcements-strip"></div>
@@ -3316,7 +3362,7 @@
       </div>
       <div>
         <label>Category</label>
-        <select id="ev-cat">
+        <select id="ev-cat" onchange="_evCatChanged()">
           <option value="general">General</option>
           <option value="presentation">Presentation</option>
           <option value="meeting">Club meeting</option>
@@ -5591,6 +5637,137 @@ function backfillDeliveriesFromFeedback() {
   return added;
 }
 
+// ── "You're up" ──────────────────────────────────────────────────────────────────────
+function _todayISO() {
+  var t = new Date();
+  return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0')
+       + '-' + String(t.getDate()).padStart(2, '0');
+}
+
+// Every shift this person holds that has not happened yet, soonest first.
+function _myUpcomingShifts() {
+  var today = _todayISO(), out = [];
+  (state.events || []).forEach(function (ev) {
+    if (!ev.date || ev.date < today) return;
+    _evSlots(ev).forEach(function (sl) {
+      if (_slotIsMine(sl, ev.id)) out.push({ ev: ev, slot: sl });
+    });
+  });
+  return out.sort(function (a, b) { return (a.ev.date || '').localeCompare(b.ev.date || ''); });
+}
+
+// Who else is on the same event, so a member knows who they are presenting with.
+function _shiftmates(ev, mySlotId) {
+  var names = [];
+  _evSlots(ev).forEach(function (sl) {
+    if (sl.id === mySlotId) return;
+    var c = _claimFor(ev.id, sl.id);
+    if (c && c.memberName) names.push(c.memberName.split(' ')[0]);
+  });
+  return names;
+}
+
+function _openShiftCount() {
+  var today = _todayISO(), n = 0;
+  (state.events || []).forEach(function (ev) {
+    if (!ev.date || ev.date < today) return;
+    _evSlots(ev).forEach(function (sl) {
+      var c = _claimFor(ev.id, sl.id);
+      if (!c || !c.memberId) n++;
+    });
+  });
+  return n;
+}
+
+// The deck this event is about, matched on the event title. No match means no buttons,
+// which is honest: guessing wrong and opening the wrong lesson is worse than not offering.
+function _deckForEvent(ev) {
+  var hay = ((ev.title || '') + ' ' + (ev.notes || '')).toLowerCase();
+  var best = null;
+  (state.presentations || []).forEach(function (p) {
+    if (!_isDeckEntry(p) || !p.title) return;
+    var t = p.title.toLowerCase();
+    if (hay.indexOf(t) !== -1 && (!best || t.length > best.title.toLowerCase().length)) best = p;
+  });
+  return best;
+}
+
+function _dayWord(iso) {
+  if (!iso) return '';
+  var parts = String(iso).split('-');
+  var d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  var today = _todayISO();
+  if (iso === today) return 'Today';
+  var tm = new Date(); tm.setDate(tm.getDate() + 1);
+  var tmIso = tm.getFullYear() + '-' + String(tm.getMonth() + 1).padStart(2, '0')
+            + '-' + String(tm.getDate()).padStart(2, '0');
+  if (iso === tmIso) return 'Tomorrow';
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+}
+
+function renderMyNext() {
+  var host = document.getElementById('dash-mine');
+  if (!host) return;
+  if (!window.currentUser) { host.innerHTML = ''; return; }
+
+  var next = _myUpcomingShifts()[0];
+  var unlogged = _pastClaimedShifts();
+  var open = _openShiftCount();
+  var mineHours = (state.hours || []).filter(_hoursIsMine);
+  var total = mineHours.reduce(function (t, h) { return t + (parseFloat(h.hours) || 0); }, 0);
+  var unconfirmed = mineHours.filter(function (h) { return !h.confirmedBy; }).length;
+
+  var blocks = [];
+
+  if (next) {
+    var deck = _deckForEvent(next.ev);
+    var mates = _shiftmates(next.ev, next.slot.id);
+    var bits = [next.ev.time || '', next.slot.label || '', next.ev.notes || '']
+                 .filter(Boolean).map(escHtml);
+    if (mates.length) {
+      bits.push('with ' + escHtml(mates.length === 1 ? mates[0]
+                : mates.slice(0, -1).join(', ') + ' and ' + mates[mates.length - 1]));
+    }
+    blocks.push('<div class="mine-next">'
+      + '<div class="mine-day">' + _dayWord(next.ev.date) + '</div>'
+      + '<div class="mine-what">' + escHtml(next.ev.title) + '</div>'
+      + (bits.length ? '<div class="mine-meta">' + bits.join(' &middot; ') + '</div>' : '')
+      + '<div class="mine-acts">'
+        + (deck
+            ? '<button class="btn btn-primary" onclick="openDeckScript(\'' + deck.id + '\',event)">Read the script</button>'
+              + '<button class="btn" onclick="presentFromCard(\'' + deck.id + '\',event)">Present</button>'
+            : '<button class="btn" onclick="switchTab(\'calendar\')">Open the calendar</button>')
+      + '</div></div>');
+  }
+
+  if (unlogged.length) {
+    var u = unlogged[0];
+    blocks.push('<div class="mine-row">'
+      + '<span>You did <strong>' + escHtml(u.ev.title) + '</strong> on ' + _hoursDateLabel(u.ev.date)
+      + ' and have not logged the hours'
+      + (unlogged.length > 1 ? ', plus ' + (unlogged.length - 1) + ' more' : '') + '.</span>'
+      + '<button class="btn btn-primary" onclick="logHoursFromShift(\'' + u.ev.id + '\',\'' + u.slot.id + '\')">Log them</button>'
+      + '</div>');
+  }
+
+  if (!next && open) {
+    blocks.push('<div class="mine-row">'
+      + '<span>' + open + (open === 1 ? ' shift is' : ' shifts are') + ' open. Nobody has signed up yet.</span>'
+      + '<button class="btn" onclick="switchTab(\'calendar\')">Take one</button>'
+      + '</div>');
+  }
+
+  if (total || unconfirmed) {
+    blocks.push('<div class="mine-row mine-row--quiet">'
+      + '<span><strong>' + _hoursFmt(total) + ' of ' + HOURS_REQUIRED + '</strong> hours logged'
+      + (unconfirmed ? ' &middot; ' + unconfirmed + ' waiting to be confirmed' : '') + '.</span>'
+      + '<button class="btn" onclick="switchTab(\'hours\')">My hours</button>'
+      + '</div>');
+  }
+
+  host.innerHTML = blocks.length ? '<div class="mine">' + blocks.join('') + '</div>' : '';
+}
+
 function renderDash() {
   const todayStr = fmtDate(today.getFullYear(), today.getMonth(), today.getDate());
   const todayISOStr = new Date().toISOString().slice(0,10);
@@ -5611,6 +5788,7 @@ function renderDash() {
     _heroNum = _decks;
     _heroLbl = _decks === 1 ? 'lesson ready to teach' : 'lessons ready to teach';
   }
+  renderMyNext();
   document.getElementById('stat-hero-num').textContent = _heroNum;
   document.getElementById('stat-hero-lbl').textContent = _heroLbl;
 
@@ -7304,6 +7482,18 @@ function _slotIsMine(sl, evId) {
   if (!c || !c.memberId) return false;
   return c.memberId === (cu.uid || cu.id) ||
          (!!cu.email && (c.memberEmail || '').toLowerCase() === cu.email.toLowerCase());
+}
+
+// A presentation with nobody named on it is how members end up finding out over text.
+// Choosing "Presentation" offers two presenter rows; they are still editable and deletable,
+// so this is a default rather than a rule.
+function _evCatChanged() {
+  var cat = document.getElementById('ev-cat');
+  var host = document.getElementById('ev-slots-builder');
+  if (!cat || !host || cat.value !== 'presentation') return;
+  if (host.querySelector('.ev-slot-row')) return;      // never overwrite what is there
+  addEventSlotRow('Presenter 1');
+  addEventSlotRow('Presenter 2');
 }
 
 function addEventSlotRow(label) {
