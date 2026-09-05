@@ -2280,12 +2280,17 @@
   body.dark-mode .hours-pill--confirmed { background: #0f2b18; color: #6ee7a0; border-color: #1d5233; }
   body.dark-mode .hours-pill--logged    { background: #2a2410; color: #f0c869; border-color: #5c4a0f; }
 
+  /* Hidden on screen. This MUST stay above the @media print block below: it used to sit
+     after it, which meant the printed log was display:none at print time and "Print my log"
+     produced a blank page -- visibility:visible cannot bring back a box display:none removed. */
+  #hours-print { display: none; }
+
   /* Print: strip the app chrome so the log comes out as a form a student can staple to
      their board's paperwork, with a supervisor signature column. */
   @media print {
     body * { visibility: hidden !important; }
     #hours-print, #hours-print * { visibility: visible !important; }
-    #hours-print { position: absolute; inset: 0; padding: 0; background: #fff; color: #000; }
+    #hours-print { display: block; position: absolute; inset: 0; padding: 0; background: #fff; color: #000; }
     #hours-print table { width: 100%; border-collapse: collapse; }
     #hours-print th, #hours-print td {
       border: 1px solid #333; padding: 7px 9px; font-size: 12px; text-align: left; vertical-align: top;
@@ -2294,7 +2299,6 @@
     #hours-print .hp-sig { height: 42px; }
     @page { margin: 14mm; }
   }
-  #hours-print { display: none; }
 
   /* ===== ROLES MANAGER ===== */
   .modal-roles-manager { max-width: 800px; width: 100%; height: 600px; max-height: 88vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
@@ -2693,7 +2697,7 @@
         <h1 class="page-title">Presentations</h1>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-primary" onclick="openAddPres()">+ Add link</button>
+        <button class="btn btn-primary editor-only" onclick="openAddPres()">+ Add link</button>
       </div>
     </div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
@@ -5177,15 +5181,17 @@ function _clubHoursTotal() {
   return (state.hours || []).reduce(function (t, h) { return t + (parseFloat(h.hours) || 0); }, 0);
 }
 
+// The one definition of "students reached". Both the goal auto-tracker and the Feedback
+// summary strip call this, so the two cannot drift apart.
+//
+// It used to read digits out of the free-text `audience` field and add them up, which meant
+// "Grade 9 Health, period 3" was counted as 12 students and "Grade 11 Bio, Westview SS" as
+// 11. A row with no recorded headcount now contributes 0, which is honest: the number only
+// counts presentations where somebody actually said how many students were in the room.
 function calcStudentsReached() {
-  let total = 0;
-  (state.feedback || []).forEach(f => {
-    if (f.audience) {
-      const nums = f.audience.match(/\d+/g);
-      if (nums) nums.forEach(n => { total += parseInt(n); });
-    }
-  });
-  return total;
+  return (state.feedback || []).reduce(function (total, f) {
+    return total + (parseInt(f.audienceSize, 10) || 0);
+  }, 0);
 }
 
 function renderDash() {
@@ -5978,6 +5984,13 @@ var presSort = 'recent';
 function setPresSearch(v) { presSearch = (v || '').toLowerCase(); renderPres(); }
 function setPresSort(v) { presSort = v; renderPres(); }
 
+// The link board rides in club/state, which firestore.rules gates to isStaff(). Anything
+// that writes to it must be hidden from a member, or they get a success toast for a write
+// the server threw away. Copy and Present stay: they read, they do not write.
+function _presCanEdit() {
+  return typeof hasStaffAccess === 'function' ? hasStaffAccess() : false;
+}
+
 function renderPres() {
   const grid = document.getElementById('pres-grid');
   if (!grid) return;
@@ -5989,7 +6002,7 @@ function renderPres() {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">'
       + '<div class="empty-state-icon">🔗</div>'
       + '<div class="empty-state-text">No links yet. Share a Google Slides, Canva, YouTube or PDF link and it\'ll appear here with a preview.</div>'
-      + '<button class="btn btn-primary" style="margin-top:14px" onclick="openAddPres()">+ Add your first link</button>'
+      + (_presCanEdit() ? '<button class="btn btn-primary" style="margin-top:14px" onclick="openAddPres()">+ Add your first link</button>' : '')
       + '</div>';
     return;
   }
@@ -6041,11 +6054,15 @@ function renderPres() {
             + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>'
             + 'Present</button>'
           : '')
-      + '<button class="link-pin" title="' + (p.pinned ? 'Unpin' : 'Pin to top') + '" onclick="togglePinPres(\'' + p.id + '\',event)">' + (p.pinned ? '📌' : '📍') + '</button>'
+      + (_presCanEdit()
+          ? '<button class="link-pin" title="' + (p.pinned ? 'Unpin' : 'Pin to top') + '" onclick="togglePinPres(\'' + p.id + '\',event)">' + (p.pinned ? '📌' : '📍') + '</button>'
+          : '')
       + '<div class="link-actions">'
         + '<button class="link-act" title="Copy link" onclick="copyPresLink(\'' + p.id + '\',event)">' + ICON_COPY + '</button>'
-        + '<button class="link-act" title="Edit" onclick="editPres(\'' + p.id + '\',event)">' + ICON_EDIT + '</button>'
-        + '<button class="link-act danger" title="Delete" onclick="deletePres(\'' + p.id + '\',event)">' + ICON_TRASH + '</button>'
+        + (_presCanEdit()
+            ? '<button class="link-act" title="Edit" onclick="editPres(\'' + p.id + '\',event)">' + ICON_EDIT + '</button>'
+              + '<button class="link-act danger" title="Delete" onclick="deletePres(\'' + p.id + '\',event)">' + ICON_TRASH + '</button>'
+            : '')
       + '</div>'
       + '<div class="link-body">'
         + '<div class="link-toprow"><div class="link-title">' + escHtml(p.title) + '</div>'
@@ -8789,7 +8806,7 @@ function _renderFeedbackChrome(sorted) {
   if (!sorted.length) { summaryEl.innerHTML = ''; return; }
   const rated = sorted.filter(f => f.rating > 0);
   const avg = rated.length ? (rated.reduce((t,f) => t + f.rating, 0) / rated.length) : 0;
-  const reached = sorted.reduce((t,f) => t + (parseInt(f.audienceSize,10) || 0), 0);
+  const reached = calcStudentsReached();
   const asked = sorted.filter(f => String(f.rebook || '').trim());
   const wouldRebook = asked.filter(f => _rebookYes(f.rebook)).length;
   const stat = (num, lbl) => '<div class="fb-stat"><span class="fb-stat-num">' + num + '</span>'
