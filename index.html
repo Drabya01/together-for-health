@@ -2284,13 +2284,20 @@
      after it, which meant the printed log was display:none at print time and "Print my log"
      produced a blank page -- visibility:visible cannot bring back a box display:none removed. */
   #hours-print { display: none; }
+  #deck-script-print { display: none; }
 
   /* Print: strip the app chrome so the log comes out as a form a student can staple to
      their board's paperwork, with a supervisor signature column. */
   @media print {
     body * { visibility: hidden !important; }
-    #hours-print, #hours-print * { visibility: visible !important; }
+    #hours-print, #hours-print *,
+    #deck-script-print, #deck-script-print * { visibility: visible !important; }
     #hours-print { display: block; position: absolute; inset: 0; padding: 0; background: #fff; color: #000; }
+    #deck-script-print { display: block; position: absolute; inset: 0; padding: 0; background: #fff; color: #000; }
+    #deck-script-print .dsp-row { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #ddd; page-break-inside: avoid; }
+    #deck-script-print .dsp-n { flex-shrink: 0; width: 20px; font-weight: 700; font-size: 12px; }
+    #deck-script-print .dsp-t { font-weight: 700; font-size: 12.5px; }
+    #deck-script-print .dsp-note { font-size: 12px; line-height: 1.5; }
     #hours-print table { width: 100%; border-collapse: collapse; }
     #hours-print th, #hours-print td {
       border: 1px solid #333; padding: 7px 9px; font-size: 12px; text-align: left; vertical-align: top;
@@ -2299,6 +2306,32 @@
     #hours-print .hp-sig { height: 42px; }
     @page { margin: 14mm; }
   }
+
+  /* ── Presenter script ───────────────────────────── */
+  .link-script {
+    position:absolute; left:11px; bottom:11px; z-index:3;
+    display:inline-flex; align-items:center; gap:5px;
+    min-height:30px; padding:5px 11px; border:none; border-radius:var(--r-pill);
+    background:rgba(0,0,0,0.62); color:#fff; font-family:inherit;
+    font-size:var(--fs-sm); font-weight:600; cursor:pointer;
+    opacity:0; transition:opacity var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .link-card:hover .link-script, .link-script:focus-visible { opacity:1; }
+  .link-script:hover { background:rgba(0,0,0,0.8); }
+
+  .ds-slide { display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--border); }
+  .ds-slide:first-of-type { border-top:none; padding-top:2px; }
+  .ds-num {
+    flex-shrink:0; width:24px; height:24px; border-radius:50%;
+    background:var(--tint-neutral); color:var(--text-muted);
+    font-size:var(--fs-xs); font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ds-body { min-width:0; }
+  .ds-title { font-family:var(--font-display); font-size:var(--fs-md); margin-bottom:3px; }
+  .ds-note { font-size:var(--fs-base); line-height:1.65; color:var(--text); }
+  .ds-none { color:var(--text-hint); font-style:italic; }
+
 
   /* ===== ROLES MANAGER ===== */
   .modal-roles-manager { max-width: 800px; width: 100%; height: 600px; max-height: 88vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
@@ -3411,6 +3444,21 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-pres')">Cancel</button>
       <button class="btn btn-primary" onclick="savePresLink()">Save link</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRESENTER SCRIPT MODAL -->
+<div class="modal-overlay" id="modal-deck-script">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <span class="modal-title" id="deck-script-title">Presenter script</span>
+      <button class="modal-close" onclick="closeModal('modal-deck-script')">&times;</button>
+    </div>
+    <div id="deck-script-body" style="overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="printDeckScript()">Print</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-deck-script')">Done</button>
     </div>
   </div>
 </div>
@@ -6053,6 +6101,10 @@ function renderPres() {
           ? '<button class="link-present" onclick="presentFromCard(\'' + p.id + '\',event)" title="Present full screen at full size">'
             + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>'
             + 'Present</button>'
+            // What to actually say. The deck alone leaves a nervous presenter reading tiles.
+            + '<button class="link-script" onclick="openDeckScript(\'' + p.id + '\',event)" title="What to say on each slide">'
+            + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+            + 'Script</button>'
           : '')
       + (_presCanEdit()
           ? '<button class="link-pin" title="' + (p.pinned ? 'Unpin' : 'Pin to top') + '" onclick="togglePinPres(\'' + p.id + '\',event)">' + (p.pinned ? '📌' : '📍') + '</button>'
@@ -6110,6 +6162,103 @@ function presentFromCard(id, ev) {
   saveState();
   presentDeck(p.url, p.title);
   renderPres();
+}
+
+// ── Presenter script ─────────────────────────────────────────────────────────────────
+// Every slide in every deck carries a data-speaker-notes attribute, and until now nothing
+// could read it. The deck's own runtime parses them into an array (_notes) that it never
+// reads, and it has no presenter view; Present mode fullscreens the IFRAME, so anything the
+// app draws around it would be hidden anyway. So the notes are surfaced here instead, as a
+// page the presenter reads on their phone or prints and holds.
+//
+// The slide markup lives in a JSON string inside the deck's bundler template, so it has to
+// be unwrapped before it can be parsed as HTML. Cached per deck: the fetch pulls the whole
+// deck file, which is worth doing once on an explicit click and not twice.
+var _deckScriptCache = {};
+
+async function _loadDeckScript(url) {
+  if (_deckScriptCache[url]) return _deckScriptCache[url];
+  var res = await fetch(url, { cache: 'force-cache' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  var raw = await res.text();
+  var m = raw.match(/<script type="__bundler\/template">([\s\S]*?)<\/script>/);
+  if (!m) throw new Error('This deck has no slide template.');
+  var doc = new DOMParser().parseFromString(JSON.parse(m[1]), 'text/html');
+  var slides = [];
+  doc.querySelectorAll('section').forEach(function (sec, i) {
+    var h = sec.querySelector('h1, h2, h3');
+    slides.push({
+      n: i + 1,
+      title: ((h && h.textContent) || '').replace(/\s+/g, ' ').trim(),
+      note: (sec.getAttribute('data-speaker-notes') || '').replace(/\s+/g, ' ').trim()
+    });
+  });
+  _deckScriptCache[url] = slides;
+  return slides;
+}
+
+var _deckScriptTitle = '';
+var _deckScriptSlides = [];
+
+async function openDeckScript(id, ev) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var p = (state.presentations || []).find(function (x) { return x.id === id; });
+  if (!p || !p.url) return;
+  _deckScriptTitle = p.title || 'Presenter script';
+  var body = document.getElementById('deck-script-body');
+  var ttl = document.getElementById('deck-script-title');
+  if (ttl) ttl.textContent = _deckScriptTitle;
+  if (body) body.innerHTML = '<p class="form-hint" style="padding:10px 0">Loading the script\u2026</p>';
+  openModal('modal-deck-script');
+  try {
+    var slides = await _loadDeckScript(p.url);
+    _deckScriptSlides = slides;
+    renderDeckScript();
+  } catch (e) {
+    if (body) {
+      body.innerHTML = '<p class="form-hint" style="padding:10px 0">Could not read this deck\u2019s script. '
+        + escHtml(String(e.message || e)) + '</p>';
+    }
+  }
+}
+
+function renderDeckScript() {
+  var body = document.getElementById('deck-script-body');
+  if (!body) return;
+  var withNotes = _deckScriptSlides.filter(function (s) { return s.note; }).length;
+  var head = '<p class="form-hint" style="margin:0 0 14px">' + _deckScriptSlides.length + ' slides'
+    + (withNotes === _deckScriptSlides.length
+        ? ' \u00b7 every slide has a note'
+        : ' \u00b7 ' + withNotes + ' with notes')
+    + ' \u00b7 read this beside the deck, or print it and hold it.</p>';
+  body.innerHTML = head + _deckScriptSlides.map(function (sl) {
+    return '<div class="ds-slide">'
+      + '<div class="ds-num">' + sl.n + '</div>'
+      + '<div class="ds-body">'
+        + '<div class="ds-title">' + escHtml(sl.title || 'Untitled slide') + '</div>'
+        + (sl.note
+            ? '<div class="ds-note">' + escHtml(sl.note) + '</div>'
+            : '<div class="ds-note ds-none">No note for this slide yet.</div>')
+      + '</div></div>';
+  }).join('');
+}
+
+function printDeckScript() {
+  if (!_deckScriptSlides.length) return;
+  var host = document.getElementById('deck-script-print') || (function () {
+    var d = document.createElement('div'); d.id = 'deck-script-print';
+    document.body.appendChild(d); return d;
+  })();
+  host.innerHTML =
+      '<h2 style="margin:0 0 3px;font-size:19px;">' + escHtml(_deckScriptTitle) + ' \u2014 presenter script</h2>'
+    + '<p style="margin:0 0 14px;font-size:12px;color:#444;">Together For Health. '
+      + 'These are notes for whoever is presenting \u2014 they are not read aloud.</p>'
+    + _deckScriptSlides.map(function (sl) {
+        return '<div class="dsp-row"><div class="dsp-n">' + sl.n + '</div>'
+          + '<div><div class="dsp-t">' + escHtml(sl.title || 'Untitled slide') + '</div>'
+          + '<div class="dsp-note">' + escHtml(sl.note || '\u2014') + '</div></div></div>';
+      }).join('');
+  window.print();
 }
 
 function presentDeck(url, title) {
